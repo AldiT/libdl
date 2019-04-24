@@ -1,0 +1,33 @@
+image: elsa/ubu18-clang6:latest
+
+stages:
+  - compile
+
+build-linux-gcc:
+  stage: compile
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake ..
+    - make
+  tags:
+    - linux
+  cache:
+    key: "$CI_JOB_NAME"
+    paths:
+      - build/
+
+build-linux-clang:
+  stage: compile
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake .. -DCMAKE_CXX_COMPILER=/usr/bin/clang++
+    - make
+  tags:
+    - linux
+  cache:
+    key: "$CI_JOB_NAME"
+    paths:
+      - build/
+      
