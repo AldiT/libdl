@@ -5,6 +5,11 @@ project(test VERSION 0.1
 
 set(TEST_TARGET testmain)
 
-add_executable(${TEST_TARGET} main.cpp)
-target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
+set(test_VERSION_MINOR 0)
+set(test_VERSION_MAJOR 1)
+
+set(CMAKE_CXX_STANDARD 17)
+
+add_executable(${TEST_TARGET} main.cpp TutorialConfig.cpp TutorialConfig.h)
+#target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
 

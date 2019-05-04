@@ -1,7 +1,13 @@
 #include <iostream>
+#include <functional>
+
+#include "TutorialConfig.h"
 
 int main()
 {
-    std::cout << "Hello world!\n";
+    [out = std::ref(std::cout << "Hello")](){out.get() << " World!\n";}();
+
+    TutorialConfig t;
+    t.test_func();
 }
 
