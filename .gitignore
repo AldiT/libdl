@@ -11,6 +11,4 @@ eigen3/
 Catch2/
 pybind11/
 spdlog/
-extern/Catch2
-extern/spdlog/
-extern/pybind11/
+extern/
