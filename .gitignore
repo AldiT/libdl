@@ -13,3 +13,4 @@ pybind11/
 spdlog/
 extern/
 .idea/
+test.cpp

@@ -14,10 +14,25 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(${TEST_TARGET} main.cpp)
 target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
 
-function(SIMPLE REQUIRED_ARG)
-    message(STATUS "From Simple, ${REQUIRED_ARG}, followed by ${ARGS}")
-    set(${REQUIRED_ARG} "From Simple" PARENT_SCOPE)
+
+set(CATCH_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/Catch2)
+add_library(Catch2::Catch IMPORTED INTERFACE)
+set_property(TARGET Catch2::Catch PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CATCH_INCLUDE_DIR}")
+
+
+
+function(SET_PATHS_TO_LIBRARIES)
+    set(Catch2_H \"${CMAKE_CURRENT_SOURCE_DIR}/extern/Catch2/include/catch.hpp\" PARENT_SCOPE)
+    message("Paths to Catch2 set! Use Catch2_H for catch.hpp")
+
+    include_directories("${PROJECT_SOURCE_DIR}/extern/eigen3")
+    message("Eigen3 path set up!")
+
+    include_directories("${PROJECT_SOURCE_DIR}/extern/pybind11/include")
 endfunction()
 
-simple(This)
-message("Output ${This}")
+set_paths_to_libraries()
+add_definitions(-DCatch2_H=${Catch2_H})
+
+
+
