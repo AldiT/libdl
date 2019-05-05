@@ -3,7 +3,6 @@
 #include <functional>
 
 #include "extern/Catch.hpp"
-#include "test.cpp"
 
 #include <Eigen/Dense>
 #include <pybind11.h>
