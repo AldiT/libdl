@@ -12,3 +12,4 @@ Catch2/
 pybind11/
 spdlog/
 extern/
+.idea/
