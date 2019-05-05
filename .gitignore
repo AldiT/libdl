@@ -11,6 +11,5 @@ eigen3/
 Catch2/
 pybind11/
 spdlog/
-extern/
 .idea/
 test.cpp
