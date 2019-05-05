@@ -11,6 +11,13 @@ set(test_VERSION_MAJOR 1)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(${TEST_TARGET} main.cpp TutorialConfig.cpp TutorialConfig.h)
+add_executable(${TEST_TARGET} main.cpp)
 target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
 
+function(SIMPLE REQUIRED_ARG)
+    message(STATUS "From Simple, ${REQUIRED_ARG}, followed by ${ARGS}")
+    set(${REQUIRED_ARG} "From Simple" PARENT_SCOPE)
+endfunction()
+
+simple(This)
+message("Output ${This}")
