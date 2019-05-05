@@ -5,10 +5,12 @@ libdl
 CMakeFiles/
 cmake_install.cmake
 CMakeCache.txt
-.idea/
 libdl.dSYM/
 testmain.dSYM/
 eigen3/
 Catch2/
 pybind11/
 spdlog/
+extern/Catch2
+extern/spdlog/
+extern/pybind11/
