@@ -7,9 +7,5 @@ cmake_install.cmake
 CMakeCache.txt
 libdl.dSYM/
 testmain.dSYM/
-eigen3/
-Catch2/
-pybind11/
-spdlog/
 .idea/
-test.cpp
+extern/
