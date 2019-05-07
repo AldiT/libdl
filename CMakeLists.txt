@@ -25,6 +25,7 @@ include_directories("extern")
 
 
 
+
 function(SET_PATHS_TO_LIBRARIES)
     set(Catch2_H \"${CMAKE_CURRENT_SOURCE_DIR}/extern/Catch2/include/catch.hpp\" PARENT_SCOPE)
     message("Paths to Catch2 set! Use Catch2_H for catch.hpp")
@@ -42,3 +43,7 @@ endfunction()
 
 add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h)
 target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
+
+find_package(PythonLibs REQUIRED)
+include_directories(${PYTHON_INCLUDE_DIRS})
+target_link_libraries(libdl ${PYTHON_LIBRARIES})
