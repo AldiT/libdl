@@ -9,7 +9,7 @@
 
 
 #include "Eigen/Dense"
-#include "Catch.hpp"
+#include "Catch2/catch.hpp"
 #include "pybind11/pybind11.h"
 
 namespace libdl::layers {
@@ -44,7 +44,7 @@ class libdl::layers::Layer {
 
 class libdl::layers::DenseLayer: protected libdl::layers::Layer{
 public:
-    DenseLayer();
+    DenseLayer(int num_neurons);
 
     Eigen::MatrixXd forward();
     Eigen::MatrixXd backward();
@@ -53,12 +53,21 @@ public:
         std::cout << "This should get printed from the test cases!" << std::endl;
         return 0;
     }
+
+    int rows(){
+        return this->weights_to_neurons.rows();
+    }
+
+protected:
+    Eigen::MatrixXd weights_to_neurons;
 };
 
-TEST_CASE("A Dense Layer"){
-    libdl::layers::DenseLayer dl;
+SCENARIO("A Dense Layer"){
+    libdl::layers::DenseLayer dl(10);
 
-    REQUIRE(dl.printCrap() == 0);
+    GIVEN("A layer with size"){
+        REQUIRE(dl.rows() == 10);
+    }
 }
 
 int add(int i, int j){
