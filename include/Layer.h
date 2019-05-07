@@ -9,7 +9,7 @@
 
 
 #include "Eigen/Dense"
-#include "Catch2/catch.hpp"
+#include "catch.hpp"
 #include "pybind11/pybind11.h"
 
 namespace libdl::layers {
