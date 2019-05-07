@@ -18,6 +18,10 @@ set(CMAKE_CXX_STANDARD 17)
 #add_library(Catch2::Catch IMPORTED INTERFACE)
 #set_property(TARGET Catch2::Catch PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CATCH_INCLUDE_DIR}")
 
+include_directories("include")
+include_directories("extern/eigen3")
+include_directories("Catch2/single_include/catch2")
+
 
 
 function(SET_PATHS_TO_LIBRARIES)
@@ -35,5 +39,5 @@ endfunction()
 
 
 
-add_executable(${TEST_TARGET} main.cpp)
+add_executable(${TEST_TARGET} src/Layer.cpp include/Layer.h)
 target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
