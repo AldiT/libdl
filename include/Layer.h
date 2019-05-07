@@ -10,13 +10,14 @@
 
 #include "Eigen/Dense"
 #include "Catch.hpp"
+#include "pybind11/pybind11.h"
 
-namespace libdl {
+namespace libdl::layers {
     class Layer;
     class DenseLayer;
 }
 
-class libdl::Layer {
+class libdl::layers::Layer {
     public:
         Layer();
         Layer(int){};
@@ -41,7 +42,7 @@ class libdl::Layer {
 };
 
 
-class libdl::DenseLayer: protected libdl::Layer{
+class libdl::layers::DenseLayer: protected libdl::layers::Layer{
 public:
     DenseLayer();
 
@@ -55,9 +56,19 @@ public:
 };
 
 TEST_CASE("A Dense Layer"){
-    libdl::DenseLayer dl;
+    libdl::layers::DenseLayer dl;
 
     REQUIRE(dl.printCrap() == 0);
+}
+
+int add(int i, int j){
+    return i + j;
+}
+
+PYBIND11_MODULE(example, m) {
+m.doc() = "pybind11 example plugin"; // optional module docstring
+
+m.def("add", &add, "A function which adds two numbers");
 }
 
 

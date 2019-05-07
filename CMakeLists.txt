@@ -21,6 +21,7 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories("include")
 include_directories("extern/eigen3")
 include_directories("extern")
+#include_directories("/usr/local/Cellar/python/3.7.3/Frameworks/Python.framework/Versions/3.7/include/python3.7m")
 
 
 
@@ -39,5 +40,5 @@ endfunction()
 
 
 
-add_executable(${TEST_TARGET} src/Layer.cpp include/Layer.h)
+add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h)
 target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
