@@ -11,13 +11,12 @@ set(test_VERSION_MAJOR 1)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(${TEST_TARGET} main.cpp)
-target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
 
 
-set(CATCH_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/Catch2)
-add_library(Catch2::Catch IMPORTED INTERFACE)
-set_property(TARGET Catch2::Catch PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CATCH_INCLUDE_DIR}")
+
+#set(CATCH_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/Catch2)
+#add_library(Catch2::Catch IMPORTED INTERFACE)
+#set_property(TARGET Catch2::Catch PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${CATCH_INCLUDE_DIR}")
 
 
 
@@ -31,8 +30,10 @@ function(SET_PATHS_TO_LIBRARIES)
     include_directories("${PROJECT_SOURCE_DIR}/extern/pybind11/include")
 endfunction()
 
-set_paths_to_libraries()
-add_definitions(-DCatch2_H=${Catch2_H})
+#set_paths_to_libraries()
+#add_definitions(-DCatch2_H=${Catch2_H})
 
 
 
+add_executable(${TEST_TARGET} main.cpp)
+target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
