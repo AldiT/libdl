@@ -44,24 +44,9 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 include_directories(${EIGEN3_INCLUDE_DIRS})
 
-
-find_package(pybind11 REQUIRED)
-set(PYBIND11_CPP_STANDARD -std=c++11)
-set(PYBIND11_CPP_STANDARD -std=c++14)
-set(PYBIND11_CPP_STANDARD -std=c++1z) # Experimental C++17 support
-# MSVC:
-set(PYBIND11_CPP_STANDARD /std:c++14)
-set(PYBIND11_CPP_STANDARD /std:c++latest) # Enables some MSVC C++17 features
-if (PYBIND11_TESTS)
-    add_subdirectory(pybind11)
-endif ()
-
-include_directories(${PYBIND11_INCLUDE_DIRS})
-
 add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h)
 target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
 
 target_link_libraries(libdl ${PYTHON_LIBRARIES})
 target_link_libraries(libdl Eigen3::Eigen)
-target_link_libraries(libdl pybind11::module)
 
