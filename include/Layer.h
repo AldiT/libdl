@@ -9,7 +9,7 @@
 
 
 #include "Eigen/Dense"
-#include "catch.hpp"
+#include "Catch.hpp"
 
 namespace libdl {
     class Layer;
