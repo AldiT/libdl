@@ -20,7 +20,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories("include")
 include_directories("extern/eigen3")
-include_directories("Catch2/single_include/catch2")
+include_directories("extern/Catch2/single_include/catch2")
 
 
 
