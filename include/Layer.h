@@ -10,12 +10,13 @@
 
 #include "Eigen/Dense"
 #include "catch.hpp"
-#include "pybind11/pybind11.h"
+#include <string>
 
 namespace libdl::layers {
     class Layer;
     class DenseLayer;
     class Perceptron;
+    class Sigmoid;
 }
 
 
@@ -33,10 +34,10 @@ class libdl::layers::Layer {
         ~Layer();
 
         //forward pass function
-        virtual Eigen::MatrixXd forward() = 0;
+        virtual Eigen::MatrixXd forward(Eigen::MatrixXd input) = 0;
 
         //backward pass function
-        virtual Eigen::MatrixXd backward() = 0;
+        virtual Eigen::MatrixXd backward(Eigen::MatrixXd gradient) = 0;
 
         virtual int printCrap() = 0;
 
@@ -46,7 +47,9 @@ class libdl::layers::Layer {
 
     protected:
         int num_neurons;
-        Eigen::MatrixXd weights_to_neurons;
+        Eigen::MatrixXd weights;
+        Eigen::MatrixXd biases;
+        std::string name;
 
 };
 
@@ -70,8 +73,8 @@ class libdl::layers::DenseLayer: protected libdl::layers::Layer{
 public:
     DenseLayer(int num_neurons);
 
-    Eigen::MatrixXd forward();
-    Eigen::MatrixXd backward();
+    Eigen::MatrixXd forward(Eigen::MatrixXd input);
+    Eigen::MatrixXd backward(Eigen::MatrixXd gradient);
 
     int printCrap(){
         std::cout << "This should get printed from the test cases!" << std::endl;
@@ -107,6 +110,9 @@ protected:
 class libdl::layers::Perceptron: libdl::layers::Layer{
 public:
 
+    Eigen::MatrixXd forward(Eigen::MatrixXd input);
+    Eigen::MatrixXd backward(Eigen::MatrixXd gradient);
+
 protected:
 
 private:
@@ -117,5 +123,35 @@ private:
 /////                            </Perceptron>                             /////
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            <Sigmoid>                                 /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+// IDEA: Maybe create a new namespace : activations
+class libdl::layers::Sigmoid : libdl::layers::Layer{
+public:
+
+    Eigen::MatrixXd forward(Eigen::MatrixXd input);
+    Eigen::MatrixXd backward(Eigen::MatrixXd gradients);
+
+protected:
+
+private:
+    double sigmoid(double input);
+    //There are no weights nor biases, so is it worth it to keep it on this hierarchy structure?
+};
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            </Sigmoid>                                /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////s
 
 #endif //LIBDL_LAYER_H

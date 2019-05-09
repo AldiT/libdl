@@ -5,11 +5,20 @@
 #ifndef LIBDL_MODEL_H
 #define LIBDL_MODEL_H
 
+#include <iostream>
+#include <list>
+
 ///
 //// This class should build a model based on layers provided by the Layer header file
 //// Functionality should include things like training, testing, summary etc.
 ///
 class Model {
+public:
+    std::list layers;
+
+private:
+
+protected:
 
 };
 

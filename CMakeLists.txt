@@ -44,7 +44,7 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 include_directories(${EIGEN3_INCLUDE_DIRS})
 
-add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h)
+add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h tests/Layer_tests.cpp)
 target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
 
 target_link_libraries(libdl ${PYTHON_LIBRARIES})
