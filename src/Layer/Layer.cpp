@@ -70,9 +70,9 @@ Eigen::MatrixXd libdl::layers::DenseLayer::backward(Eigen::MatrixXd gradient) {
 //TODO: Add the functionality for Perceptron layer
 //      namely, define only the forward pass for now!
 Eigen::MatrixXd libdl::layers::Perceptron::forward(Eigen::MatrixXd input){
-    Eigen::MatrixXd temp = this->weights.dot(input);
-    temp = temp + this->biases;
-    return temp;
+    //Eigen::MatrixXd temp = this->weights.dot(input);
+    //temp = temp + this->biases;
+    return Eigen::MatrixXd::Constant(3, 3, 1);
 }
 
 Eigen::MatrixXd libdl::layers::Perceptron::backward(Eigen::MatrixXd gradient){
@@ -96,7 +96,7 @@ Eigen::MatrixXd libdl::layers::Perceptron::backward(Eigen::MatrixXd gradient){
 ////////////////////////////////////////////////////////////////////////////////
 
 Eigen::MatrixXd libdl::layers::Sigmoid::forward(Eigen::MatrixXd input){
-    return input.unaryExpr(&this->sigmoid);
+    return Eigen::MatrixXd::Constant(3, 3, 1);
 }
 
 Eigen::MatrixXd libdl::layers::Sigmoid::backward(Eigen::MatrixXd gradients){
@@ -104,7 +104,7 @@ Eigen::MatrixXd libdl::layers::Sigmoid::backward(Eigen::MatrixXd gradients){
 }
 
 double libdl::layers::Sigmoid::sigmoid(double input){
-    return 1 / (1 + std::exp(-x));
+    return 2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
