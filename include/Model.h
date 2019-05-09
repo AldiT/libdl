@@ -14,7 +14,6 @@
 ///
 class Model {
 public:
-    std::list layers;
 
 private:
 
