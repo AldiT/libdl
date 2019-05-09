@@ -5,11 +5,8 @@
 #ifndef LIBDL_LAYER_H
 #define LIBDL_LAYER_H
 
-#define CATCH_CONFIG_MAIN
-
 
 #include "Eigen/Dense"
-#include "catch.hpp"
 #include <string>
 
 namespace libdl::layers {
@@ -25,7 +22,6 @@ namespace libdl::layers {
 /////                            <Layer>                                   /////
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
-
 
 class libdl::layers::Layer {
     public:

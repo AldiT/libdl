@@ -20,7 +20,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories("include")
 include_directories("extern")
-#include_directories("/usr/local/Cellar/python/3.7.3/Frameworks/Python.framework/Versions/3.7/include/python3.7m")
 
 
 
@@ -35,8 +34,6 @@ function(SET_PATHS_TO_LIBRARIES)
     include_directories("${PROJECT_SOURCE_DIR}/extern/pybind11/include")
 endfunction()
 
-#set_paths_to_libraries()
-#add_definitions(-DCatch2_H=${Catch2_H})
 
 find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
@@ -44,7 +41,7 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 include_directories(${EIGEN3_INCLUDE_DIRS})
 
-add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h tests/Layer_tests.cpp)
+add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h tests/Layer_tests.cpp src/TensorWrapper.cpp include/TensorWrapper.h)
 target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
 
 target_link_libraries(libdl ${PYTHON_LIBRARIES})

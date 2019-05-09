@@ -6,7 +6,6 @@
 
 #include "Layer.h"
 #include "Eigen/Dense"
-#include "Layer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /////                                                                      /////
@@ -100,7 +99,7 @@ Eigen::MatrixXd libdl::layers::Sigmoid::forward(Eigen::MatrixXd input){
 }
 
 Eigen::MatrixXd libdl::layers::Sigmoid::backward(Eigen::MatrixXd gradients){
-
+    return Eigen::MatrixXd::Constant(3, 3, 1);
 }
 
 double libdl::layers::Sigmoid::sigmoid(double input){
