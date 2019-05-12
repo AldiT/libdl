@@ -8,6 +8,10 @@
 #include <iostream>
 #include <list>
 
+namespace libdl{
+    class Model;
+}
+
 ///
 //// This class should build a model based on layers provided by the Layer header file
 //// Functionality should include things like training, testing, summary etc.

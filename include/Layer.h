@@ -2,8 +2,8 @@
 // Created by Aldi Topalli on 2019-05-07.
 //
 
-#ifndef LIBDL_LAYER_H
-#define LIBDL_LAYER_H
+#ifndef LIBDL_LAYERS_LAYER_H
+#define LIBDL_LAYERS_LAYER_H
 
 
 #include "Eigen/Dense"
@@ -150,4 +150,4 @@ private:
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////s
 
-#endif //LIBDL_LAYER_H
+#endif //LIBDL_LAYERS_LAYER_H

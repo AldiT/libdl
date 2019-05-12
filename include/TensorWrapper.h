@@ -9,27 +9,36 @@
 
 
 
-namespace libdl::tensor{
-    template <typename scalarType>
+namespace libdl{
     class TensorWrapper;
 }
 
 
-template <typename scalarType >
-class libdl::tensor::TensorWrapper {
+class libdl::TensorWrapper {
 
 public:
-    //Add a constructor that takes an arbitrary number of values , which represent an arbitrary number of
-    // dimensions.
-    TensorWrapper(){};
+    TensorWrapper();
+    TensorWrapper(Eigen::MatrixXd tensor);
+    TensorWrapper(int );
+
     TensorWrapper(int* dims);
     TensorWrapper(TensorWrapper* tensor);
 
+    ~TensorWrapper();
 
-    //Also overload operators for multiplication, indexing and addition
-    TensorWrapper operator() (int* indexes);//Get a specific value in the tensor
+
+    ///
+    //// Indexing operator overload, same notation as Eigen
+    ////
+    //
+    TensorWrapper* operator() (int i);
+    TensorWrapper* operator() (int i, int j);
+    TensorWrapper* operator() (int i, int j, int z);
+    TensorWrapper* operator() (int b, int i, int j, int z);
+
+
     TensorWrapper operator* (TensorWrapper* tensor);//Multiply two tensors with compatible sizes
-    TensorWrapper operator+ (scalarType scalar);//Multiply each element of the tensor with a scalar
+    TensorWrapper operator+ ();//Multiply each element of the tensor with a scalar
     TensorWrapper operator+ (TensorWrapper* tensor);
 
 private:
@@ -37,6 +46,7 @@ private:
     // so basically you will try to represent a tensor of arbitrary dimensions as a bunch of
     // 2D Eigen::MatrixXd matrices to use the benefit of already defined operations.
     Eigen::MatrixXd *tensor;
+    int third_dimension;
 
 
     //Probably more to add here.
