@@ -8,8 +8,6 @@
 #include "catch.hpp"
 #include "Eigen/Dense"
 #include "TensorWrapper_tests.cpp"
-#include "pybind11/embed.h"
-#include "pybind11/pybind11.h"
 #include "Layer.h"
 
 using namespace Eigen;
