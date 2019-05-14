@@ -5,9 +5,10 @@
 #ifndef LIBDL_LAYERS_LAYER_H
 #define LIBDL_LAYERS_LAYER_H
 
-
+#include <memory>
 #include "Eigen/Dense"
 #include <string>
+
 
 namespace libdl::layers {
     template <typename Tensor>
@@ -40,13 +41,14 @@ class libdl::layers::Layer {
         virtual int printCrap() = 0;
 
 
+
     private:
 
 
     protected:
         int num_neurons;
-        Tensor weights;
-        Tensor biases;
+        std::unique_ptr<Tensor> weights = nullptr;
+        std::unique_ptr<Tensor> biases = nullptr;
         std::string name;
 
 };
@@ -69,7 +71,8 @@ class libdl::layers::Layer {
 
 class libdl::layers::DenseLayer2D: protected libdl::layers::Layer<Eigen::MatrixXd>{
 public:
-    DenseLayer2D(int num_neurons);
+
+    DenseLayer2D(int, int);
 
     Eigen::MatrixXd forward(Eigen::MatrixXd input);
     Eigen::MatrixXd backward(Eigen::MatrixXd gradient);
@@ -82,6 +85,13 @@ public:
     int rows(){
         return this->weights_to_neurons.rows();
     }
+
+    std::string info();
+
+    Eigen::MatrixXd get_weights(){
+        return *(this->weights);
+    }
+
 
 protected:
     Eigen::MatrixXd weights_to_neurons;
