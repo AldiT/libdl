@@ -18,6 +18,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories("include")
 include_directories("extern")
+include_directories("extern/spdlog/include")
 
 
 

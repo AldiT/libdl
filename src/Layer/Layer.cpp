@@ -46,7 +46,7 @@ libdl::layers::DenseLayer2D::DenseLayer2D(int num_neurons): libdl::layers::Layer
 Eigen::MatrixXd libdl::layers::DenseLayer2D::forward(Eigen::MatrixXd input) {
     try{
         if(input.cols() != this->weights.rows()){
-            throw "Dimensions of the matrix being multiplied do not match: " + input.cols() + " != " + this->weights.rows();
+            //throw "Dimensions of the matrix being multiplied do not match: " + input.cols() + " != " + this->weights.rows();
         }
     }catch(const char* msg){
         std::cerr << msg << std::endl;
