@@ -6,8 +6,6 @@ project(libdl VERSION 0.1
 
 set(TEST_TARGET libdl)
 
-set(test_VERSION_MINOR 0)
-set(test_VERSION_MAJOR 1)
 
 set(CMAKE_CXX_STANDARD 17)
 
