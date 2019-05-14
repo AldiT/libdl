@@ -41,14 +41,16 @@ Layer<Tensor>::~Layer() {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-DenseLayer2D::DenseLayer2D(int input_features, int num_neurons): Layer<Eigen::MatrixXd>::Layer(){
+DenseLayer2D::DenseLayer2D(int input_features, int num_neurons, std::string name="Layer"): Layer<Eigen::MatrixXd>::Layer(){
     try {
 
         this->num_neurons = num_neurons;
         this->weights = std::make_unique<Eigen::MatrixXd>(input_features, this->num_neurons);
-        this->biases = std::make_unique<Eigen::MatrixXd>(this->num_neurons, 1);
+        this->biases = std::make_unique<Eigen::VectorXd>(this->num_neurons);
+        this->name = name;
 
         *(this->weights) = Eigen::MatrixXd::Random(input_features, this->num_neurons);
+        *(this->biases) = Eigen::VectorXd::Constant(this->num_neurons, 1);
 
     }catch(std::bad_alloc err){
         std::cerr << "Not enough space in memory for the weight declaration!" << std::endl;
@@ -69,8 +71,16 @@ Eigen::MatrixXd DenseLayer2D::forward(Eigen::MatrixXd input) {
             throw msg;
         }
 
+        auto temp = input * *(this->weights);
 
-        return input * *(this->weights);
+        //TODO: Add the bias to the weight with input multiplication
+        /*
+        for(int i = 0; i < input.rows(); i++){
+            temp.row(i) = temp.row(i) + *(this->biases);
+        }*/
+
+
+        return temp;
 
     }catch (const std::string msg){
         std::cerr << msg <<std::endl;

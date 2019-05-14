@@ -48,7 +48,7 @@ class libdl::layers::Layer {
     protected:
         int num_neurons;
         std::unique_ptr<Tensor> weights = nullptr;
-        std::unique_ptr<Tensor> biases = nullptr;
+        std::unique_ptr<Eigen::VectorXd> biases = nullptr;
         std::string name;
 
 };
@@ -72,7 +72,7 @@ class libdl::layers::Layer {
 class libdl::layers::DenseLayer2D: protected libdl::layers::Layer<Eigen::MatrixXd>{
 public:
 
-    DenseLayer2D(int, int);
+    DenseLayer2D(int, int, std::string);
 
     Eigen::MatrixXd forward(Eigen::MatrixXd input);
     Eigen::MatrixXd backward(Eigen::MatrixXd gradient);
@@ -90,6 +90,10 @@ public:
 
     Eigen::MatrixXd get_weights(){
         return *(this->weights);
+    }
+
+    Eigen::MatrixXd get_biases(){
+        return *(this->biases);
     }
 
 

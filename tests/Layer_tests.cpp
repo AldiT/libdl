@@ -16,7 +16,7 @@ int main(int argc, char* argv[]){
 
     //int result = Catch::Session().run(argc, argv);
 
-    libdl::layers::DenseLayer2D dl2d(2, 3);
+    libdl::layers::DenseLayer2D dl2d(2, 3, "Test Layer");
 
     Eigen::MatrixXd input(4, 2);
     input(0, 0) = 0;
@@ -39,7 +39,12 @@ int main(int argc, char* argv[]){
 
     std::cout << dl2d.get_weights() << std::endl;
     std::cout << "=================" << std::endl;
+    std::cout << dl2d.get_biases() << std::endl;
+    std::cout << "=================" << std::endl;
+    std::cout << input << std::endl;
+    std::cout << "=================" << std::endl;
     std::cout << dl2d.forward(input) << std::endl;
+
 
 
     return 0;
