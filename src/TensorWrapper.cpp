@@ -41,4 +41,35 @@ TensorWrapper* TensorWrapper::operator()(int i) {
     return &temp;
 }
 
+//Implement indexing first
+
+//After indexing implement multiplication
+
+
+/*
+
+TensorWrapper TensorWrapper::operator*(libdl::TensorWrapper *tensor) {
+    TensorWrapper result(this->third_dimension);
+
+    for(int i = 0; i < this->third_dimension; i++){
+        result
+    }
+}
+
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #endif

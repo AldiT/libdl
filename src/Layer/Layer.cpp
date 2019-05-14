@@ -12,12 +12,12 @@
 /////                            <Layer>                                   /////
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
-
-libdl::layers::Layer::Layer() {
+template <typename Tensor>
+libdl::layers::Layer<Tensor>::Layer() {
 
 }
-
-libdl::layers::Layer::~Layer() {
+template <typename Tensor>
+libdl::layers::Layer<Tensor>::~Layer() {
 
 }
 
@@ -37,16 +37,16 @@ libdl::layers::Layer::~Layer() {
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
-libdl::layers::DenseLayer::DenseLayer(int num_neurons): libdl::layers::Layer::Layer(){
+libdl::layers::DenseLayer2D::DenseLayer2D(int num_neurons): libdl::layers::Layer<Eigen::MatrixXd>::Layer(){
     this->num_neurons = num_neurons;
     this->weights_to_neurons.resize(num_neurons, 1);
 }
 
-Eigen::MatrixXd libdl::layers::DenseLayer::forward(Eigen::MatrixXd input) {
+Eigen::MatrixXd libdl::layers::DenseLayer2D::forward(Eigen::MatrixXd input) {
     return Eigen::MatrixXd::Random(3, 3);
 }
 
-Eigen::MatrixXd libdl::layers::DenseLayer::backward(Eigen::MatrixXd gradient) {
+Eigen::MatrixXd libdl::layers::DenseLayer2D::backward(Eigen::MatrixXd gradient) {
     return Eigen::MatrixXd::Random(3, 3);
 }
 

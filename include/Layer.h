@@ -10,8 +10,9 @@
 #include <string>
 
 namespace libdl::layers {
+    template <typename Tensor>
     class Layer;
-    class DenseLayer;
+    class DenseLayer2D;
     class Perceptron;
     class Sigmoid;
 }
@@ -23,6 +24,7 @@ namespace libdl::layers {
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
+template <typename Tensor>
 class libdl::layers::Layer {
     public:
         Layer();
@@ -43,8 +45,8 @@ class libdl::layers::Layer {
 
     protected:
         int num_neurons;
-        Eigen::MatrixXd weights;
-        Eigen::MatrixXd biases;
+        Tensor weights;
+        Tensor biases;
         std::string name;
 
 };
@@ -65,9 +67,9 @@ class libdl::layers::Layer {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-class libdl::layers::DenseLayer: protected libdl::layers::Layer{
+class libdl::layers::DenseLayer2D: protected libdl::layers::Layer<Eigen::MatrixXd>{
 public:
-    DenseLayer(int num_neurons);
+    DenseLayer2D(int num_neurons);
 
     Eigen::MatrixXd forward(Eigen::MatrixXd input);
     Eigen::MatrixXd backward(Eigen::MatrixXd gradient);
@@ -103,7 +105,8 @@ protected:
 
 
 // TODO: Add the functionality of the forward pass
-class libdl::layers::Perceptron: libdl::layers::Layer{
+
+class libdl::layers::Perceptron: libdl::layers::Layer<Eigen::MatrixXd>{
 public:
 
     Eigen::MatrixXd forward(Eigen::MatrixXd input);
@@ -129,7 +132,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 // IDEA: Maybe create a new namespace : activations
-class libdl::layers::Sigmoid : libdl::layers::Layer{
+class libdl::layers::Sigmoid : libdl::layers::Layer<Eigen::MatrixXd>{
 public:
 
     Eigen::MatrixXd forward(Eigen::MatrixXd input);
