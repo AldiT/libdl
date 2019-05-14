@@ -12,8 +12,6 @@
 
 using namespace Eigen;
 
-namespace py = pybind11;
-
 int main(int argc, char* argv[]){
 
     //int result = Catch::Session().run(argc, argv);
