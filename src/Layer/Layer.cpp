@@ -71,13 +71,16 @@ Eigen::MatrixXd DenseLayer2D::forward(Eigen::MatrixXd input) {
             throw msg;
         }
 
-        auto temp = input * *(this->weights);
+        Eigen::MatrixXd temp;
+        temp = input * *(this->weights);
 
         //TODO: Add the bias to the weight with input multiplication
         /*
         for(int i = 0; i < input.rows(); i++){
             temp.row(i) = temp.row(i) + *(this->biases);
         }*/
+
+        temp.rowwise() += this->biases->transpose();
 
 
         return temp;

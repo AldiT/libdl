@@ -96,6 +96,10 @@ public:
         return *(this->biases);
     }
 
+    std::string get_name(){
+        return this->name;
+    }
+
 
 protected:
     Eigen::MatrixXd weights_to_neurons;
@@ -138,6 +142,8 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 
+
+//TODO: Add sigmoid on top of the two Dense Layers you just created.
 
 ////////////////////////////////////////////////////////////////////////////////
 /////                                                                      /////
