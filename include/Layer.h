@@ -158,6 +158,10 @@ public:
     Eigen::MatrixXd forward(Eigen::MatrixXd input);
     Eigen::MatrixXd backward(Eigen::MatrixXd gradients);
 
+    int printCrap(){
+        return 1;
+    }
+
 protected:
 
 private:

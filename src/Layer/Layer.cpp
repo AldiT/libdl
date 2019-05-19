@@ -7,6 +7,7 @@
 #include "Layer.h"
 #include "Eigen/Dense"
 #include "spdlog/spdlog.h"
+#include <cmath>
 
 using namespace libdl::layers;
 
@@ -73,12 +74,6 @@ Eigen::MatrixXd DenseLayer2D::forward(Eigen::MatrixXd input) {
 
         Eigen::MatrixXd temp;
         temp = input * *(this->weights);
-
-        //TODO: Add the bias to the weight with input multiplication
-        /*
-        for(int i = 0; i < input.rows(); i++){
-            temp.row(i) = temp.row(i) + *(this->biases);
-        }*/
 
         temp.rowwise() += this->biases->transpose();
 
@@ -150,7 +145,7 @@ Eigen::MatrixXd Perceptron::backward(Eigen::MatrixXd gradient){
 ////////////////////////////////////////////////////////////////////////////////
 
 Eigen::MatrixXd Sigmoid::forward(Eigen::MatrixXd input){
-    return Eigen::MatrixXd::Constant(3, 3, 1);
+    return input.unaryExpr([](double e){ return 1 / (1 + std::exp(e));});
 }
 
 Eigen::MatrixXd Sigmoid::backward(Eigen::MatrixXd gradients){
@@ -158,7 +153,7 @@ Eigen::MatrixXd Sigmoid::backward(Eigen::MatrixXd gradients){
 }
 
 double Sigmoid::sigmoid(double input){
-    return 2;
+    return 1 / (1 + std::exp(input));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
