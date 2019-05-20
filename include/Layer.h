@@ -83,7 +83,7 @@ public:
     }
 
     int rows(){
-        return this->weights_to_neurons.rows();
+        return this->weights->rows();
     }
 
     std::string info();
@@ -102,7 +102,7 @@ public:
 
 
 protected:
-    Eigen::MatrixXd weights_to_neurons;
+    std::unique_ptr<Eigen::MatrixXd> input;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

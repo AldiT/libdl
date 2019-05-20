@@ -42,37 +42,19 @@ int main(int argc, char* argv[]){
     labels(2) = 1;
     labels(3) = 0;
 
-
+    libdl::error::ErrorFunctions e(1, labels);
 
 
     auto out1 = dl2d.forward(input);
-
-
+    out1 = sig.forward(out1);
     auto out2 = dl2d_1.forward(out1);
-
-
     out2 = sig.forward(out2);
 
+    /*
+    for (int i = 0; i < 10; i++){
 
-    libdl::error::ErrorFunctions e(1, labels);
-
-    MatrixXd::Index maxIndex[4];
-    VectorXd maxVal(4);
-
-    for(int i = 0; i < 4; i++){
-        maxVal(i) = out2.row(i).maxCoeff(&maxIndex[i]);
-    }
-
-    std::cout << "Logits: " << std::endl;
-    std::cout << "=================" << std::endl;
-    std::cout << out2 << std::endl;
-    std::cout << "=================" << std::endl;
-    std::cout << "Error" << std::endl;
-    std::cout << "=================" << std::endl;
-    std::cout << e.get_error(labels, maxVal) << std::endl;
-
-
-
+        std::cout << "Error: " << e.get_error(labels, out2) << std::endl;
+    }*/
 
     return 0;
 }

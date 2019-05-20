@@ -65,6 +65,8 @@ Eigen::MatrixXd DenseLayer2D::forward(Eigen::MatrixXd input) {
 
     try{
 
+        this->input = std::make_unique<Eigen::MatrixXd>(input);
+
         if(this->weights->rows() != input.cols()) {
             std::string msg;
             msg = "Not compatible shapes: " + std::to_string(this->weights->rows()) + " != " +
@@ -90,7 +92,11 @@ Eigen::MatrixXd DenseLayer2D::forward(Eigen::MatrixXd input) {
 }
 
 Eigen::MatrixXd DenseLayer2D::backward(Eigen::MatrixXd gradient) {
-    return Eigen::MatrixXd::Random(3, 3);
+    //this is a layer with weights so we also need to update the weights after we calculate the gradient
+
+    auto grad = *(this->input);
+
+    return this->input->transpose() * gradient;
 }
 
 
