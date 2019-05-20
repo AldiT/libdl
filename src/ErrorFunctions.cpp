@@ -14,7 +14,7 @@ libdl::error::ErrorFunctions::ErrorFunctions(int num_classes, Eigen::VectorXd ta
 }
 
 
-double libdl::error::ErrorFunctions::get_error(Eigen::VectorXd targets, Eigen::VectorXd logits) {
+double libdl::error::ErrorFunctions::get_error(Eigen::VectorXd targets, Eigen::MatrixXd logits) {
 
     Eigen::VectorXd maxVal(4);
     Eigen::MatrixXd::Index maxIndex[4];
@@ -25,20 +25,18 @@ double libdl::error::ErrorFunctions::get_error(Eigen::VectorXd targets, Eigen::V
         std::exit(-1);
     }
 
-    this->logits = std::make_unique<Eigen::VectorXd>(logits);
+
 
 
     for (int j = 0; j < 4; j++){
         maxVal(j) = logits.row(j).maxCoeff(&maxIndex[j]);
     }
 
-
+    this->logits = std::make_unique<Eigen::MatrixXd>(logits);
 
     return (*(this->targets) - maxVal).unaryExpr([](double e){ return std::pow(e, 2);}).sum();
 }
 
-Eigen::VectorXd libdl::error::ErrorFunctions::get_gradient(){
-    auto grad = *(this->targets) - *(this->logits);
-
-    return grad;
+Eigen::VectorXd libdl::error::ErrorFunctions::get_gradient() {
+    return -(*(this->targets) - *(this->logits))/4;
 }

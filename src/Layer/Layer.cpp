@@ -50,7 +50,7 @@ DenseLayer2D::DenseLayer2D(int input_features, int num_neurons, std::string name
         this->biases = std::make_unique<Eigen::VectorXd>(this->num_neurons);
         this->name = name;
 
-        *(this->weights) = Eigen::MatrixXd::Random(input_features, this->num_neurons);
+        *(this->weights) = Eigen::MatrixXd::Random(input_features, this->num_neurons)/2;
         *(this->biases) = Eigen::VectorXd::Constant(this->num_neurons, 1);
 
     }catch(std::bad_alloc err){
@@ -91,12 +91,20 @@ Eigen::MatrixXd DenseLayer2D::forward(Eigen::MatrixXd input) {
     }
 }
 
-Eigen::MatrixXd DenseLayer2D::backward(Eigen::MatrixXd gradient) {
+Eigen::MatrixXd DenseLayer2D::backward(Eigen::MatrixXd gradient, double lr) {
     //this is a layer with weights so we also need to update the weights after we calculate the gradient
+    /*std::cout << std::endl;
+    std::cout << "Shape of transposed input: " << this->input->transpose().rows() << "x" << this->input->transpose().cols();
+    std::cout << std::endl;
+    std::cout << "Shape of gradient: " << gradient.rows() << "x" << gradient.cols();
+    std::cout << std::endl;
+    std::cout << "Shape of weights: " << this->weights->rows() << "x" << this->weights->cols();
+    std::cout << std::endl;*/
 
-    auto grad = *(this->input);
+    *(this->weights) -= lr * (this->input->transpose() * gradient);
 
-    return this->input->transpose() * gradient;
+
+    return gradient * this->weights->transpose();
 }
 
 
@@ -117,45 +125,21 @@ std::string DenseLayer2D::info(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /////                                                                      /////
-/////                            <Perceptron>                              /////
-/////                                                                      /////
-////////////////////////////////////////////////////////////////////////////////
-
-
-//TODO: Add the functionality for Perceptron layer
-//      namely, define only the forward pass for now!
-Eigen::MatrixXd Perceptron::forward(Eigen::MatrixXd input){
-    //Eigen::MatrixXd temp = this->weights.dot(input);
-    //temp = temp + this->biases;
-    return Eigen::MatrixXd::Constant(3, 3, 1);
-}
-
-Eigen::MatrixXd Perceptron::backward(Eigen::MatrixXd gradient){
-    //TODO: Implement the backward pass for this function
-    return Eigen::MatrixXd::Constant(3, 3, 1.2);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/////                                                                      /////
-/////                            </Perceptron>                             /////
-/////                                                                      /////
-////////////////////////////////////////////////////////////////////////////////
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/////                                                                      /////
 /////                            <Sigmoid>                                 /////
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
 Eigen::MatrixXd Sigmoid::forward(Eigen::MatrixXd input){
+    this->input = std::make_unique<Eigen::MatrixXd>(input);
+
     return input.unaryExpr([](double e){ return 1 / (1 + std::exp(e));});
 }
 
-Eigen::MatrixXd Sigmoid::backward(Eigen::MatrixXd gradients){
-    return Eigen::MatrixXd::Constant(3, 3, 1);
+Eigen::MatrixXd Sigmoid::backward(Eigen::MatrixXd gradients, double lr){
+
+
+    return this->forward(*(this->input)) *
+    this->forward(*(this->input)).unaryExpr([](double e){return 1 - e;}).transpose() * gradients;
 }
 
 double Sigmoid::sigmoid(double input){

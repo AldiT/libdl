@@ -18,8 +18,9 @@ int main(int argc, char* argv[]){
     //int result = Catch::Session().run(argc, argv);
 
     libdl::layers::DenseLayer2D dl2d(2, 3, "Test Layer");
-    libdl::layers::DenseLayer2D dl2d_1(3, 3, "Test Layer 2");
-    libdl::layers::Sigmoid sig;
+    libdl::layers::DenseLayer2D dl2d_1(3, 1, "Test Layer 2");
+    libdl::layers::Sigmoid sig1;
+    libdl::layers::Sigmoid sig2;
 
 
 
@@ -45,16 +46,42 @@ int main(int argc, char* argv[]){
     libdl::error::ErrorFunctions e(1, labels);
 
 
-    auto out1 = dl2d.forward(input);
-    out1 = sig.forward(out1);
-    auto out2 = dl2d_1.forward(out1);
-    out2 = sig.forward(out2);
+    Eigen::MatrixXd out1;
+    Eigen::MatrixXd out2;
+    Eigen::MatrixXd grads;
 
-    /*
-    for (int i = 0; i < 10; i++){
+    double alpha = 0.05;
 
-        std::cout << "Error: " << e.get_error(labels, out2) << std::endl;
-    }*/
+    for (int i = 0; i < 20; i++){
+        out1 = dl2d.forward(input);
+        out1 = sig1.forward(out1);
+        out2 = dl2d_1.forward(out1);
+        out2 = sig2.forward(out2);
+
+        std::cout << "Error: " << e.get_error(labels, out2);
+
+        grads = e.get_gradient();
+
+        grads = sig2.backward(grads, alpha);
+
+        grads = dl2d_1.backward(grads, alpha);
+        grads = sig1.backward(grads, alpha);
+        grads = dl2d.backward(grads, alpha);
+
+    }
+
+    std::cout << "Testing" << std::endl;
+
+    Eigen::VectorXd res(4);
+    Eigen::MatrixXd o1;
+    Eigen::MatrixXd o2;
+
+    o1 = dl2d.forward(input);
+    o1 = sig1.forward(o1);
+    o2 = dl2d_1.forward(o1);
+    o2 = sig2.forward(o2);
+
+    std::cout << "Output: " << o2 << std::endl;
 
     return 0;
 }

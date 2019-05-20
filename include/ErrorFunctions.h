@@ -17,14 +17,14 @@ public:
     ErrorFunctions(int num_classes, Eigen::VectorXd targets);
 
     //TODO: Generalize type Eigen::MatrixXd to TensorWrapper
-    double get_error(Eigen::VectorXd targets, Eigen::VectorXd logits);
+    double get_error(Eigen::VectorXd targets, Eigen::MatrixXd logits);
     Eigen::VectorXd get_gradient();
 protected:
 
 private:
     int num_classes;
     std::unique_ptr<Eigen::VectorXd> targets;
-    std::unique_ptr<Eigen::VectorXd> logits;
+    std::unique_ptr<Eigen::MatrixXd> logits;
 };
 
 

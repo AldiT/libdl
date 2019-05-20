@@ -36,7 +36,7 @@ class libdl::layers::Layer {
         virtual Eigen::MatrixXd forward(Eigen::MatrixXd input) = 0;
 
         //backward pass function
-        virtual Eigen::MatrixXd backward(Eigen::MatrixXd gradient) = 0;
+        virtual Eigen::MatrixXd backward(Eigen::MatrixXd gradient, double lr) = 0;
 
         virtual int printCrap() = 0;
 
@@ -49,6 +49,7 @@ class libdl::layers::Layer {
         int num_neurons;
         std::unique_ptr<Tensor> weights = nullptr;
         std::unique_ptr<Eigen::VectorXd> biases = nullptr;
+        std::unique_ptr<Eigen::MatrixXd> input = nullptr;
         std::string name;
 
 };
@@ -75,7 +76,7 @@ public:
     DenseLayer2D(int, int, std::string);
 
     Eigen::MatrixXd forward(Eigen::MatrixXd input);
-    Eigen::MatrixXd backward(Eigen::MatrixXd gradient);
+    Eigen::MatrixXd backward(Eigen::MatrixXd gradient, double lr);
 
     int printCrap(){
         std::cout << "This should get printed from the test cases!" << std::endl;
@@ -102,7 +103,6 @@ public:
 
 
 protected:
-    std::unique_ptr<Eigen::MatrixXd> input;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,7 +156,7 @@ class libdl::layers::Sigmoid : libdl::layers::Layer<Eigen::MatrixXd>{
 public:
 
     Eigen::MatrixXd forward(Eigen::MatrixXd input);
-    Eigen::MatrixXd backward(Eigen::MatrixXd gradients);
+    Eigen::MatrixXd backward(Eigen::MatrixXd gradients, double lr);
 
     int printCrap(){
         return 1;
