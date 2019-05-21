@@ -10,8 +10,6 @@ build-linux-gcc:
     - cd build
     - cmake ..
     - make
-    - ls
-    - ./libdl
   tags:
     - linux
   cache:
@@ -26,8 +24,6 @@ build-linux-clang:
     - cd build
     - cmake .. -DCMAKE_CXX_COMPILER=/usr/bin/clang++
     - make
-    - ls
-    - ./libdl
   tags:
     - linux
   cache:
