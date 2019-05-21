@@ -61,7 +61,7 @@ int main(int argc, char* argv[]){
               << dl2d_1.info() << std::endl;
 
     std::cout << "Error: ";
-    for (int i = 0; i < 3000; i++){
+    for (int i = 0; i < 4000; i++){
         out1 = dl2d.forward(input);
         out1 = sig1.forward(out1);
 
