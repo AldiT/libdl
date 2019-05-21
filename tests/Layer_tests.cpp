@@ -108,12 +108,6 @@ int main(int argc, char* argv[]){
 
 
     std::cout << "\nOutput: \n" << o3 << std::endl;
-    /*
-    if(o3(0, 0) >= 0.5){
-
-    } else{
-        std::cout << "\nOutput: " << 0 << std::endl;
-    }*/
 
     return 0;
 }
