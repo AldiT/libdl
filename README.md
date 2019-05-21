@@ -12,12 +12,11 @@
 * ```make```
 * And execute ```./libdl```
 
+
+
 ### The whole program is set up on the Layer_tests.cpp file under tests folder (this is where **main** function is)
  The points which are being predicted are also specified in the main function, if you feel that you need to test new points
- just add some rows to the end of the input variable of type Eigen::MatrixXd, if you add them here make sure to also add
- the respective labels to the labels variable of type Eigen::VectorXd.
+ at the bottom of the main function there is the test phase in **line 96-122**. The input is also specified in these lines
+ so to test new points just change them as you like.
 
- ## Or
-
- You can create a new Eigen::MatrixXd variable at the end of the main function (where it is tested, right before the
-  cout << "Output") and feed it to the test run **lines 98-103** file : tests/Layers_tests.cpp
+ ## Find main function on: tests/Layer_tests.cpp

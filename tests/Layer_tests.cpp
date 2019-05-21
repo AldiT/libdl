@@ -91,11 +91,27 @@ int main(int argc, char* argv[]){
 
     }
 
+    //Here I test new input points
+
+    Eigen::MatrixXd test_in(4, 2);
+
+    test_in(0, 0) = 1; // 1
+    test_in(0, 1) = 0;
+
+    test_in(1, 0) = 1; // 1
+    test_in(1, 1) = 0;
+
+    test_in(2, 0) = 1;
+    test_in(2, 1) = 1; // 0
+
+    test_in(3, 0) = 1;
+    test_in(3, 1) = 0; // 1
+
     Eigen::MatrixXd o1;
     Eigen::MatrixXd o2;
     Eigen::MatrixXd o3;
 
-    o1 = dl2d.forward(input);
+    o1 = dl2d.forward(test_in);
     o1 = sig1.forward(o1);
     o2 = middle.forward(o1);
     o2 = sig2.forward(o2);
