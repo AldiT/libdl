@@ -13,3 +13,10 @@
 * And execute ```./libdl```
 
 ### The whole program is set up on the Layer_tests.cpp file under tests folder (this is where **main** function is)
+ The points which are being predicted are also specified in the main function, if you feel that you need to test new points
+ just add some rows to the end of the input variable of type Eigen::MatrixXd.
+
+ ## Or
+
+ You can create a new Eigen::MatrixXd variable at the end of the main function (where it is tested, right before the
+  cout << "Output") and feed it to the test run **lines 98-103**
