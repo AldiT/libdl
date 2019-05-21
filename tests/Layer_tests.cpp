@@ -105,7 +105,7 @@ int main(int argc, char* argv[]){
     test_in(2, 1) = 1; // 0
 
     test_in(3, 0) = 1;
-    test_in(3, 1) = 0; // 1
+    test_in(3, 1) = 1; // 0
 
     Eigen::MatrixXd o1;
     Eigen::MatrixXd o2;
