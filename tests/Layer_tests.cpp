@@ -27,7 +27,7 @@ int main(int argc, char* argv[]){
 
 
 
-    MatrixXd input(4, 2);
+    MatrixXd input(5, 2);
     input(0, 0) = 0;
     input(0, 1) = 1;
 
@@ -40,11 +40,15 @@ int main(int argc, char* argv[]){
     input(3, 0) = 0;
     input(3, 1) = 0;
 
-    VectorXd labels(4);
+    input(4, 0) = 0;
+    input(4, 1) = 0;
+
+    VectorXd labels(5);
     labels(0) = 1;
     labels(1) = 0;
     labels(2) = 1;
     labels(3) = 0;
+    labels(4) = 0;
 
     libdl::error::ErrorFunctions e(1, labels);
 
@@ -55,11 +59,9 @@ int main(int argc, char* argv[]){
     Eigen::MatrixXd grads;
 
     double alpha = 0.5;
-    int j = 0;
 
     std::cout << "Error: ";
-    for (int i = 0; i < 10000; i++){
-        j++;
+    for (int i = 0; i < 4000; i++){
         out1 = dl2d.forward(input);
         out1 = sig1.forward(out1);
 
@@ -88,7 +90,6 @@ int main(int argc, char* argv[]){
         grads = dl2d.backward(grads, alpha);
 
     }
-    std::cout << "\nCicled " << j << " times.\n" << std::endl;
 
     Eigen::MatrixXd o1;
     Eigen::MatrixXd o2;
