@@ -32,18 +32,18 @@ int main(int argc, char* argv[]){
     input(0, 1) = 1;
 
     input(1, 0) = 1;
-    input(1, 1) = 0;
+    input(1, 1) = 1;
 
     input(2, 0) = 1;
-    input(2, 1) = 1;
+    input(2, 1) = 0;
 
     input(3, 0) = 0;
     input(3, 1) = 0;
 
     VectorXd labels(4);
     labels(0) = 1;
-    labels(1) = 1;
-    labels(2) = 0;
+    labels(1) = 0;
+    labels(2) = 1;
     labels(3) = 0;
 
     libdl::error::ErrorFunctions e(1, labels);
@@ -55,10 +55,6 @@ int main(int argc, char* argv[]){
     Eigen::MatrixXd grads;
 
     double alpha = 0.5;
-
-    std::cout << dl2d.info() << " "
-              << middle.info() << " "
-              << dl2d_1.info() << std::endl;
 
     std::cout << "Error: ";
     for (int i = 0; i < 4000; i++){
@@ -74,7 +70,7 @@ int main(int argc, char* argv[]){
 
         auto err = e.get_error(labels, out3);
 
-        if(i % 100 == 0){
+        if(i % 1000 == 0){
             std::cout << err << " ";
         }
 
@@ -91,10 +87,6 @@ int main(int argc, char* argv[]){
 
     }
 
-    Eigen::MatrixXd in(1, 2);
-
-    in(0, 0) = 1; in(0, 1) = 0;
-
     Eigen::MatrixXd o1;
     Eigen::MatrixXd o2;
     Eigen::MatrixXd o3;
@@ -108,6 +100,8 @@ int main(int argc, char* argv[]){
 
 
     std::cout << "\nOutput: \n" << o3 << std::endl;
+
+    //You can also test it by instead providing a matrix with a different input 
 
     return 0;
 }
