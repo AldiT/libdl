@@ -35,13 +35,13 @@ endfunction()
 
 find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
+include_directories("${PROJECT_SOURCE_DIR}/extern/eigen3")
 
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+#find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 include_directories(${EIGEN3_INCLUDE_DIRS})
 
 add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h tests/Layer_tests.cpp src/TensorWrapper.cpp include/TensorWrapper.h src/ErrorFunctions.cpp include/ErrorFunctions.h)
 target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
 
 target_link_libraries(libdl ${PYTHON_LIBRARIES})
-target_link_libraries(libdl Eigen3::Eigen)
 
