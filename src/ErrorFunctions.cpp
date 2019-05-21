@@ -16,9 +16,6 @@ libdl::error::ErrorFunctions::ErrorFunctions(int num_classes, Eigen::VectorXd ta
 
 double libdl::error::ErrorFunctions::get_error(Eigen::VectorXd targets, Eigen::MatrixXd logits) {
 
-    Eigen::VectorXd maxVal(4);
-    Eigen::MatrixXd::Index maxIndex[4];
-
     if (logits.rows() != this->targets->rows()){
         std::cerr << "Targets number not the same as logits. " << logits.rows() << " !=  " << this->targets->rows()
         << std::endl;
@@ -26,17 +23,11 @@ double libdl::error::ErrorFunctions::get_error(Eigen::VectorXd targets, Eigen::M
     }
 
 
+    this->logits = std::make_unique<Eigen::VectorXd>(logits);
 
-
-    for (int j = 0; j < 4; j++){
-        maxVal(j) = logits.row(j).maxCoeff(&maxIndex[j]);
-    }
-
-    this->logits = std::make_unique<Eigen::MatrixXd>(logits);
-
-    return (*(this->targets) - maxVal).unaryExpr([](double e){ return std::pow(e, 2);}).sum();
+    return (*(this->targets) - *(this->logits)).unaryExpr([](double e){ return std::pow(e, 2);}).sum()/2;
 }
 
 Eigen::VectorXd libdl::error::ErrorFunctions::get_gradient() {
-    return -(*(this->targets) - *(this->logits))/4;
+    return (*(this->logits) - *(this->targets));
 }

@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <string>
 
 #include "Layer.h"
 #include "Eigen/Dense"
@@ -50,7 +51,7 @@ DenseLayer2D::DenseLayer2D(int input_features, int num_neurons, std::string name
         this->biases = std::make_unique<Eigen::VectorXd>(this->num_neurons);
         this->name = name;
 
-        *(this->weights) = Eigen::MatrixXd::Random(input_features, this->num_neurons)/2;
+        *(this->weights) = Eigen::MatrixXd::Random(input_features, this->num_neurons);
         *(this->biases) = Eigen::VectorXd::Constant(this->num_neurons, 1);
 
     }catch(std::bad_alloc err){
@@ -92,17 +93,9 @@ Eigen::MatrixXd DenseLayer2D::forward(Eigen::MatrixXd input) {
 }
 
 Eigen::MatrixXd DenseLayer2D::backward(Eigen::MatrixXd gradient, double lr) {
-    //this is a layer with weights so we also need to update the weights after we calculate the gradient
-    /*std::cout << std::endl;
-    std::cout << "Shape of transposed input: " << this->input->transpose().rows() << "x" << this->input->transpose().cols();
-    std::cout << std::endl;
-    std::cout << "Shape of gradient: " << gradient.rows() << "x" << gradient.cols();
-    std::cout << std::endl;
-    std::cout << "Shape of weights: " << this->weights->rows() << "x" << this->weights->cols();
-    std::cout << std::endl;*/
-
-    *(this->weights) -= lr * (this->input->transpose() * gradient);
-
+    //update weights
+    *(this->weights) -= lr * (this->input->transpose() * gradient); // replace 4 by N
+    *(this->biases) -= lr * gradient.colwise().sum().transpose();
 
     return gradient * this->weights->transpose();
 }
@@ -111,7 +104,8 @@ Eigen::MatrixXd DenseLayer2D::backward(Eigen::MatrixXd gradient, double lr) {
 std::string DenseLayer2D::info(){
     std::string str;
 
-    str = "Some dummy string";
+    str = "Shape: " + std::to_string(this->weights->rows()) + "x" + std::to_string(this->weights->cols()) + "\n";
+
     return str;
 }
 
@@ -132,18 +126,19 @@ std::string DenseLayer2D::info(){
 Eigen::MatrixXd Sigmoid::forward(Eigen::MatrixXd input){
     this->input = std::make_unique<Eigen::MatrixXd>(input);
 
-    return input.unaryExpr([](double e){ return 1 / (1 + std::exp(e));});
+    return input.unaryExpr([this](double e){ return this->sigmoid(e);});
 }
 
-Eigen::MatrixXd Sigmoid::backward(Eigen::MatrixXd gradients, double lr){
+Eigen::MatrixXd Sigmoid::backward(Eigen::MatrixXd gradient, double lr){
+    //std::cout << "\nShape of temp:\n" << temp.rows() << "x" << temp.cols() << std::endl;
+    //std::cout << "\nShape of gradient: \n" << gradient.rows() << "x" << gradient.cols() << std::endl;
 
-
-    return this->forward(*(this->input)) *
-    this->forward(*(this->input)).unaryExpr([](double e){return 1 - e;}).transpose() * gradients;
+    return this->input->unaryExpr([this](double e)
+    {return this->sigmoid(e) * (1 - this->sigmoid(e));}).array() * gradient.array();
 }
 
 double Sigmoid::sigmoid(double input){
-    return 1 / (1 + std::exp(input));
+    return 1 / (1 + std::exp(-input));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

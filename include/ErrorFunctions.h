@@ -24,7 +24,7 @@ protected:
 private:
     int num_classes;
     std::unique_ptr<Eigen::VectorXd> targets;
-    std::unique_ptr<Eigen::MatrixXd> logits;
+    std::unique_ptr<Eigen::VectorXd> logits;
 };
 
 
