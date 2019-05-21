@@ -19,4 +19,4 @@
  ## Or
 
  You can create a new Eigen::MatrixXd variable at the end of the main function (where it is tested, right before the
-  cout << "Output") and feed it to the test run **lines 98-103**
+  cout << "Output") and feed it to the test run **lines 98-103** file : tests/Layers_tests.cpp
