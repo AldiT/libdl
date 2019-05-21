@@ -57,7 +57,7 @@ int main(int argc, char* argv[]){
     double alpha = 0.5;
 
     std::cout << "Error: ";
-    for (int i = 0; i < 4000; i++){
+    for (int i = 0; i < 10000; i++){
         out1 = dl2d.forward(input);
         out1 = sig1.forward(out1);
 
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]){
 
     std::cout << "\nOutput: \n" << o3 << std::endl;
 
-    //You can also test it by instead providing a matrix with a different input 
+    //You can also test it by instead providing a matrix with a different input
 
     return 0;
 }
