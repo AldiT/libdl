@@ -93,7 +93,7 @@ int main(int argc, char* argv[]){
 
     //Here I test new input points
 
-    Eigen::MatrixXd test_in(4, 2);
+    Eigen::MatrixXd test_in(5, 2);
 
     test_in(0, 0) = 1; // 1
     test_in(0, 1) = 0;
@@ -106,6 +106,9 @@ int main(int argc, char* argv[]){
 
     test_in(3, 0) = 1;
     test_in(3, 1) = 1; // 0
+
+    test_in(4, 0) = 0;
+    test_in(4, 1) = 1;
 
     Eigen::MatrixXd o1;
     Eigen::MatrixXd o2;
