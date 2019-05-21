@@ -14,7 +14,8 @@
 
 ### The whole program is set up on the Layer_tests.cpp file under tests folder (this is where **main** function is)
  The points which are being predicted are also specified in the main function, if you feel that you need to test new points
- just add some rows to the end of the input variable of type Eigen::MatrixXd.
+ just add some rows to the end of the input variable of type Eigen::MatrixXd, if you add them here make sure to also add
+ the respective labels to the labels variable of type Eigen::VectorXd.
 
  ## Or
 
