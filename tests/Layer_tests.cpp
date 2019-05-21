@@ -55,9 +55,11 @@ int main(int argc, char* argv[]){
     Eigen::MatrixXd grads;
 
     double alpha = 0.5;
+    int j = 0;
 
     std::cout << "Error: ";
     for (int i = 0; i < 10000; i++){
+        j++;
         out1 = dl2d.forward(input);
         out1 = sig1.forward(out1);
 
@@ -86,6 +88,7 @@ int main(int argc, char* argv[]){
         grads = dl2d.backward(grads, alpha);
 
     }
+    std::cout << "\nCicled " << j << " times.\n" << std::endl;
 
     Eigen::MatrixXd o1;
     Eigen::MatrixXd o2;
