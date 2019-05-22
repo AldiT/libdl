@@ -28,9 +28,9 @@ namespace libdl::layers {
 template <typename Tensor>
 class libdl::layers::Layer {
     public:
-        Layer();
+        Layer() {};
         Layer(int){};
-        ~Layer();
+        ~Layer() {};
 
         //forward pass function
         virtual Eigen::MatrixXd forward(Eigen::MatrixXd input) = 0;

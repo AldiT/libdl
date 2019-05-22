@@ -17,14 +17,14 @@ using namespace libdl::layers;
 /////                            <Layer>                                   /////
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
-template <typename Tensor>
-Layer<Tensor>::Layer() {
-
-}
-template <typename Tensor>
-Layer<Tensor>::~Layer() {
-
-}
+//template <typename Tensor>
+//Layer<Tensor>::Layer() {
+//
+//}
+//template <typename Tensor>
+//Layer<Tensor>::~Layer() {
+//
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 /////                                                                      /////
