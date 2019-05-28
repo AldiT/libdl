@@ -38,7 +38,7 @@ TensorWrapper::~TensorWrapper() {
 
 TensorWrapper* TensorWrapper::operator()(int i) {
     TensorWrapper temp(this->tensor[i]);
-    return &temp;
+    return nullptr;
 }
 
 //Implement indexing first

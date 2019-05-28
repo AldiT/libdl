@@ -91,29 +91,6 @@ int main(int argc, char* argv[]){
 
     }
 
-    Eigen::MatrixXd in(1, 2);
-
-    in(0, 0) = 1; in(0, 1) = 0;
-
-    Eigen::MatrixXd o1;
-    Eigen::MatrixXd o2;
-    Eigen::MatrixXd o3;
-
-    o1 = dl2d.forward(input);
-    o1 = sig1.forward(o1);
-    o2 = middle.forward(o1);
-    o2 = sig2.forward(o2);
-    o3 = dl2d_1.forward(o2);
-    o3 = sig3.forward(o3);
-
-
-    std::cout << "\nOutput: \n" << o3 << std::endl;
-    /*
-    if(o3(0, 0) >= 0.5){
-
-    } else{
-        std::cout << "\nOutput: " << 0 << std::endl;
-    }*/
-
+    std::cout << "\nOutput: \n" << out3 << std::endl;
     return 0;
 }
