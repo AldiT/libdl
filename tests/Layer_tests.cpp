@@ -61,7 +61,7 @@ int main(int argc, char* argv[]){
     double alpha = 0.5;
 
     std::cout << "Error: ";
-    for (int i = 0; i < 10000; i++){
+    for (int i = 0; i < 4000; i++){
         out1 = dl2d.forward(input);
         out1 = sig1.forward(out1);
         //std::cout << "Out layer 1: \n" << out1 << std::endl;
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]){
 
         auto err = e.get_error(labels, out3);
 
-        if(i % 1000 == 0){
+        if(i % 10000 == 0){
             std::cout << err << " ";
         }
 
