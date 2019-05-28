@@ -51,7 +51,9 @@ DenseLayer2D::DenseLayer2D(int input_features, int num_neurons, std::string name
         this->biases = std::make_unique<Eigen::VectorXd>(this->num_neurons);
         this->name = name;
 
-        *(this->weights) = Eigen::MatrixXd::Random(input_features, this->num_neurons);
+        auto temp = Eigen::MatrixXd::Constant(input_features, this->num_neurons, 1);
+
+        *(this->weights) = temp;
         *(this->biases) = Eigen::VectorXd::Constant(this->num_neurons, 1);
 
     }catch(std::bad_alloc err){

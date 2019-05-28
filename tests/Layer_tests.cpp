@@ -61,16 +61,19 @@ int main(int argc, char* argv[]){
     double alpha = 0.5;
 
     std::cout << "Error: ";
-    for (int i = 0; i < 4000; i++){
+    for (int i = 0; i < 10; i++){
         out1 = dl2d.forward(input);
         out1 = sig1.forward(out1);
+        std::cout << "Out layer 1: \n" << out1 << std::endl;
 
 
         out2 = middle.forward(out1);
         out2 = sig2.forward(out2);
+        std::cout << "Out layer 2: \n" << out2 << std::endl;
 
         out3 = dl2d_1.forward(out2);
         out3 = sig3.forward(out3);
+        std::cout << "Out layer 3: \n" << out3 << std::endl;
 
         auto err = e.get_error(labels, out3);
 
