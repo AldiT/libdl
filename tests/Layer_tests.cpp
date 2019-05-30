@@ -10,8 +10,22 @@
 #include "TensorWrapper_tests.cpp"
 #include "Layer.h"
 #include "ErrorFunctions.h"
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
 
 using namespace Eigen;
+
+
+int add(int x, int y){
+    return x+y;
+}
+
+PYBIND11_MODULE(example, m){
+    m.doc() = R"pbdoc(pybind11 example plugin)pbdoc"; // optional module docstring
+
+    m.def("add", &add, R"pbdoc(A function which adds two numbers)pbdoc");
+}
 
 int main(int argc, char* argv[]){
 

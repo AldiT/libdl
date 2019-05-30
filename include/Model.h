@@ -6,23 +6,86 @@
 #define LIBDL_MODEL_H
 
 #include <iostream>
+#include <string>
+#include "Layer.h"
+#include "TensorWrapper.h"
+
+#include <memory>
 #include <list>
 
-namespace libdl{
+namespace libdl::model{
+    template <typename TensorType>
     class Model;
+    class History;
+    struct Milestone;
+    class Optimizer;
 }
+
+typedef libdl::model::Milestone milestone;
+
+
+
+
+struct libdl::model::Milestone{
+    std::string name;
+    std::string summary;
+    std::string value;
+};
+
+class libdl::model::History{
+public:
+    History(){};
+
+    void printCrap(){std::cout << "Crap" << std::endl;};
+
+protected:
+
+private:
+    std::string msg;
+    std::list<milestone> history;
+};
+
+
 
 ///
 //// This class should build a model based on layers provided by the Layer header file
 //// Functionality should include things like training, testing, summary etc.
 ///
-class Model {
+template <typename TensorType>
+class libdl::model::Model {
 public:
+    Model() {};
 
-private:
+
+    void add(libdl::layers::Layer<TensorType> layer);
+
+
+    libdl::model::History train(int epochs, double lr, double lr_decay, int batch_size,
+            libdl::model::Optimizer optimizer);
+
+    libdl::model::History test();
+
 
 protected:
 
+
+private:
+    bool train_mode; //train or test mode
+    int training_epochs;
+    double learning_rate;
+    double learning_rate_decay;
+    int batch_size;
+    std::list<libdl::layers::Layer<TensorType>> model;
+    libdl::model::History* history;
+};
+
+
+class libdl::model::Optimizer{
+public:
+
+protected:
+
+private:
 };
 
 
