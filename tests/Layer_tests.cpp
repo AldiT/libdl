@@ -2,10 +2,10 @@
 // Created by Aldi Topalli on 2019-05-08.
 //
 
-//#define CATCH_CONFIG_RUNNER
+#define CATCH_CONFIG_RUNNER
 
 #include <iostream>
-//#include "catch.hpp"
+#include "catch.hpp"
 #include "Eigen/Dense"
 #include "TensorWrapper_tests.cpp"
 #include "Layer.h"
@@ -119,5 +119,19 @@ int main(int argc, char* argv[]){
     }
 
     std::cout << "\nOutput: \n" << out3 << std::endl;
+
+    std::cout << "\nTesting conv layer here and below:" << std::endl;
+    libdl::layers::Convolution2D conv;
+
+    Eigen::MatrixXd temp(28, 28);
+    temp = Eigen::MatrixXd::Constant(28, 28, 1);
+
+
+
+    std::cout << "Test in created \n" << temp.rows() << std::endl;
+
+
+    std::cout << "\nCorrelated matrix: \n" << conv.forward(temp) << std::endl;
+
     return 0;
 }

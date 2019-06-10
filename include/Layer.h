@@ -16,7 +16,7 @@ namespace libdl::layers {
     class DenseLayer2D;
     class Perceptron;
     class Sigmoid;
-    template <typename Tensor>
+    //template <typename Tensor>
     class Convolution2D;
 }
 
@@ -153,30 +153,36 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 
-
+//Still Experimental
 ////////////////////////////////////////////////////////////////////////////////
 /////                                                                      /////
 /////                            <Convolution2D>                           /////
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename Tensor>
-class libdl::layers::Convolution2D : libdl::layers::Layer<Tensor>{
+//template <typename Tensor>
+class libdl::layers::Convolution2D : libdl::layers::Layer<Eigen::MatrixXd>{
 public:
     //constructor
-    Convolution2D(int kernel_size_, int stride_, int padding_, int num_filters_):
+    Convolution2D(int kernel_size_=3, int stride_=1, int padding_=1, int num_filters_=16):
             num_filters(num_filters_), kernel_size(kernel_size_), stride(stride_), padding(padding_){
 
-        this->filters = this->weights;
+
+        this->weights = std::make_unique<Eigen::MatrixXd>(this->kernel_size, this->kernel_size);
+        *(this->weights) = Eigen::MatrixXd::Constant(this->kernel_size, this->kernel_size, 1);
+
+        this->biases = std::make_unique<Eigen::VectorXd>(this->num_filters);
+        //this->filters = this->weights;
 
     }
 
-    Convolution2D(Tensor filter);
+    Convolution2D(Eigen::MatrixXd filter);
 
 
 
-    Tensor forward(Tensor input);
-    Tensor backward(Tensor gradients, double lr);
+    Eigen::MatrixXd forward(Eigen::MatrixXd input);
+    Eigen::MatrixXd backward(Eigen::MatrixXd gradients, double lr);
+    Eigen::MatrixXd add_padding();
 
 protected:
     //protected because later I might want to implement some fancy convolution layer to perform segmantation or whatever
@@ -184,15 +190,15 @@ protected:
 
     //Correlation should be the same as convolution in the case of NN so that is what I implement here
     // for simplicity
-    Tensor correlation(Tensor input);
+    Eigen::MatrixXd correlation(Eigen::MatrixXd input);
 
 
-    Tensor rotate180(Tensor filter);
+    Eigen::MatrixXd rotate180(Eigen::MatrixXd filter);
 
-    Tensor add_padding();
+
 
 private:
-    std::shared_ptr<Tensor> filters; //Shared because it will point to the same address as weights from Layer
+    std::unique_ptr<Eigen::MatrixXd> filters; //Shared because it will point to the same address as weights from Layer
                                      // to save memory
     int num_filters;
     int kernel_size;

@@ -8,3 +8,4 @@ CMakeCache.txt
 libdl.dSYM/
 testmain.dSYM/
 .idea/
+libdl.egg-info/

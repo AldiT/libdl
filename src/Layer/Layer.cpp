@@ -154,24 +154,81 @@ double Sigmoid::sigmoid(double input){
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
+Eigen::MatrixXd libdl::layers::Convolution2D::forward(Eigen::MatrixXd input_){
+    this->input = std::make_unique<Eigen::MatrixXd>(input_);
 
 
-Tensor libdl::layers::Convolution2D::correlation(Tensor input) {
-    *(this->input) = input;
+    //*(this->input) = input_;
+
+    return this->correlation(*(this->input));
+}
+
+Eigen::MatrixXd libdl::layers::Convolution2D::backward(Eigen::MatrixXd gradient, double lr){
+    return gradient;
+}
+
+
+//template <typename Tensor>
+Eigen::MatrixXd libdl::layers::Convolution2D::correlation(Eigen::MatrixXd input) {
+    //*(this->input) = input;
 
     //add padding if there is padding to be added
-    *(this->input) = this->add_padding();
+
+    this->padding = (this->kernel_size-1) / 2;
+
+
+    std::cout << "\nOutput shape: " << this->padding << "x" ;/*<< o_cols << std::endl;*/
+
+    int o_rows = ((this->input->rows() + (2 * this->padding) - this->kernel_size)/this->stride) + 1;
+    int o_cols = (this->input->cols() + (2 * this->padding) - this->kernel_size)/this->stride + 1;
+
+    *(this->input) = this->add_padding();//Working as it should
+
+    std::cout << "\nOutput shape: " << o_rows << "x" << o_cols << std::endl;
+
+    Eigen::MatrixXd output(o_rows, o_cols);
+
+    for(int i = 0; i < o_rows; i++){
+        for(int j = 0; j < o_cols; j++){
+            output(i, j) = (this->input->block(i, j, this->kernel_size, this->kernel_size).array()*
+                    this->weights->array()).sum();
+        }
+    }
+
+
+    return output;
 
 }
 
 //Maybe this will not be neccessary: Most probably
-Tensor libdl::layers::Convolution2D::rotate180(Tensor filter) {
+//template <typename Tensor>
+Eigen::MatrixXd libdl::layers::Convolution2D::rotate180(Eigen::MatrixXd filter) {
 
 }
 
-Tensor libdl::layers::Convolution2D::add_padding() {
+//Adds *padding* rows in each direction.
+//template <typename Tensor>
+Eigen::MatrixXd libdl::layers::Convolution2D::add_padding() {
     //TODO: Implement the padding part
+    if(this->padding == 0){
+        return *(this->input);
+    }else{
+
+        Eigen::MatrixXd tmp(this->input->rows()+2 * this->padding, this->input->cols() + 2 * this->padding);
+
+        tmp = Eigen::MatrixXd::Constant(this->input->rows()+2 * padding, this->input->cols() + 2 * padding, 0);
+
+        tmp.block(padding, padding, this->input->rows(), this->input->cols()) = *(this->input);
+
+        *(this->input) = tmp;
+
+
+
+        return *(this->input);
+    }
 }
+
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
