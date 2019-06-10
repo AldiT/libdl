@@ -17,14 +17,27 @@ namespace py = pybind11;
 using namespace Eigen;
 
 
-int add(int x, int y){
-    return x+y;
-}
+struct test{
+    test(const std::string &name_) : name(name_){}
+
+    const std::string getName() const{return name;}
+    void setName(std::string &new_name){name = new_name;}
+
+    std::string name;
+};
 
 PYBIND11_MODULE(example, m){
-    m.doc() = R"pbdoc(pybind11 example plugin)pbdoc"; // optional module docstring
+    py::class_<test>(m, "test")
+            .def(py::init<const std::string &>())
+            .def("setName", &test::setName)
+            .def("getName", &test::getName)
+            .def_readwrite("name", &test::name)
+            .def("__repr__",
+                    [](const test &a){
+                return "< example.test named " + a.name + ">";
+            });
 
-    m.def("add", &add, R"pbdoc(A function which adds two numbers)pbdoc");
+
 }
 
 int main(int argc, char* argv[]){

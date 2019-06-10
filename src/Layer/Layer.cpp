@@ -147,3 +147,36 @@ double Sigmoid::sigmoid(double input){
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            <Convolution2D>                           /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+Tensor libdl::layers::Convolution2D::correlation(Tensor input) {
+    *(this->input) = input;
+
+    //add padding if there is padding to be added
+    *(this->input) = this->add_padding();
+
+}
+
+//Maybe this will not be neccessary: Most probably
+Tensor libdl::layers::Convolution2D::rotate180(Tensor filter) {
+
+}
+
+Tensor libdl::layers::Convolution2D::add_padding() {
+    //TODO: Implement the padding part
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            </Convolution2D>                          /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+

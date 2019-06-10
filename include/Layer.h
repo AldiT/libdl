@@ -16,6 +16,8 @@ namespace libdl::layers {
     class DenseLayer2D;
     class Perceptron;
     class Sigmoid;
+    template <typename Tensor>
+    class Convolution2D;
 }
 
 
@@ -33,12 +35,10 @@ class libdl::layers::Layer {
         ~Layer();
 
         //forward pass function
-        virtual Eigen::MatrixXd forward(Eigen::MatrixXd input) = 0;
+        virtual Tensor forward(Tensor input) = 0;
 
         //backward pass function
-        virtual Eigen::MatrixXd backward(Eigen::MatrixXd gradient, double lr) = 0;
-
-        virtual int printCrap() = 0;
+        virtual Tensor backward(Tensor gradient, double lr) = 0;
 
 
 
@@ -115,31 +115,6 @@ protected:
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/////                                                                      /////
-/////                            <Perceptron>                              /////
-/////                                                                      /////
-////////////////////////////////////////////////////////////////////////////////
-
-
-// TODO: Add the functionality of the forward pass
-
-class libdl::layers::Perceptron: libdl::layers::Layer<Eigen::MatrixXd>{
-public:
-
-    Eigen::MatrixXd forward(Eigen::MatrixXd input);
-    Eigen::MatrixXd backward(Eigen::MatrixXd gradient);
-
-protected:
-
-private:
-};
-
-////////////////////////////////////////////////////////////////////////////////
-/////                                                                      /////
-/////                            </Perceptron>                             /////
-/////                                                                      /////
-////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -175,6 +150,61 @@ private:
 /////                                                                      /////
 /////                            </Sigmoid>                                /////
 /////                                                                      /////
-////////////////////////////////////////////////////////////////////////////////s
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            <Convolution2D>                           /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename Tensor>
+class libdl::layers::Convolution2D : libdl::layers::Layer<Tensor>{
+public:
+    //constructor
+    Convolution2D(int kernel_size_, int stride_, int padding_, int num_filters_):
+            num_filters(num_filters_), kernel_size(kernel_size_), stride(stride_), padding(padding_){
+
+        this->filters = this->weights;
+
+    }
+
+    Convolution2D(Tensor filter);
+
+
+
+    Tensor forward(Tensor input);
+    Tensor backward(Tensor gradients, double lr);
+
+protected:
+    //protected because later I might want to implement some fancy convolution layer to perform segmantation or whatever
+    //methods
+
+    //Correlation should be the same as convolution in the case of NN so that is what I implement here
+    // for simplicity
+    Tensor correlation(Tensor input);
+
+
+    Tensor rotate180(Tensor filter);
+
+    Tensor add_padding();
+
+private:
+    std::shared_ptr<Tensor> filters; //Shared because it will point to the same address as weights from Layer
+                                     // to save memory
+    int num_filters;
+    int kernel_size;
+    int stride;
+    int padding;
+
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            </Convolution2D>                          /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
 
 #endif //LIBDL_LAYERS_LAYER_H
