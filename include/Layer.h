@@ -182,7 +182,7 @@ public:
 
     Eigen::MatrixXd forward(Eigen::MatrixXd input);
     Eigen::MatrixXd backward(Eigen::MatrixXd gradients, double lr);
-    Eigen::MatrixXd add_padding();
+
 
 protected:
     //protected because later I might want to implement some fancy convolution layer to perform segmantation or whatever
@@ -191,7 +191,7 @@ protected:
     //Correlation should be the same as convolution in the case of NN so that is what I implement here
     // for simplicity
     Eigen::MatrixXd correlation(Eigen::MatrixXd input);
-
+    Eigen::MatrixXd add_padding2D();
 
     Eigen::MatrixXd rotate180(Eigen::MatrixXd filter);
 

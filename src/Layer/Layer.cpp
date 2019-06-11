@@ -208,7 +208,7 @@ Eigen::MatrixXd libdl::layers::Convolution2D::rotate180(Eigen::MatrixXd filter) 
 
 //Adds *padding* rows in each direction.
 //template <typename Tensor>
-Eigen::MatrixXd libdl::layers::Convolution2D::add_padding() {
+Eigen::MatrixXd libdl::layers::Convolution2D::add_padding2D() {
     //TODO: Implement the padding part
     if(this->padding == 0){
         return *(this->input);
