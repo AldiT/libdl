@@ -34,9 +34,15 @@ struct libdl::model::Milestone{
 
 class libdl::model::History{
 public:
-    History(){};
+    History();
 
-    void printCrap(){std::cout << "Crap" << std::endl;};
+    std::string getMessage();
+    void setMessage(std::string);
+
+    std::list<milestone> getHistory();
+    void addHistory(milestone);
+
+    void clearHistory();
 
 protected:
 
@@ -60,7 +66,7 @@ public:
     void add(libdl::layers::Layer<TensorType> layer);
 
 
-    libdl::model::History train(int epochs, double lr, double lr_decay, int batch_size,
+    libdl::model::History train(std::vector<libdl::TensorWrapper3D>, int epochs, double lr, double lr_decay, int batch_size,
             libdl::model::Optimizer optimizer);
 
     libdl::model::History test();
@@ -75,8 +81,9 @@ private:
     double learning_rate;
     double learning_rate_decay;
     int batch_size;
+    std::unique_ptr<libdl::model::Optimizer> optimizer;
     std::list<libdl::layers::Layer<TensorType>> model;
-    libdl::model::History* history;
+    std::unique_ptr<libdl::model::History> history;
 };
 
 

@@ -182,7 +182,7 @@ Eigen::MatrixXd libdl::layers::Convolution2D::correlation(Eigen::MatrixXd input)
     int o_rows = ((this->input->rows() + (2 * this->padding) - this->kernel_size)/this->stride) + 1;
     int o_cols = (this->input->cols() + (2 * this->padding) - this->kernel_size)/this->stride + 1;
 
-    *(this->input) = this->add_padding();//Working as it should
+    *(this->input) = this->add_padding2D();//Working as it should
 
     std::cout << "\nOutput shape: " << o_rows << "x" << o_cols << std::endl;
 

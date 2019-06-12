@@ -43,6 +43,7 @@ public:
     int get_second_dim() const ;//Done
     int get_third_dim () const ;//Done
 
+    int size();
 
 
     static double           DotProduct(TensorWrapper3D&, TensorWrapper3D&);//Done
