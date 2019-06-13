@@ -8,6 +8,7 @@
 #include <memory>
 #include "Eigen/Dense"
 #include <string>
+#include "TensorWrapper.h"
 
 
 namespace libdl::layers {
@@ -180,8 +181,8 @@ public:
 
 
 
-    Eigen::MatrixXd forward(Eigen::MatrixXd input);
-    Eigen::MatrixXd backward(Eigen::MatrixXd gradients, double lr);
+    Eigen::MatrixXd forward(libdl::TensorWrapper3D& input_);
+    Eigen::MatrixXd backward(libdl::TensorWrapper3D& gradients_, double lr);
 
 
 protected:
