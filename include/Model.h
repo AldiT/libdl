@@ -40,7 +40,7 @@ public:
     void setMessage(std::string);
 
     std::list<milestone> getHistory();
-    void addHistory(milestone);
+    bool addHistory(milestone);
 
     void clearHistory();
 

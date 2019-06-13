@@ -6,6 +6,7 @@
 #define LIBDL_TENSORWRAPPER_H
 
 #include "Eigen/Dense"
+#include <memory>
 #include <list>
 #include <vector>
 #include <cstdarg>
@@ -13,6 +14,7 @@
 
 namespace libdl{
     class TensorWrapper3D;
+    class TensorWrapper_Exp;
 }
 
 
@@ -33,6 +35,10 @@ public:
     Eigen::MatrixXd operator() (int i);//Done
     Eigen::VectorXd operator() (int i, int j);//Done
     double          operator() (int i, int j, int z);//Done
+
+    Eigen::MatrixXd at(int i);//Done
+    Eigen::VectorXd at(int i, int j);//Done
+    double          at(int i, int j, int z);//Done
 
 
     TensorWrapper3D operator* (TensorWrapper3D&);   //Multiply two tensors with compatible sizes //Done
@@ -61,6 +67,51 @@ private:
     //Probably more to add here.
 
 
+};
+
+
+class libdl::TensorWrapper_Exp{
+public:
+
+    //Constructors
+    TensorWrapper_Exp(int batch_size_=16, int tensor_height_=28, int tensor_width_=28, int tensor_depth_=3, bool are_filters_=false); //default values for mnist
+    TensorWrapper_Exp(const TensorWrapper_Exp&);
+    TensorWrapper_Exp& operator= (const TensorWrapper_Exp&) const;
+
+    Eigen::MatrixXd operator() (int i) const; //return i-th an instance
+
+
+    TensorWrapper_Exp correlation(const TensorWrapper_Exp& ) const;
+    TensorWrapper_Exp& pad(int padding_) const;
+
+
+    void from_EigenMatrixXd(const Eigen::MatrixXd& matrix_);
+    Eigen::MatrixXd to_EigenMatrixXd();
+
+
+    Eigen::MatrixXd get_slice(int instance_, int depth_) const;
+
+    //getters_setters
+    int get_batch_size() const;
+    int get_tensor_height() const;
+    int get_tensor_width() const;
+    int get_tensor_depth() const;
+
+    Eigen::MatrixXd get_tensor() const;
+
+    friend std::ostream& operator<< (std::ostream& os, TensorWrapper_Exp wrapper_){
+        os << "Tensor: \n" << wrapper_.get_tensor() << std::endl;
+    }
+
+protected:
+
+private:
+    std::unique_ptr<Eigen::MatrixXd> tensor;
+    int batch_size;
+    int tensor_height;
+    int tensor_width;
+    int tensor_depth;
+    bool are_filters;
 };
 
 

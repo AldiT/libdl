@@ -6,6 +6,7 @@
 #define LIBDL_LAYERS_LAYER_H
 
 #include <memory>
+#include <vector>
 #include "Eigen/Dense"
 #include <string>
 #include "TensorWrapper.h"
@@ -36,10 +37,10 @@ class libdl::layers::Layer {
         ~Layer();
 
         //forward pass function
-        virtual Tensor forward(Tensor input) = 0;
+        virtual std::vector<Tensor> forward(std::vector<Tensor> input) = 0;
 
         //backward pass function
-        virtual Tensor backward(Tensor gradient, double lr) = 0;
+        virtual std::vector<Tensor> backward(std::vector<Tensor> gradient, double lr) = 0;
 
 
 
@@ -48,9 +49,9 @@ class libdl::layers::Layer {
 
     protected:
         int num_neurons;
-        std::unique_ptr<Tensor> weights = nullptr;
-        std::unique_ptr<Eigen::VectorXd> biases = nullptr;
-        std::unique_ptr<Eigen::MatrixXd> input = nullptr;
+        std::unique_ptr<Tensor> weights;
+        std::unique_ptr<Eigen::VectorXd> biases;
+        std::vector<Eigen::MatrixXd> input;
         std::string name;
 
 };
@@ -76,13 +77,9 @@ public:
 
     DenseLayer2D(int, int, std::string);
 
-    Eigen::MatrixXd forward(Eigen::MatrixXd input);
-    Eigen::MatrixXd backward(Eigen::MatrixXd gradient, double lr);
+    std::vector<Eigen::MatrixXd> forward(std::vector<Eigen::MatrixXd> );
+    std::vector<Eigen::MatrixXd> backward(std::vector<Eigen::MatrixXd> , double );
 
-    int printCrap(){
-        std::cout << "This should get printed from the test cases!" << std::endl;
-        return 0;
-    }
 
     int rows(){
         return this->weights->rows();
@@ -131,12 +128,9 @@ protected:
 class libdl::layers::Sigmoid : libdl::layers::Layer<Eigen::MatrixXd>{
 public:
 
-    Eigen::MatrixXd forward(Eigen::MatrixXd input);
-    Eigen::MatrixXd backward(Eigen::MatrixXd gradients, double lr);
+    std::vector<Eigen::MatrixXd> forward(std::vector<Eigen::MatrixXd> input);
+    std::vector<Eigen::MatrixXd> backward(std::vector<Eigen::MatrixXd> gradients, double lr);
 
-    int printCrap(){
-        return 1;
-    }
 
 protected:
 
@@ -162,27 +156,17 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 //template <typename Tensor>
-class libdl::layers::Convolution2D : libdl::layers::Layer<Eigen::MatrixXd>{
+class libdl::layers::Convolution2D : libdl::layers::Layer<libdl::TensorWrapper3D>{
 public:
     //constructor
-    Convolution2D(int kernel_size_=3, int stride_=1, int padding_=1, int num_filters_=16):
-            num_filters(num_filters_), kernel_size(kernel_size_), stride(stride_), padding(padding_){
-
-
-        this->weights = std::make_unique<Eigen::MatrixXd>(this->kernel_size, this->kernel_size);
-        *(this->weights) = Eigen::MatrixXd::Constant(this->kernel_size, this->kernel_size, 1);
-
-        this->biases = std::make_unique<Eigen::VectorXd>(this->num_filters);
-        //this->filters = this->weights;
-
-    }
+    Convolution2D(int kernel_size_=3, int num_filters_=16, int stride_=1, int padding_=1, int input_depth_=3);
 
     Convolution2D(Eigen::MatrixXd filter);
 
 
 
-    Eigen::MatrixXd forward(libdl::TensorWrapper3D& input_);
-    Eigen::MatrixXd backward(libdl::TensorWrapper3D& gradients_, double lr);
+    std::vector<libdl::TensorWrapper3D> forward(std::vector<libdl::TensorWrapper3D> input_);
+    std::vector<libdl::TensorWrapper3D> backward(std::vector<libdl::TensorWrapper3D> gradients_, double lr);
 
 
 protected:
@@ -191,20 +175,25 @@ protected:
 
     //Correlation should be the same as convolution in the case of NN so that is what I implement here
     // for simplicity
-    Eigen::MatrixXd correlation(Eigen::MatrixXd input);
-    Eigen::MatrixXd add_padding2D();
+    Eigen::MatrixXd correlation2D(Eigen::MatrixXd, Eigen::MatrixXd) const;
+    Eigen::MatrixXd add_padding2D(Eigen::MatrixXd) const;
 
     Eigen::MatrixXd rotate180(Eigen::MatrixXd filter);
 
 
 
 private:
-    std::unique_ptr<Eigen::MatrixXd> filters; //Shared because it will point to the same address as weights from Layer
+    std::vector<libdl::TensorWrapper3D> input;
+    std::vector<libdl::TensorWrapper3D> filters; //Shared because it will point to the same address as weights from Layer
                                      // to save memory
+    //biases inherited from Layer
     int num_filters;
     int kernel_size;
+    int input_depth;
     int stride;
     int padding;
+    int filter_rank;
+
 
 };
 
