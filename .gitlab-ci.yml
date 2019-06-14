@@ -6,7 +6,7 @@ stages:
 build-linux-gcc:
   stage: compile
   script:
-    - git clone https://github.com/pybind/pybind11.git extern/pybind11 --recursive
+    - ls -a extern/pybind11
     - mkdir -p build
     - cd build
     - cmake ..
