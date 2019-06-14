@@ -6,12 +6,6 @@ stages:
 build-linux-gcc:
   stage: compile
   script:
-    - cd extern/pybind11
-    - mkdir build
-    - cd build
-    - cmake ..
-    - make
-    - cd ../../..
     - mkdir -p build
     - cd build
     - cmake ..
