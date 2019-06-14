@@ -47,11 +47,11 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     target_compile_options(pybind11 INTERFACE -fsized-deallocation)
 endif()
 
-#pybind11_add_module(example "${PROJECT_SOURCE_DIR}/tests/Layer_tests.cpp")
+pybind11_add_module(example "${PROJECT_SOURCE_DIR}/tests/Layer_tests.cpp")
 
-add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h tests/Layer_tests.cpp src/TensorWrapper.cpp include/TensorWrapper.h src/ErrorFunctions.cpp include/ErrorFunctions.h)
-target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
+#add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h tests/Layer_tests.cpp src/TensorWrapper.cpp include/TensorWrapper.h src/ErrorFunctions.cpp include/ErrorFunctions.h)
+#target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
 
-target_link_libraries(libdl ${PYTHON_LIBRARIES})
-target_link_libraries(libdl Eigen3::Eigen)
+#target_link_libraries(libdl ${PYTHON_LIBRARIES})
+#target_link_libraries(libdl Eigen3::Eigen)
 
