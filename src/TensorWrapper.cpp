@@ -61,6 +61,7 @@ Eigen::MatrixXd TensorWrapper3D::operator()(int i) {
     }
 }
 
+
 Eigen::VectorXd TensorWrapper3D::operator()(int i, int j) {
 
     if((i > this->first_dim || i < 0) || (j > this->second_dim || j < 0)){
@@ -239,25 +240,145 @@ libdl::TensorWrapper_Exp::TensorWrapper_Exp(int batch_size_, int tensor_height_,
 }
 
 //copy constructor
-libdl::TensorWrapper_Exp::TensorWrapper_Exp(const libdl::TensorWrapper_Exp &) {
+libdl::TensorWrapper_Exp::TensorWrapper_Exp(const libdl::TensorWrapper_Exp &copy_cnstr) {
+    this->batch_size    = copy_cnstr.get_batch_size();
+    this->tensor_height = copy_cnstr.get_tensor_height();
+    this->tensor_width  = copy_cnstr.get_tensor_width();
+    this->tensor_depth  = copy_cnstr.get_tensor_depth();
+    this->are_filters   = copy_cnstr.is_filter();
 
+    this->tensor = std::make_unique<Eigen::MatrixXd>(this->batch_size,
+                                                     this->tensor_height * this->tensor_width * this->tensor_depth);
+
+    *(this->tensor)     = copy_cnstr.get_tensor();
 }
+
+
+//OPERATOR OVERLOADING SECTION
 
 //assignment operator
-TensorWrapper_Exp& libdl::TensorWrapper_Exp::operator=(const libdl::TensorWrapper_Exp &) const {
+TensorWrapper_Exp& libdl::TensorWrapper_Exp::operator=(const libdl::TensorWrapper_Exp &obj) {
+    this->batch_size    = obj.get_batch_size();
+    this->tensor_height = obj.get_tensor_height();
+    this->tensor_width  = obj.get_tensor_width();
+    this->tensor_depth  = obj.get_tensor_depth();
+    this->are_filters   = obj.is_filter();
+
+    *(this->tensor)     = obj.get_tensor();
+
+    return *this;
+}
+
+TensorWrapper_Exp& libdl::TensorWrapper_Exp::operator+(TensorWrapper_Exp& add_){
+    try{
+        if(add_.get_tensor().rows() != this->tensor->rows() || add_.get_tensor().cols() != this->tensor->cols()){
+            throw std::invalid_argument("The size of the tensors does not match!"); //TODO: Maybe check individual dimensions so that you know which one to set to which value
+        }
+
+        *(this->tensor) = *(this->tensor) + add_.get_tensor();
+
+    }catch(std::invalid_argument &err){
+        std::cerr << "libdl::TensorWrapper::operator+: " << err.what() << std::endl;
+        std::exit(-1);
+    }
+}
+
+TensorWrapper_Exp& libdl::TensorWrapper_Exp::operator*(double weight){
+    *(this->tensor) *= weight;
+
+    return *this;
+}
+
+TensorWrapper_Exp& libdl::TensorWrapper_Exp::correlation(libdl::TensorWrapper_Exp& filters, int padding, int stride,
+        libdl::TensorWrapper_Exp& output) const {
+    try {
+
+        if(!filters.is_filter())
+            throw std::invalid_argument("(filters) are not filters!");
+
+        int o_rows = ((this->get_tensor_height() + (2 * padding) - filters.get_tensor_height())/stride) + 1;
+        int o_cols = (this->get_tensor_width() + (2 * padding) - filters.get_tensor_width())/stride + 1;
+
+        if(output.get_batch_size() != this->batch_size || output.get_tensor_height() != o_rows ||
+            output.get_tensor_width() != o_cols || output.get_tensor_depth() != filters.get_batch_size())
+            throw std::invalid_argument("output has not the right shape");
+
+
+        Eigen::MatrixXd temp(o_rows, o_cols);
+
+        for (int instance = 0; instance < this->get_batch_size(); instance++) {
+            for (int filter = 0; filter < filters.get_batch_size(); filter++) {
+
+                temp = Eigen::MatrixXd::Constant(o_rows, o_cols, 0);
+
+                for (int slice = 0; slice < this->get_tensor_depth(); slice++) {
+
+                    auto instance_slice = this->get_slice(instance, slice);
+                    auto filter_slice = filters.get_slice(filter, slice);
+
+                    temp += libdl::TensorWrapper_Exp::correlation2D(instance_slice, filter_slice, padding, stride);
+                }
+                output.update_slice(instance, filter, temp);
+            }
+        }
+
+        return output;
+    }catch(std::invalid_argument &err){
+        std::cerr << "libdl::TensorWrapper_Exp::correlation: " << err.what() << std::endl;
+        std::exit(-1);
+    }
+
 
 }
 
-TensorWrapper_Exp libdl::TensorWrapper_Exp::correlation(const libdl::TensorWrapper_Exp& filters) const {
+TensorWrapper_Exp& libdl::TensorWrapper_Exp::full_convolution(libdl::TensorWrapper_Exp &filters,
+                                                              libdl::TensorWrapper_Exp &output) const {
 
+    //HINT: If you padd the input you can use the samek convolutions as the one written above.
+    this->correlation(filters, filters.get_tensor_height()-1, 1, output);
 
-
-
+    return output;
 }
 
-TensorWrapper_Exp& libdl::TensorWrapper_Exp::pad(int padding_) const {
+Eigen::MatrixXd libdl::TensorWrapper_Exp::correlation2D(Eigen::MatrixXd& m1, Eigen::MatrixXd& m2, int padding, int stride) {
 
+    int o_rows = ((m1.rows() + (2 * padding) - m2.rows())/stride) + 1;
+    int o_cols = (m1.cols() + (2 * padding) - m2.cols())/stride + 1;
+
+    libdl::TensorWrapper_Exp::pad(m1, padding);//Working as it should
+
+    Eigen::MatrixXd output(o_rows, o_cols);
+
+    for(int i = 0; i < o_rows; i++){
+        for(int j = 0; j < o_cols; j++){
+            output(i, j) = (m1.block(i, j, m2.rows(), m2.cols()).array()*
+                            m2.array()).sum();
+        }
+    }
+
+
+    return output;
 }
+
+Eigen::MatrixXd libdl::TensorWrapper_Exp::pad(Eigen::MatrixXd& to_pad_, int padding) {
+    if(padding == 0){
+        return to_pad_;
+    }else{
+
+        Eigen::MatrixXd tmp(to_pad_.rows()+2 * padding, to_pad_.cols() + 2 * padding);
+
+        tmp = Eigen::MatrixXd::Constant(to_pad_.rows()+2 * padding, to_pad_.cols() + 2 * padding, 0);
+
+        tmp.block(padding, padding, to_pad_.rows(), to_pad_.cols()) = to_pad_;
+
+        to_pad_ = tmp;
+
+
+
+        return to_pad_;
+    }
+}
+
 
 Eigen::MatrixXd libdl::TensorWrapper_Exp::get_slice(int instance_, int depth_) const {
     try{
@@ -285,25 +406,60 @@ Eigen::MatrixXd libdl::TensorWrapper_Exp::get_slice(int instance_, int depth_) c
 
 }
 
-Eigen::MatrixXd libdl::TensorWrapper_Exp::get_tensor() const{
+void libdl::TensorWrapper_Exp::update_slice(int instance_, int depth_, Eigen::MatrixXd new_slice_) {
+    try{
+        if(instance_ < 0 || instance_ > this->batch_size)
+            throw std::invalid_argument("instance_");
+
+        if(depth_ < 0 || depth_ > this->tensor_depth)
+            throw std::invalid_argument("depth_");
+
+        if(new_slice_.rows() != this->get_tensor_height() || new_slice_.cols() != this->get_tensor_width())
+            throw std::invalid_argument("new_slice_");
+
+        for(int row = 0; row < new_slice_.rows(); row++){
+            this->tensor->block(instance_, row*this->tensor_width, 1, this->tensor_width) = new_slice_.row(row);
+        }
+
+    }catch(std::invalid_argument & err){
+        std::cerr << "TensorWrapper::update_slice_: The argument provided \"" << err.what() << "\" is not right!";
+        std::exit(-1);
+    }catch(std::exception &exp){
+        std::cerr << "TensorWrapper::update_slice_: An unexpected error happend: " << exp.what() << std::endl;
+        std::exit(-1);
+    }
+}
+
+
+Eigen::MatrixXd& libdl::TensorWrapper_Exp::get_tensor() const{
     return *(this->tensor);
 }
 
-int libdl::TensorWrapper_Exp::get_batch_size() const{
+void libdl::TensorWrapper_Exp::set_tensor(Eigen::MatrixXd new_tensor) {
+    *(this->tensor) = new_tensor;
+}
+
+int libdl::TensorWrapper_Exp::get_batch_size()      const{
     return this->batch_size;
 }
 
-int libdl::TensorWrapper_Exp::get_tensor_height() const {
+int libdl::TensorWrapper_Exp::get_tensor_height()   const {
     return this->tensor_height;
 }
 
-int libdl::TensorWrapper_Exp::get_tensor_width() const {
+int libdl::TensorWrapper_Exp::get_tensor_width()    const {
     return this->tensor_width;
 }
 
-int libdl::TensorWrapper_Exp::get_tensor_depth() const {
+int libdl::TensorWrapper_Exp::get_tensor_depth()    const {
     return this->tensor_depth;
 }
+
+bool libdl::TensorWrapper_Exp::is_filter()          const{
+    return this->are_filters;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /////                                                                      /////

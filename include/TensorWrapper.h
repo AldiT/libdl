@@ -76,13 +76,16 @@ public:
     //Constructors
     TensorWrapper_Exp(int batch_size_=16, int tensor_height_=28, int tensor_width_=28, int tensor_depth_=3, bool are_filters_=false); //default values for mnist
     TensorWrapper_Exp(const TensorWrapper_Exp&);
-    TensorWrapper_Exp& operator= (const TensorWrapper_Exp&) const;
+    TensorWrapper_Exp& operator= (const TensorWrapper_Exp&);
 
-    Eigen::MatrixXd operator() (int i) const; //return i-th an instance
+    Eigen::MatrixXd operator() (int i) const; //return i-th instance
+    TensorWrapper_Exp& operator+(TensorWrapper_Exp&);
+    TensorWrapper_Exp& operator*(double);
+
+    TensorWrapper_Exp& correlation(TensorWrapper_Exp& , int , int, TensorWrapper_Exp&) const;
+    TensorWrapper_Exp& full_convolution(TensorWrapper_Exp&, TensorWrapper_Exp&) const;
 
 
-    TensorWrapper_Exp correlation(const TensorWrapper_Exp& ) const;
-    TensorWrapper_Exp& pad(int padding_) const;
 
 
     void from_EigenMatrixXd(const Eigen::MatrixXd& matrix_);
@@ -90,20 +93,26 @@ public:
 
 
     Eigen::MatrixXd get_slice(int instance_, int depth_) const;
+    void            update_slice(int instance_, int depth_, Eigen::MatrixXd new_slice_);
 
     //getters_setters
     int get_batch_size() const;
     int get_tensor_height() const;
     int get_tensor_width() const;
     int get_tensor_depth() const;
+    bool is_filter() const;
 
-    Eigen::MatrixXd get_tensor() const;
+    Eigen::MatrixXd& get_tensor() const;
+    void set_tensor(Eigen::MatrixXd new_tensor);
 
     friend std::ostream& operator<< (std::ostream& os, TensorWrapper_Exp wrapper_){
         os << "Tensor: \n" << wrapper_.get_tensor() << std::endl;
     }
 
 protected:
+
+    static Eigen::MatrixXd correlation2D(Eigen::MatrixXd& m1, Eigen::MatrixXd& m2, int, int stride=1);
+    static Eigen::MatrixXd pad(Eigen::MatrixXd&, int);
 
 private:
     std::unique_ptr<Eigen::MatrixXd> tensor;
@@ -113,6 +122,7 @@ private:
     int tensor_depth;
     bool are_filters;
 };
+
 
 
 #endif //LIBDL_TENSORWRAPPER_H

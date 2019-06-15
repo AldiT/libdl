@@ -62,8 +62,8 @@ DenseLayer2D::DenseLayer2D(int input_features, int num_neurons, std::string name
 
 }
 
-std::vector<Eigen::MatrixXd> DenseLayer2D::forward(std::vector<Eigen::MatrixXd> input) {
-/*
+Eigen::MatrixXd& DenseLayer2D::forward(Eigen::MatrixXd& input) {
+
     try{
 
         this->input = std::make_unique<Eigen::MatrixXd>(input);
@@ -75,13 +75,12 @@ std::vector<Eigen::MatrixXd> DenseLayer2D::forward(std::vector<Eigen::MatrixXd> 
             throw msg;
         }
 
-        Eigen::MatrixXd temp;
-        temp = input * *(this->weights);
+        input = input * *(this->weights);
 
-        temp.rowwise() += this->biases->transpose();
+        input.rowwise() += this->biases->transpose();
 
 
-        return temp;
+        return input;
 
     }catch (const std::string msg){
         std::cerr << msg <<std::endl;
@@ -89,17 +88,17 @@ std::vector<Eigen::MatrixXd> DenseLayer2D::forward(std::vector<Eigen::MatrixXd> 
     }catch(...){
         std::cerr << "Unexpected error happend in the forward pass of layer: " << this->name <<std::endl;
         std::exit(-1);
-    }*/
-    return input;
+    }
 }
 
-std::vector<Eigen::MatrixXd> DenseLayer2D::backward(std::vector<Eigen::MatrixXd> gradient, double lr) {
-    /*
+Eigen::MatrixXd& DenseLayer2D::backward(Eigen::MatrixXd& gradient, double lr) {
+
     //update weights
     *(this->weights) -= lr * (this->input->transpose() * gradient); // replace 4 by N
     *(this->biases) -= lr * gradient.colwise().sum().transpose();
 
-    return gradient * this->weights->transpose();*/
+    gradient = gradient * this->weights->transpose();
+
     return gradient;
 }
 
@@ -126,22 +125,24 @@ std::string DenseLayer2D::info(){
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
-std::vector<Eigen::MatrixXd> Sigmoid::forward(std::vector<Eigen::MatrixXd> input){
-    /*
+Eigen::MatrixXd& Sigmoid::forward(Eigen::MatrixXd& input){
+
     this->input = std::make_unique<Eigen::MatrixXd>(input);
 
-    return input.unaryExpr([this](double e){ return this->sigmoid(e);});*/
+    input = input.unaryExpr([this](double e){ return this->sigmoid(e);});
+
     return input;
 }
 
-std::vector<Eigen::MatrixXd> Sigmoid::backward(std::vector<Eigen::MatrixXd> gradient, double lr){
-    /*
+Eigen::MatrixXd& Sigmoid::backward(Eigen::MatrixXd& gradient, double lr){
+
     //std::cout << "\nShape of temp:\n" << temp.rows() << "x" << temp.cols() << std::endl;
     //std::cout << "\nShape of gradient: \n" << gradient.rows() << "x" << gradient.cols() << std::endl;
 
-    return this->input->unaryExpr([this](double e)
-    {return this->sigmoid(e) * (1 - this->sigmoid(e));}).array() * gradient.array();*/
-    return gradient;
+    this->input->unaryExpr([this](double e)
+                           {return this->sigmoid(e) * (1 - this->sigmoid(e));}).array() * gradient.array();
+
+    return *(this->input);
 }
 
 double Sigmoid::sigmoid(double input){
@@ -164,16 +165,13 @@ double Sigmoid::sigmoid(double input){
 libdl::layers::Convolution2D::Convolution2D(int kernel_size_, int num_filters_, int stride_, int padding_, int input_depth_):
         kernel_size(kernel_size_), num_filters(num_filters_), stride(stride_), padding(padding_){
 
-    this->filters = std::vector<libdl::TensorWrapper3D>(this->num_filters, libdl::TensorWrapper3D(this->kernel_size,
-            this->kernel_size, this->input_depth));
 
-    for(int filter = 0; filter < this->num_filters; filter++){
+    //For now only stride 1 works
+    this->stride = 1;
 
-        for(int filter_slice = 0; filter_slice < this->input_depth; filter_slice++){
-            this->filters[filter].at(filter_slice) = Eigen::MatrixXd::Random(this->kernel_size, this->kernel_size);//Double check if this changes the weights for real
-            //it might be returning a copy to the real thing
-        }
-    }
+    this->filters = std::make_unique<libdl::TensorWrapper_Exp>(this->num_filters,
+            this->kernel_size, this->kernel_size, this->input_depth, true);//Initialize filters randomly
+   this->filters->set_tensor();
 
     this->biases = std::make_unique<Eigen::VectorXd>(this->num_filters);
     *(this->biases) = Eigen::VectorXd::Constant(this->num_filters, 1);
@@ -182,62 +180,32 @@ libdl::layers::Convolution2D::Convolution2D(int kernel_size_, int num_filters_, 
 }
 
 
-std::vector<libdl::TensorWrapper3D> libdl::layers::Convolution2D::forward(std::vector<libdl::TensorWrapper3D> inputs_){//this should be multiple 2D images
-    this->input = std::vector<libdl::TensorWrapper3D>(inputs_.size(), libdl::TensorWrapper3D(
-            inputs_[0].get_first_dim(), inputs_[0].get_second_dim(), inputs_[0].get_third_dim()));
-    this->input = inputs_;
+libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::forward(libdl::TensorWrapper_Exp& inputs_){//this should be multiple 2D images
 
-    int o_rows = ((this->input[0].get_first_dim() + (2 * this->padding) - this->kernel_size)/this->stride) + 1; //same for all instances
-    int o_cols = (this->input[0].get_second_dim() + (2 * this->padding) - this->kernel_size)/this->stride + 1; //same for all instances
+    this->input = std::make_unique<libdl::TensorWrapper_Exp>(inputs_); //operator=
 
-    std::vector<libdl::TensorWrapper3D> res(this->input.size(), libdl::TensorWrapper3D(o_rows, o_cols, this->num_filters));
-    Eigen::MatrixXd temp;
+    int o_rows = (this->input->get_tensor_height() + 2 * this->padding - this->kernel_size)/this->stride + 1;
+    int o_cols = (this->input->get_tensor_width() + 2 * this->padding - this->kernel_size)/this->stride + 1;
 
-    for(int instance = 0; instance < this->input.size(); instance++){//iterate through instances
-        for(int filter = 0; filter < this->num_filters; filter++) {//iterate through filters
+    this->output = std::make_unique<libdl::TensorWrapper_Exp>(this->input->get_batch_size(), o_rows,
+            o_cols, this->filters->get_batch_size());
 
-            for (int slice = 0; slice < this->filters[0].get_third_dim(); slice++){ //slices number should be the same for filter and image
-                temp = this->correlation2D(this->input.at(instance)(slice), this->filters.at(filter)(slice));
-            }
+    this->input->correlation(*(this->filters), this->padding, this->stride, *(this->output));
 
-            res.at(instance)(filter) += temp;
-        }
-    }
-
-    return res;
+    return *(this->output);
 }
 
-std::vector<libdl::TensorWrapper3D> libdl::layers::Convolution2D::backward(std::vector<libdl::TensorWrapper3D> gradients_, double lr){//Multiple 2D gradients
+libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::backward(libdl::TensorWrapper_Exp& gradients_, double lr){//Multiple 2D gradients
+    //TODO: Call the full_convolution operation here, which is implemented at the TensorWrapper_Exp class.
+    libdl::TensorWrapper_Exp filter_gradients;
+
+    filter_gradients = this->input->full_convolution(gradients_, filter_gradients);
+
+    this->filters = this->filters + lr * filter_gradients;
+
     return gradients_;
 }
 
-
-//template <typename Tensor>
-Eigen::MatrixXd libdl::layers::Convolution2D::correlation2D(Eigen::MatrixXd to_corralate_,Eigen::MatrixXd filter_) const{
-    //*(this->input) = input;
-
-    //add padding if there is padding to be added
-
-    int o_rows = ((to_corralate_.rows() + (2 * this->padding) - this->kernel_size)/this->stride) + 1;
-    int o_cols = (to_corralate_.cols() + (2 * this->padding) - this->kernel_size)/this->stride + 1;
-
-    this->add_padding2D(to_corralate_);//Working as it should
-
-    std::cout << "\nOutput shape: " << o_rows << "x" << o_cols << std::endl;
-
-    Eigen::MatrixXd output(o_rows, o_cols);
-
-    for(int i = 0; i < o_rows; i++){
-        for(int j = 0; j < o_cols; j++){
-            output(i, j) = (to_corralate_.block(i, j, this->kernel_size, this->kernel_size).array()*
-                    filter_.array()).sum();
-        }
-    }
-
-
-    return output;
-
-}
 
 //Maybe this will not be neccessary: Most probably
 //template <typename Tensor>
@@ -247,25 +215,7 @@ Eigen::MatrixXd libdl::layers::Convolution2D::rotate180(Eigen::MatrixXd filter) 
 
 //Adds *padding* rows in each direction.
 //template <typename Tensor>
-Eigen::MatrixXd libdl::layers::Convolution2D::add_padding2D(Eigen::MatrixXd to_pad_) const{
-    //TODO: Implement the padding part
-    if(this->padding == 0){
-        return to_pad_;
-    }else{
 
-        Eigen::MatrixXd tmp(to_pad_.rows()+2 * this->padding, to_pad_.cols() + 2 * this->padding);
-
-        tmp = Eigen::MatrixXd::Constant(to_pad_.rows()+2 * padding, to_pad_.cols() + 2 * padding, 0);
-
-        tmp.block(padding, padding, to_pad_.rows(), to_pad_.cols()) = to_pad_;
-
-        to_pad_ = tmp;
-
-
-
-        return to_pad_;
-    }
-}
 
 
 
