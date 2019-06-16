@@ -33,7 +33,7 @@ endfunction()
 
 
 
-find_package(Python REQUIRED)
+find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
