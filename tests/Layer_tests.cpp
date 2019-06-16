@@ -2,7 +2,7 @@
 // Created by Aldi Topalli on 2019-05-08.
 //
 
-//#define CATCH_CONFIG_RUNNER
+#define CATCH_CONFIG_RUNNER
 
 #include <iostream>
 #include "catch.hpp"
@@ -13,15 +13,13 @@
 
 #include "TensorWrapper.h"
 
-namespace py = pybind11;
-
 using namespace Eigen;
 
 
 
 int main(int argc, char* argv[]){
     std::cout << "Running tests...\n";
-    //int result = Catch::Session().run(argc, argv);
+    int result = Catch::Session().run(argc, argv);
 
     std::cout << "All tests ran!\n";
 
