@@ -42,6 +42,8 @@ TensorWrapper3D& TensorWrapper3D::operator=(const TensorWrapper3D& rhs){
     this->first_dim = rhs.get_first_dim();
     this->second_dim = rhs.get_second_dim();
     this->third_dim = rhs.get_third_dim();
+
+    return *this;
 }
 
 
@@ -162,6 +164,8 @@ TensorWrapper3D TensorWrapper3D::operator* (double num){
     for(int i = 0; i < this->get_third_dim(); i++){
         this->tensor.at(i) *= num;
     }
+
+    return *this;
 }
 
 TensorWrapper3D TensorWrapper3D::operator+ (TensorWrapper3D& tensor_){
@@ -276,6 +280,8 @@ const TensorWrapper_Exp libdl::TensorWrapper_Exp::operator+(TensorWrapper_Exp& a
         }
 
         *(this->tensor) = *(this->tensor) + add_.get_tensor();
+
+        return *this;
 
     }catch(std::invalid_argument &err){
         std::cerr << "libdl::TensorWrapper::operator+: " << err.what() << std::endl;

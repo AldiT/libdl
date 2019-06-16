@@ -219,7 +219,7 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::backward(libdl::TensorWr
 //Maybe this will not be neccessary: Most probably
 //template <typename Tensor>
 Eigen::MatrixXd libdl::layers::Convolution2D::rotate180(Eigen::MatrixXd filter) {
-
+    return filter;
 }
 
 //Adds *padding* rows in each direction.

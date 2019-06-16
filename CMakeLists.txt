@@ -18,7 +18,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories("include")
 include_directories("extern")
-include_directories("extern/pybind11/include")
+include_directories("extern/pybind11")
 
 
 
@@ -29,8 +29,6 @@ function(SET_PATHS_TO_LIBRARIES)
 
     include_directories("${PROJECT_SOURCE_DIR}/extern/eigen3")
     message("Eigen3 path set up!")
-
-    include_directories("${PROJECT_SOURCE_DIR}/extern/pybind11/include")
 
 endfunction()
 
@@ -43,14 +41,12 @@ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 include_directories(${EIGEN3_INCLUDE_DIRS})
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/extern/pybind11)
-add_subdirectory(${PROJECT_SOURCE_DIR}/extern/opencv)
-include_directories("${PROJECT_SOURCE_DIR}/extern/opencv/include")
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     target_compile_options(pybind11 INTERFACE -fsized-deallocation)
 endif()
 
-pybind11_add_module(libdl "${PROJECT_SOURCE_DIR}/tests/Layer_tests.cpp")
+pybind11_add_module(example "${PROJECT_SOURCE_DIR}/tests/TensorWrapper_tests.cpp")
 
 add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h tests/Layer_tests.cpp src/TensorWrapper.cpp include/TensorWrapper.h src/ErrorFunctions.cpp include/ErrorFunctions.h)
 target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)

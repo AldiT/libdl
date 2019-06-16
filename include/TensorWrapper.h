@@ -105,9 +105,10 @@ public:
     Eigen::MatrixXd& get_tensor() const;
     void set_tensor(Eigen::MatrixXd new_tensor);
 
+    /*
     friend std::ostream& operator<< (std::ostream& os, TensorWrapper_Exp wrapper_){
         os << "Tensor: \n" << wrapper_.get_tensor() << std::endl;
-    }
+    }*/
 
 protected:
 
