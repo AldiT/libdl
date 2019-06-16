@@ -66,7 +66,7 @@ public:
     void add(libdl::layers::Layer<TensorType> layer);
 
 
-    libdl::model::History train(std::vector<libdl::TensorWrapper3D>, int epochs, double lr, double lr_decay, int batch_size,
+    libdl::model::History train(libdl::TensorWrapper_Exp&, int epochs, double lr, double lr_decay, int batch_size,
             libdl::model::Optimizer optimizer);
 
     libdl::model::History test();

@@ -79,8 +79,8 @@ public:
     TensorWrapper_Exp& operator= (const TensorWrapper_Exp&);
 
     Eigen::MatrixXd operator() (int i) const; //return i-th instance
-    TensorWrapper_Exp& operator+(TensorWrapper_Exp&);
-    TensorWrapper_Exp& operator*(double);
+    const TensorWrapper_Exp operator+(TensorWrapper_Exp&) const;
+    const TensorWrapper_Exp operator*(double) const;
 
     TensorWrapper_Exp& correlation(TensorWrapper_Exp& , int , int, TensorWrapper_Exp&) const;
     TensorWrapper_Exp& full_convolution(TensorWrapper_Exp&, TensorWrapper_Exp&) const;

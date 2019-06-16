@@ -27,12 +27,26 @@ int main(int argc, char* argv[]){
     return 0;
 }
 
+void printImg(double img[]){
+    std::cout << Eigen::Map<MatrixXd>(img) << std::endl;
+}
+
+PYBIND11_MODULE(libdl, m){
+    m.doc() = "This function will read an image";
+    m.def("printImg", &printImg, "This function prints a matrix");
+}
+
+
+
+
+/*
 SCENARIO("Testing the Convolution Layer", "[ConvolutionLayer]"){
     GIVEN("A convolution layer"){
         libdl::layers::Convolution2D conv(3, 16, 1, 1, 3);
 
         libdl::TensorWrapper_Exp input(16, 28, 28, 3);
         input.set_tensor(Eigen::MatrixXd::Constant(16, 28*28*3, 1));
+
 
         WHEN("random input goes through the layer"){
             libdl::TensorWrapper_Exp output(16, 28, 28, 16);
@@ -44,4 +58,4 @@ SCENARIO("Testing the Convolution Layer", "[ConvolutionLayer]"){
 
 
     }
-}
+}*/

@@ -171,7 +171,7 @@ libdl::layers::Convolution2D::Convolution2D(int kernel_size_, int num_filters_, 
 
     this->filters = std::make_unique<libdl::TensorWrapper_Exp>(this->num_filters,
             this->kernel_size, this->kernel_size, this->input_depth, true);//Initialize filters randomly
-   this->filters->set_tensor();
+   //this->filters->set_tensor();
 
     this->biases = std::make_unique<Eigen::VectorXd>(this->num_filters);
     *(this->biases) = Eigen::VectorXd::Constant(this->num_filters, 1);
@@ -192,16 +192,25 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::forward(libdl::TensorWra
 
     this->input->correlation(*(this->filters), this->padding, this->stride, *(this->output));
 
+    //TODO: Add biases to the output of the layer
+
+
     return *(this->output);
 }
 
 libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::backward(libdl::TensorWrapper_Exp& gradients_, double lr){//Multiple 2D gradients
-    //TODO: Call the full_convolution operation here, which is implemented at the TensorWrapper_Exp class.
+
     libdl::TensorWrapper_Exp filter_gradients;
 
-    filter_gradients = this->input->full_convolution(gradients_, filter_gradients);
+    filter_gradients = this->input->correlation(gradients_, this->padding, this->stride, filter_gradients);
 
-    this->filters = this->filters + lr * filter_gradients;
+    filter_gradients = filter_gradients * lr;
+
+    *(this->filters) = *(this->filters) + filter_gradients;
+
+    //TODO: Update the biases aswell, calculate the gradients for biases as well
+
+    gradients_ = gradients_.full_convolution(*(this->filters), gradients_);
 
     return gradients_;
 }

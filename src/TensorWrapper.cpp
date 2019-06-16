@@ -269,7 +269,7 @@ TensorWrapper_Exp& libdl::TensorWrapper_Exp::operator=(const libdl::TensorWrappe
     return *this;
 }
 
-TensorWrapper_Exp& libdl::TensorWrapper_Exp::operator+(TensorWrapper_Exp& add_){
+const TensorWrapper_Exp libdl::TensorWrapper_Exp::operator+(TensorWrapper_Exp& add_) const{
     try{
         if(add_.get_tensor().rows() != this->tensor->rows() || add_.get_tensor().cols() != this->tensor->cols()){
             throw std::invalid_argument("The size of the tensors does not match!"); //TODO: Maybe check individual dimensions so that you know which one to set to which value
@@ -283,7 +283,7 @@ TensorWrapper_Exp& libdl::TensorWrapper_Exp::operator+(TensorWrapper_Exp& add_){
     }
 }
 
-TensorWrapper_Exp& libdl::TensorWrapper_Exp::operator*(double weight){
+const TensorWrapper_Exp libdl::TensorWrapper_Exp::operator*(double weight) const{
     *(this->tensor) *= weight;
 
     return *this;

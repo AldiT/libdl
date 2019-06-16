@@ -69,8 +69,9 @@ void libdl::model::Model<TensorType>::add(libdl::layers::Layer<TensorType> layer
 }
 
 template <typename TensorType>
-libdl::model::History libdl::model::Model<TensorType>::train(std::vector<libdl::TensorWrapper3D> train_data, int epochs, double lr, double lr_decay, int batch_size,
+libdl::model::History libdl::model::Model<TensorType>::train(TensorWrapper_Exp& train_data, int epochs, double lr, double lr_decay, int batch_size,
                      libdl::model::Optimizer optimizer) {
+    /*
     this->training_epochs = epochs;
     this->learning_rate = lr;
     this->learning_rate_decay = lr_decay;
@@ -91,7 +92,7 @@ libdl::model::History libdl::model::Model<TensorType>::train(std::vector<libdl::
 
             }
         }
-    }
+    }*/
 
     //TODO: Needs to return what it needs to return sports
 }
