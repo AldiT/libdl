@@ -47,9 +47,9 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/extern/pybind11)
 
 pybind11_add_module(example "${PROJECT_SOURCE_DIR}/tests/pybind_tests.cpp")
 
-#add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h tests/Layer_tests.cpp src/TensorWrapper.cpp include/TensorWrapper.h src/ErrorFunctions.cpp include/ErrorFunctions.h)
-#target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
+add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h tests/Layer_tests.cpp src/TensorWrapper.cpp include/TensorWrapper.h src/ErrorFunctions.cpp include/ErrorFunctions.h)
+target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
 
-#target_link_libraries(${TEST_TARGET} ${PYTHON_LIBRARIES})
-#target_link_libraries(${TEST_TARGET} Eigen3::Eigen)
+target_link_libraries(${TEST_TARGET} ${PYTHON_LIBRARIES})
+target_link_libraries(${TEST_TARGET} Eigen3::Eigen)
 

@@ -3,23 +3,21 @@
 //
 
 #include <pybind11/pybind11.h>
+#include <pybind11/eigen.h>
 #include <iostream>
+
+typedef Eigen::MatrixXd Matrix;
 
 namespace py = pybind11;
 
-int add(uint* arr){
-    int length = sizeof(arr) / sizeof(uint);
+Matrix print(Matrix &m){
 
-    std::cout << "\n\n";
-    for(int i = 0; i < length; i++){
-        std::cout << arr[i] << " ";
-    }
-    std::cout << "\n\n";
+    std::cout << "Printintg matrix: \n\n" << m << std::endl;
 
-    return 1;
+    return m;
 }
 
 PYBIND11_MODULE(example, m){
 
-    m.def("add", &add, "");
+    m.def("print", &print, "");
 }

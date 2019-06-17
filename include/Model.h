@@ -18,7 +18,7 @@ namespace libdl::model{
     class Model;
     class History;
     struct Milestone;
-    class Optimizer;
+    class Optimizer; //TODO: Implement this in a seperate class
 }
 
 typedef libdl::model::Milestone milestone;
@@ -87,13 +87,6 @@ private:
 };
 
 
-class libdl::model::Optimizer{
-public:
-
-protected:
-
-private:
-};
 
 
 #endif //LIBDL_MODEL_H
