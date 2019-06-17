@@ -46,8 +46,9 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/extern/pybind11)
 #endif()
 
 pybind11_add_module(example "${PROJECT_SOURCE_DIR}/tests/pybind_tests.cpp")
+target_link_libraries(example PUBLIC pybind11::module)
 
-add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h tests/Layer_tests.cpp src/TensorWrapper.cpp include/TensorWrapper.h src/ErrorFunctions.cpp include/ErrorFunctions.h)
+add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h tests/Layer_tests.cpp src/TensorWrapper.cpp include/TensorWrapper.h src/ErrorFunctions.cpp include/ErrorFunctions.h include/data.h include/data_handler.h src/data.cpp src/data_handler.cpp)
 target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
 
 target_link_libraries(${TEST_TARGET} ${PYTHON_LIBRARIES})

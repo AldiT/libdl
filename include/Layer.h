@@ -7,10 +7,11 @@
 
 #include <memory>
 #include <vector>
-#include "Eigen/Dense"
 #include <string>
+#include "Eigen/Dense"
 #include "TensorWrapper.h"
 
+namespace libdl{}
 
 namespace libdl::layers {
     template <typename Tensor>

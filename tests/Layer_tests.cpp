@@ -12,12 +12,32 @@
 #include "ErrorFunctions.h"
 
 #include "TensorWrapper.h"
+#include <stdint.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 using namespace Eigen;
 
 
 
+
+/*
+
 int main(int argc, char* argv[]){
+    int width, height, bpp;
+
+    uint8_t* img = stbi_load("../../data/trainingSet/0/img_366.jpg", &width, &height, &bpp, 1);
+
+    stbi_image_free(img);
+
+    for(int i = 0; i < width; i++){
+        for(int j = 0; j < height; j++){
+            std::cout << img[i*j];
+        }
+    }
+
+
+
     std::cout << "Running tests...\n";
     int result = Catch::Session().run(argc, argv);
 
@@ -134,7 +154,7 @@ int main(int argc, char* argv[]){
 
 
     return 0;
-}
+}*/
 
 
 /*
