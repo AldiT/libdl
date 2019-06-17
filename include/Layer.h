@@ -34,13 +34,13 @@ class libdl::layers::Layer {
     public:
         Layer();
         Layer(int){};
-        ~Layer();
+        virtual ~Layer(){};
 
         //forward pass function
-        virtual Tensor& forward(Tensor& input) = 0;
+        virtual Tensor forward(Tensor input) = 0;
 
         //backward pass function
-        virtual Tensor& backward(Tensor& gradient, double lr) = 0;
+        virtual Tensor backward(Tensor gradient, double lr) = 0;
 
 
 
@@ -72,26 +72,26 @@ class libdl::layers::Layer {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-class libdl::layers::DenseLayer2D: protected libdl::layers::Layer<Eigen::MatrixXd>{
+class libdl::layers::DenseLayer2D: public libdl::layers::Layer<TensorWrapper_Exp>{
 public:
 
     DenseLayer2D(int, int, std::string);
 
-    Eigen::MatrixXd& forward(Eigen::MatrixXd& );
-    Eigen::MatrixXd& backward(Eigen::MatrixXd& , double );
+    TensorWrapper_Exp forward(TensorWrapper_Exp );
+    TensorWrapper_Exp backward(TensorWrapper_Exp , double );
 
 
     int rows(){
-        return this->weights->rows();
+        return this->weights->get_batch_size();
     }
 
     std::string info();
 
     Eigen::MatrixXd get_weights(){
-        return *(this->weights);
+        return this->weights->get_tensor();
     }
 
-    Eigen::MatrixXd get_biases(){
+    Eigen::VectorXd get_biases(){
         return *(this->biases);
     }
 
@@ -125,11 +125,11 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 // IDEA: Maybe create a new namespace : activations
-class libdl::layers::Sigmoid : libdl::layers::Layer<Eigen::MatrixXd>{
+class libdl::layers::Sigmoid : public libdl::layers::Layer<TensorWrapper_Exp>{
 public:
 
-    Eigen::MatrixXd& forward(Eigen::MatrixXd& input);
-    Eigen::MatrixXd& backward(Eigen::MatrixXd& gradients, double lr);
+    TensorWrapper_Exp forward(TensorWrapper_Exp input);
+    TensorWrapper_Exp backward(TensorWrapper_Exp gradients, double lr);
 
 
 protected:
@@ -156,7 +156,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 //template <typename Tensor>
-class libdl::layers::Convolution2D : libdl::layers::Layer<libdl::TensorWrapper_Exp>{
+class libdl::layers::Convolution2D : public libdl::layers::Layer<libdl::TensorWrapper_Exp>{
 public:
     //constructor
     Convolution2D(int kernel_size_=3, int num_filters_=16, int stride_=1, int padding_=0, int input_depth_=3);

@@ -13,16 +13,19 @@
 #include <memory>
 #include <list>
 
+
+
 namespace libdl::model{
     template <typename TensorType>
     class Model;
     class History;
     struct Milestone;
-    class Optimizer; //TODO: Implement this in a seperate class
+    class Optimizer; //TODO: Implement this in a seperate file
 }
 
-typedef libdl::model::Milestone milestone;
 
+typedef libdl::model::Milestone Milestone;
+typedef libdl::model::History History;
 
 
 
@@ -39,8 +42,8 @@ public:
     std::string getMessage();
     void setMessage(std::string);
 
-    std::list<milestone> getHistory();
-    bool addHistory(milestone);
+    std::list<Milestone> getHistory();
+    bool addHistory(Milestone);
 
     void clearHistory();
 
@@ -48,7 +51,7 @@ protected:
 
 private:
     std::string msg;
-    std::list<milestone> history;
+    std::list<Milestone> history;
 };
 
 
@@ -60,14 +63,14 @@ private:
 template <typename TensorType>
 class libdl::model::Model {
 public:
-    Model() {};
+    Model();
 
 
-    void add(libdl::layers::Layer<TensorType> layer);
+    void add(libdl::layers::Layer<TensorType>* layer);
 
 
-    libdl::model::History train(libdl::TensorWrapper_Exp&, int epochs, double lr, double lr_decay, int batch_size,
-            libdl::model::Optimizer optimizer);
+    libdl::model::History train(libdl::TensorWrapper_Exp&, int epochs, double lr, double lr_decay, int batch_size/*,
+            libdl::model::Optimizer optimizer*/); //For now Optimizer let it be just null
 
     libdl::model::History test();
 
@@ -81,9 +84,8 @@ private:
     double learning_rate;
     double learning_rate_decay;
     int batch_size;
-    std::unique_ptr<libdl::model::Optimizer> optimizer;
-    std::list<libdl::layers::Layer<TensorType>> model;
-    std::unique_ptr<libdl::model::History> history;
+    std::list<std::unique_ptr<libdl::layers::Layer<TensorType>>> model;
+    std::unique_ptr<History> history;
 };
 
 

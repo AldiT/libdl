@@ -77,6 +77,7 @@ public:
 
     //Constructors
     TensorWrapper_Exp(int batch_size_=16, int tensor_height_=28, int tensor_width_=28, int tensor_depth_=3, bool are_filters_=false); //default values for mnist
+    TensorWrapper_Exp(int, int, bool);
     TensorWrapper_Exp(const TensorWrapper_Exp&);
     TensorWrapper_Exp& operator= (const TensorWrapper_Exp&);
 
@@ -124,6 +125,7 @@ private:
     int tensor_width;
     int tensor_depth;
     bool are_filters;
+    bool is_2D;
 };
 
 

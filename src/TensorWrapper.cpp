@@ -243,6 +243,22 @@ libdl::TensorWrapper_Exp::TensorWrapper_Exp(int batch_size_, int tensor_height_,
 
 }
 
+libdl::TensorWrapper_Exp::TensorWrapper_Exp(int height, int width, bool are_weights):
+    are_filters(are_weights), tensor_height(height), tensor_width(width), is_2D(true)
+{
+    try {
+        this->tensor = std::make_unique<Eigen::MatrixXd>(height, width);
+
+        if (this->are_filters)
+            *(this->tensor) = Eigen::MatrixXd::Random(height, width);
+
+    }catch(std::bad_alloc &err){
+        std::cout << "TensorWrapper_Exp::TensorWrapper_Exp(...): Not enough memory: " << err.what() << std::endl;
+        std::exit(-1);
+    }
+
+}
+
 //copy constructor
 libdl::TensorWrapper_Exp::TensorWrapper_Exp(const libdl::TensorWrapper_Exp &copy_cnstr) {
     this->batch_size    = copy_cnstr.get_batch_size();
@@ -251,11 +267,12 @@ libdl::TensorWrapper_Exp::TensorWrapper_Exp(const libdl::TensorWrapper_Exp &copy
     this->tensor_depth  = copy_cnstr.get_tensor_depth();
     this->are_filters   = copy_cnstr.is_filter();
 
-    this->tensor = std::make_unique<Eigen::MatrixXd>(this->batch_size,
-                                                     this->tensor_height * this->tensor_width * this->tensor_depth);
+    this->tensor = std::make_unique<Eigen::MatrixXd>(copy_cnstr.get_tensor().rows(), copy_cnstr.get_tensor().cols());
 
-    *(this->tensor)     = copy_cnstr.get_tensor();
+    this->set_tensor(copy_cnstr.get_tensor());
 }
+
+
 
 
 //OPERATOR OVERLOADING SECTION

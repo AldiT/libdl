@@ -19,7 +19,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 libdl::model::History::History() {
-    this->history = std::list<milestone>();
+    this->history = std::list<Milestone>();
 
 }
 
@@ -31,11 +31,11 @@ void libdl::model::History::setMessage(std::string msg_) {
     this->msg = msg_;
 }
 
-std::list<milestone> libdl::model::History::getHistory() {
+std::list<Milestone> libdl::model::History::getHistory() {
     return this->history;
 }
 
-bool libdl::model::History::addHistory(milestone to_add) {
+bool libdl::model::History::addHistory(Milestone to_add) {
     try{
         this->history.push_back(to_add);
         return true;
@@ -62,15 +62,20 @@ void libdl::model::History::clearHistory() {
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
+template <typename TensorType>
+libdl::model::Model<TensorType>::Model() {
+}
+
 //Model
 template <typename TensorType>
-void libdl::model::Model<TensorType>::add(libdl::layers::Layer<TensorType> layer_) {
-    this->model.push_back(layer_);
+void libdl::model::Model<TensorType>::add(libdl::layers::Layer<TensorType>* layer_) {
+    this->model.push_back(std::make_unique<libdl::TensorWrapper_Exp>(layer_));
 }
 
 template <typename TensorType>
-libdl::model::History libdl::model::Model<TensorType>::train(TensorWrapper_Exp& train_data, int epochs, double lr, double lr_decay, int batch_size,
-                     libdl::model::Optimizer optimizer) {
+libdl::model::History libdl::model::Model<TensorType>::train(TensorWrapper_Exp& train_data, int epochs, double lr,
+        double lr_decay, int batch_size)
+{
     /*
     this->training_epochs = epochs;
     this->learning_rate = lr;
