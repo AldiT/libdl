@@ -17,14 +17,7 @@ using namespace libdl::layers;
 /////                            <Layer>                                   /////
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
-template <typename Tensor>
-Layer<Tensor>::Layer() {
 
-}
-template <typename Tensor>
-Layer<Tensor>::~Layer() {
-
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /////                                                                      /////
@@ -62,7 +55,7 @@ DenseLayer2D::DenseLayer2D(int input_features, int num_neurons, std::string name
 
 }
 
-Eigen::MatrixXd& DenseLayer2D::forward(Eigen::MatrixXd& input) {
+Eigen::MatrixXd DenseLayer2D::forward(Eigen::MatrixXd input) {
 
     try{
 
@@ -75,12 +68,14 @@ Eigen::MatrixXd& DenseLayer2D::forward(Eigen::MatrixXd& input) {
             throw msg;
         }
 
-        input = input * *(this->weights);
+        Eigen::MatrixXd temp;
+        temp = input * *(this->weights);
 
-        input.rowwise() += this->biases->transpose();
+        temp.rowwise() += this->biases->transpose();
 
 
-        return input;
+
+        return temp;
 
     }catch (const std::string msg){
         std::cerr << msg <<std::endl;
@@ -91,7 +86,7 @@ Eigen::MatrixXd& DenseLayer2D::forward(Eigen::MatrixXd& input) {
     }
 }
 
-Eigen::MatrixXd& DenseLayer2D::backward(Eigen::MatrixXd& gradient, double lr) {
+Eigen::MatrixXd DenseLayer2D::backward(Eigen::MatrixXd gradient, double lr) {
 
     //update weights
     *(this->weights) -= lr * (this->input->transpose() * gradient); // replace 4 by N
@@ -125,24 +120,20 @@ std::string DenseLayer2D::info(){
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
-Eigen::MatrixXd& Sigmoid::forward(Eigen::MatrixXd& input){
+Eigen::MatrixXd Sigmoid::forward(Eigen::MatrixXd input){
 
     this->input = std::make_unique<Eigen::MatrixXd>(input);
 
-    input = input.unaryExpr([this](double e){ return this->sigmoid(e);});
-
-    return input;
+    return  input.unaryExpr([this](double e){ return this->sigmoid(e);});
 }
 
-Eigen::MatrixXd& Sigmoid::backward(Eigen::MatrixXd& gradient, double lr){
+Eigen::MatrixXd Sigmoid::backward(Eigen::MatrixXd gradient, double lr){
 
     //std::cout << "\nShape of temp:\n" << temp.rows() << "x" << temp.cols() << std::endl;
     //std::cout << "\nShape of gradient: \n" << gradient.rows() << "x" << gradient.cols() << std::endl;
 
-    this->input->unaryExpr([this](double e)
+    return this->input->unaryExpr([this](double e)
                            {return this->sigmoid(e) * (1 - this->sigmoid(e));}).array() * gradient.array();
-
-    return *(this->input);
 }
 
 double Sigmoid::sigmoid(double input){
@@ -180,7 +171,7 @@ libdl::layers::Convolution2D::Convolution2D(int kernel_size_, int num_filters_, 
 }
 
 
-libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::forward(libdl::TensorWrapper_Exp& inputs_){//this should be multiple 2D images
+libdl::TensorWrapper_Exp libdl::layers::Convolution2D::forward(libdl::TensorWrapper_Exp inputs_){//this should be multiple 2D images
 
     this->input = std::make_unique<libdl::TensorWrapper_Exp>(inputs_); //operator=
 
@@ -198,7 +189,7 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::forward(libdl::TensorWra
     return *(this->output);
 }
 
-libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::backward(libdl::TensorWrapper_Exp& gradients_, double lr){//Multiple 2D gradients
+libdl::TensorWrapper_Exp libdl::layers::Convolution2D::backward(libdl::TensorWrapper_Exp gradients_, double lr){//Multiple 2D gradients
 
     libdl::TensorWrapper_Exp filter_gradients;
 

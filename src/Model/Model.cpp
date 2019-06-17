@@ -69,8 +69,8 @@ void libdl::model::Model<TensorType>::add(libdl::layers::Layer<TensorType> layer
 }
 
 template <typename TensorType>
-libdl::model::History libdl::model::Model<TensorType>::train(TensorWrapper_Exp& train_data, int epochs, double lr, double lr_decay, int batch_size,
-                     libdl::model::Optimizer optimizer) {
+libdl::model::History libdl::model::Model<TensorType>::train(TensorWrapper_Exp& train_data, int epochs,
+        double lr, double lr_decay, int batch_size) {
     /*
     this->training_epochs = epochs;
     this->learning_rate = lr;

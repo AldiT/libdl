@@ -32,15 +32,15 @@ namespace libdl::layers {
 template <typename Tensor>
 class libdl::layers::Layer {
     public:
-        Layer();
+        Layer() {};
         Layer(int){};
-        ~Layer();
+        ~Layer() {};
 
         //forward pass function
-        virtual Tensor& forward(Tensor& input) = 0;
+        virtual Tensor forward(Tensor input) = 0;
 
         //backward pass function
-        virtual Tensor& backward(Tensor& gradient, double lr) = 0;
+        virtual Tensor backward(Tensor gradient, double lr) = 0;
 
 
 
@@ -77,8 +77,8 @@ public:
 
     DenseLayer2D(int, int, std::string);
 
-    Eigen::MatrixXd& forward(Eigen::MatrixXd& );
-    Eigen::MatrixXd& backward(Eigen::MatrixXd& , double );
+    Eigen::MatrixXd forward(Eigen::MatrixXd );
+    Eigen::MatrixXd backward(Eigen::MatrixXd , double );
 
 
     int rows(){
@@ -128,8 +128,8 @@ protected:
 class libdl::layers::Sigmoid : libdl::layers::Layer<Eigen::MatrixXd>{
 public:
 
-    Eigen::MatrixXd& forward(Eigen::MatrixXd& input);
-    Eigen::MatrixXd& backward(Eigen::MatrixXd& gradients, double lr);
+    Eigen::MatrixXd forward(Eigen::MatrixXd input);
+    Eigen::MatrixXd backward(Eigen::MatrixXd gradients, double lr);
 
 
 protected:
@@ -165,8 +165,8 @@ public:
 
 
 
-    libdl::TensorWrapper_Exp& forward(libdl::TensorWrapper_Exp& input_);
-    libdl::TensorWrapper_Exp& backward(libdl::TensorWrapper_Exp& gradients_, double lr);
+    libdl::TensorWrapper_Exp forward(libdl::TensorWrapper_Exp input_);
+    libdl::TensorWrapper_Exp backward(libdl::TensorWrapper_Exp gradients_, double lr);
 
 
 protected:

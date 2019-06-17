@@ -58,7 +58,6 @@ SCENARIO("Testing the experimental TensorWrapper", "[TensorWrapper_Exp]"){
             libdl::TensorWrapper_Exp output(3, 28, 28, 16, false); //same padding=1
             input.correlation(filters, 1, 1, output);
 
-            std::cout << "\nFirst slice: \n" << output.get_slice(0, 0) << std::endl;
 
             THEN("now check the values of the correlation"){
                 auto a_slice = output.get_slice(0, 0);

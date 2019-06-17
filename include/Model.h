@@ -66,8 +66,7 @@ public:
     void add(libdl::layers::Layer<TensorType> layer);
 
 
-    libdl::model::History train(libdl::TensorWrapper_Exp&, int epochs, double lr, double lr_decay, int batch_size,
-            libdl::model::Optimizer optimizer);
+    libdl::model::History train(libdl::TensorWrapper_Exp&, int epochs, double lr, double lr_decay, int batch_size);
 
     libdl::model::History test();
 
@@ -81,7 +80,7 @@ private:
     double learning_rate;
     double learning_rate_decay;
     int batch_size;
-    std::unique_ptr<libdl::model::Optimizer> optimizer;
+    //std::unique_ptr<libdl::model::Optimizer> optimizer; //Incomplete type
     std::list<libdl::layers::Layer<TensorType>> model;
     std::unique_ptr<libdl::model::History> history;
 };
