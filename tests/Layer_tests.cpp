@@ -32,12 +32,14 @@ int main(int argc, char* argv[]){
     std::cout << "Downloading features.\n";
     dh->read_feature_label("../data/train-labels-idx1-ubyte");
     std::cout << "Downloading labels.\n";
-    //dh->split_data();
-    //dh->count_classes();
+    dh->split_data();
+    dh->count_classes();
 
     libdl::TensorWrapper_Exp train_data   = dh->convert_training_data_to_Eigen();
     libdl::TensorWrapper_Exp train_labels = dh->convert_training_labels_to_Eigen();
-    std::cout << "data as twe.\n";
+    std::cout << "data as twe.\n" << "Size: " << train_data.get_batch_size()
+    << " Height: " << train_data.get_tensor_height() << " Width: " << train_data.get_tensor_width()
+    << " Depth: " << train_data.get_tensor_depth() << std::endl;
 
     libdl::layers::Convolution2D conv1(3, 16, 1, 1, 1); //28x28x1
     std::cout << "conv 1.\n";
@@ -71,6 +73,7 @@ int main(int argc, char* argv[]){
 
 
     libdl::TensorWrapper_Exp batch(16, 28, 28, 1, false);
+    batch.set_tensor(train_data.get_tensor().block(0, 0, 16, 28*28), 28, 28, 1);
     std::cout << "Batch created.\n";
 
 
