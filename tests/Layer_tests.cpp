@@ -44,7 +44,7 @@ int main(int argc, char* argv[]){
     libdl::layers::ReLU relu2;
     libdl::layers::MaxPool pool2(2, 2);//7x7x32
 
-    libdl::layers::Flatten flatten(7, 7, 7, 7);//7x7*32
+    libdl::layers::Flatten flatten(16, 7, 7, 32);//7x7*32
 
     libdl::layers::DenseLayer2D dense1(1152, 500, "dense1"); //224x100
     libdl::layers::ReLU relu3;

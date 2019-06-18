@@ -232,9 +232,9 @@ Eigen::MatrixXd libdl::layers::Convolution2D::rotate180(Eigen::MatrixXd filter) 
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
-libdl::layers::Flatten::Flatten(int input_height, int input_width, int gradient_height, int gradient_width){
-    this->input = std::make_unique<libdl::TensorWrapper_Exp>(input_height, input_width);
-    this->gradient = std::make_unique<libdl::TensorWrapper_Exp>(gradient_height, gradient_width);
+libdl::layers::Flatten::Flatten(int batch_size, int height, int width, int depth){
+    this->input = std::make_unique<libdl::TensorWrapper_Exp>(batch_size, height, width, depth, false);
+    this->gradient = std::make_unique<libdl::TensorWrapper_Exp>(batch_size, height, width, depth, false);
 }
 
 Eigen::MatrixXd& libdl::layers::Flatten::forward(libdl::TensorWrapper_Exp& input) {

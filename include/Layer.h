@@ -217,7 +217,7 @@ private:
 class libdl::layers::Flatten
 {
 public:
-    Flatten(int input_height, int input_width, int gradient_height, int gradient_width);
+    Flatten(int batch_size, int height, int width, int depth);
 
     Matrixd& forward(TensorWrapper& input);
     TensorWrapper& backward(Matrixd& gradients);
