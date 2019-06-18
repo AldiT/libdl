@@ -25,34 +25,49 @@ int main(int argc, char* argv[]){
     std::cout << "Running tests...\n";
     int result = Catch::Session().run(argc, argv);
 
+    std::cout << "Downloading data.\n";
     std::unique_ptr<data_handler> dh = std::make_unique<data_handler>();
 
     dh->read_feature_vector("../data/train-images-idx3-ubyte");
+    std::cout << "Downloading features.\n";
     dh->read_feature_label("../data/train-labels-idx1-ubyte");
-    dh->split_data();
-    dh->count_classes();
+    std::cout << "Downloading labels.\n";
+    //dh->split_data();
+    //dh->count_classes();
 
     libdl::TensorWrapper_Exp train_data   = dh->convert_training_data_to_Eigen();
     libdl::TensorWrapper_Exp train_labels = dh->convert_training_labels_to_Eigen();
+    std::cout << "data as twe.\n";
 
     libdl::layers::Convolution2D conv1(3, 16, 1, 1, 1); //28x28x1
+    std::cout << "conv 1.\n";
     libdl::layers::ReLU relu1;//28x28x1
+    std::cout << "relu1.\n";
 
     libdl::layers::MaxPool pool1(3, 2);//14x14x16
+    std::cout << "pool1.\n";
 
     libdl::layers::Convolution2D conv2(3, 32, 1, 1, 1);//14x14x32
+    std::cout << "conv2.\n";
     libdl::layers::ReLU relu2;
+    std::cout << "relu2.\n";
     libdl::layers::MaxPool pool2(2, 2);//7x7x32
+    std::cout << "pool2.\n";
 
     libdl::layers::Flatten flatten(16, 7, 7, 32);//7x7*32
+    std::cout << "flatten.\n";
 
     libdl::layers::DenseLayer2D dense1(1152, 500, "dense1"); //224x100
+    std::cout << "dense1.\n";
     libdl::layers::ReLU relu3;
+    std::cout << "relu3.\n";
 
     libdl::layers::DenseLayer2D dense2(500, 10, "dense2");
+    std::cout << "dense2.\n";
 
     libdl::error::CrossEntropy cross_entropy_error(10,
             train_labels.get_tensor().block(0, 0, 16, 1));
+    std::cout << "error.\n";
 
 
     libdl::TensorWrapper_Exp batch(16, 28, 28, 1, false);
