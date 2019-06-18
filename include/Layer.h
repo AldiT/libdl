@@ -43,10 +43,10 @@ class libdl::layers::Layer {
         ~Layer() {};
 
         //forward pass function
-        virtual Tensor forward(Tensor input) = 0;
+        virtual Tensor& forward(Tensor& input) = 0;
 
         //backward pass function
-        virtual Tensor backward(Tensor gradient, double lr) = 0;
+        virtual Tensor& backward(Tensor& gradient, double lr) = 0;
 
 
 
@@ -58,6 +58,7 @@ class libdl::layers::Layer {
         std::unique_ptr<Tensor> weights;
         std::unique_ptr<Eigen::VectorXd> biases;
         std::unique_ptr<Tensor> input;
+        std::unique_ptr<Tensor> output;
         std::string name;
 
 };
@@ -83,8 +84,8 @@ public:
 
     DenseLayer2D(int, int, std::string);
 
-    Matrixd forward(Matrixd);
-    Matrixd backward(Matrixd , double );
+    Matrixd& forward(Matrixd&);
+    Matrixd& backward(Matrixd& , double );
 
 
     int rows(){
@@ -134,8 +135,8 @@ protected:
 class libdl::layers::Sigmoid : libdl::layers::Layer<Matrixd>{
 public:
 
-    Matrixd forward(Matrixd input);
-    Matrixd backward(Matrixd gradients, double lr);
+    Matrixd& forward(Matrixd& input);
+    Matrixd& backward(Matrixd& gradients, double lr);
 
 
 protected:
@@ -171,8 +172,8 @@ public:
 
 
 
-    TensorWrapper forward(TensorWrapper input_);
-    TensorWrapper backward(TensorWrapper gradients_, double lr);
+    TensorWrapper& forward(TensorWrapper& input_);
+    TensorWrapper& backward(TensorWrapper& gradients_, double lr);
 
 
 protected:
@@ -247,8 +248,8 @@ private:
 class libdl::layers::Softmax : libdl::layers::Layer<Matrixd>{
 public:
 
-    Matrixd forward(Matrixd);
-    Matrixd backward(Matrixd, double);
+    Matrixd& forward(Matrixd&);
+    Matrixd& backward(Matrixd&, double);
 
 protected:
 
@@ -275,11 +276,13 @@ class libdl::layers::ReLU
 {
 public:
 
-    Matrixd forward(Matrixd input){
-        return input.unaryExpr([](double e){return ((e > 0)? e : 0);});
+    Matrixd& forward(Matrixd& input){
+        input.unaryExpr([](double e){return ((e > 0)? e : 0);});
+        return input;
     }
-    Matrixd backward(Matrixd gradients, double lr){
-        return gradients.unaryExpr([](double e){return (e > 0 ? e : 0);});
+    Matrixd& backward(Matrixd& gradients, double lr){
+        gradients.unaryExpr([](double e){return (e > 0 ? e : 0);});
+        return gradients;
     }
 
 };
@@ -302,14 +305,15 @@ class libdl::layers::MaxPool: public libdl::layers::Layer<TensorWrapper>
 public:
     MaxPool(int kernel, int stride);
 
-    TensorWrapper forward(TensorWrapper);
-    TensorWrapper backward(TensorWrapper, double);
+    TensorWrapper& forward(TensorWrapper&);
+    TensorWrapper& backward(TensorWrapper&, double);
 
 protected:
 
 private:
     std::unique_ptr<TensorWrapper> past_propagation;
     std::unique_ptr<TensorWrapper> output;
+    std::unique_ptr<TensorWrapper> backward_gradient;
     int window_size;
     int stride;
 

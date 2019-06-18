@@ -236,14 +236,18 @@ libdl::TensorWrapper_Exp::TensorWrapper_Exp(int batch_size_, int tensor_height_,
             *(this->tensor) = Eigen::MatrixXd::Random(this->batch_size,
                                                       this->tensor_height * this->tensor_width * this->tensor_depth);
 
+        this->this_size += sizeof(this);
     }catch(std::bad_alloc &err){
         std::cout << "TensorWrapper_Exp::TensorWrapper_Exp(...): Not enough memory: " << err.what() << std::endl;
         std::exit(-1);
     }
 
+
+
 }
 
 //copy constructor
+
 libdl::TensorWrapper_Exp::TensorWrapper_Exp(const libdl::TensorWrapper_Exp &copy_cnstr) {
     this->batch_size    = copy_cnstr.get_batch_size();
     this->tensor_height = copy_cnstr.get_tensor_height();
@@ -255,6 +259,7 @@ libdl::TensorWrapper_Exp::TensorWrapper_Exp(const libdl::TensorWrapper_Exp &copy
                                                      this->tensor_height * this->tensor_width * this->tensor_depth);
 
     *(this->tensor)     = copy_cnstr.get_tensor();
+    this->this_size += sizeof(this);
 }
 
 
@@ -271,6 +276,8 @@ TensorWrapper_Exp& libdl::TensorWrapper_Exp::operator=(const libdl::TensorWrappe
     *(this->tensor)     = obj.get_tensor();
 
     return *this;
+
+    this->this_size += sizeof(this);
 }
 
 const TensorWrapper_Exp libdl::TensorWrapper_Exp::operator+(TensorWrapper_Exp& add_) const{

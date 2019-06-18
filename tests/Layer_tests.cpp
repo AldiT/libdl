@@ -37,6 +37,8 @@ int main(int argc, char* argv[]){
 
     libdl::TensorWrapper_Exp train_data   = dh->convert_training_data_to_Eigen();
     libdl::TensorWrapper_Exp train_labels = dh->convert_training_labels_to_Eigen();
+    dh.reset(nullptr);
+
     std::cout << "data as twe.\n" << "Size: " << train_data.get_batch_size()
     << " Height: " << train_data.get_tensor_height() << " Width: " << train_data.get_tensor_width()
     << " Depth: " << train_data.get_tensor_depth() << std::endl;
@@ -47,7 +49,7 @@ int main(int argc, char* argv[]){
     std::cout << "relu1.\n";
 
     libdl::layers::MaxPool pool1(3, 2);//14x14x16
-    std::cout << "pool1.\n";
+    std::cout << "pool1.\n"<< " Size till now: " << train_data.get_size() << std::endl;
 
     libdl::layers::Convolution2D conv2(3, 32, 1, 1, 1);//14x14x32
     std::cout << "conv2.\n";
@@ -73,7 +75,6 @@ int main(int argc, char* argv[]){
 
 
     libdl::TensorWrapper_Exp batch(16, 28, 28, 1, false);
-    batch.set_tensor(train_data.get_tensor().block(0, 0, 16, 28*28), 28, 28, 1);
     std::cout << "Batch created.\n";
 
 
@@ -91,9 +92,15 @@ int main(int argc, char* argv[]){
             batch.set_tensor(train_data.get_tensor().block(b, 0, 16, 28*28), 28, 28, 1);
             std::cout << "Batch created.\n";
 
+            std::cout << "Size of batch: " << " size: " << batch.get_size()
+            << " height: " << batch.get_tensor_height() << " width: " << batch.get_tensor_width()
+            << " depth: " << batch.get_tensor_depth() << std::endl;
+
             out_conv = conv1.forward(batch);
+            std::cout << "1\n";
             out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
                     out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+            std::cout << "2\n";
             out_conv = pool1.forward(out_conv);
             std::cout << "First block.\n";
 

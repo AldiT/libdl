@@ -112,6 +112,8 @@ public:
         os << "Tensor: \n" << wrapper_.get_tensor() << std::endl;
     }*/
 
+    double get_size(){return this_size;}
+
 protected:
 
     static Eigen::MatrixXd correlation2D(Eigen::MatrixXd& m1, Eigen::MatrixXd& m2, int, int stride=1);
@@ -124,6 +126,8 @@ private:
     int tensor_width;
     int tensor_depth;
     bool are_filters;
+
+    double this_size;
 };
 
 
