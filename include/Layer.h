@@ -11,8 +11,6 @@
 #include "Eigen/Dense"
 #include "TensorWrapper.h"
 
-namespace libdl{}
-
 namespace libdl::layers {
     template <typename Tensor>
     class Layer;
@@ -22,8 +20,14 @@ namespace libdl::layers {
     //template <typename Tensor>
     class Convolution2D;
     class Flatten;
+    class Softmax;
+    class ReLU;
+    class MaxPool;
 }
 
+
+typedef libdl::TensorWrapper_Exp TensorWrapper;
+typedef Eigen::MatrixXd Matrixd;
 
 ////////////////////////////////////////////////////////////////////////////////
 /////                                                                      /////
@@ -79,8 +83,8 @@ public:
 
     DenseLayer2D(int, int, std::string);
 
-    Eigen::MatrixXd forward(Eigen::MatrixXd );
-    Eigen::MatrixXd backward(Eigen::MatrixXd , double );
+    Matrixd forward(Matrixd);
+    Matrixd backward(Matrixd , double );
 
 
     int rows(){
@@ -89,11 +93,11 @@ public:
 
     std::string info();
 
-    Eigen::MatrixXd get_weights(){
+    Matrixd get_weights(){
         return *(this->weights);
     }
 
-    Eigen::MatrixXd get_biases(){
+    Matrixd get_biases(){
         return *(this->biases);
     }
 
@@ -127,11 +131,11 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 // IDEA: Maybe create a new namespace : activations
-class libdl::layers::Sigmoid : libdl::layers::Layer<Eigen::MatrixXd>{
+class libdl::layers::Sigmoid : libdl::layers::Layer<Matrixd>{
 public:
 
-    Eigen::MatrixXd forward(Eigen::MatrixXd input);
-    Eigen::MatrixXd backward(Eigen::MatrixXd gradients, double lr);
+    Matrixd forward(Matrixd input);
+    Matrixd backward(Matrixd gradients, double lr);
 
 
 protected:
@@ -158,17 +162,17 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 //template <typename Tensor>
-class libdl::layers::Convolution2D : libdl::layers::Layer<libdl::TensorWrapper_Exp>{
+class libdl::layers::Convolution2D : libdl::layers::Layer<TensorWrapper>{
 public:
     //constructor
     Convolution2D(int kernel_size_=3, int num_filters_=16, int stride_=1, int padding_=0, int input_depth_=3);
 
-    Convolution2D(Eigen::MatrixXd filter);
+    Convolution2D(Matrixd filter);
 
 
 
-    libdl::TensorWrapper_Exp forward(libdl::TensorWrapper_Exp input_);
-    libdl::TensorWrapper_Exp backward(libdl::TensorWrapper_Exp gradients_, double lr);
+    TensorWrapper forward(TensorWrapper input_);
+    TensorWrapper backward(TensorWrapper gradients_, double lr);
 
 
 protected:
@@ -178,13 +182,13 @@ protected:
     //Correlation should be the same as convolution in the case of NN so that is what I implement here
     // for simplicity
 
-    Eigen::MatrixXd rotate180(Eigen::MatrixXd filter);
+    Matrixd rotate180(Eigen::MatrixXd filter);
 
 
 
 private:
-    std::unique_ptr<libdl::TensorWrapper_Exp> output;
-    std::unique_ptr<libdl::TensorWrapper_Exp> filters; //Shared because it will point to the same address as weights from Layer
+    std::unique_ptr<TensorWrapper> output;
+    std::unique_ptr<TensorWrapper> filters; //Shared because it will point to the same address as weights from Layer
                                      // to save memory
     //biases inherited from Layer
     int num_filters;
@@ -213,14 +217,16 @@ private:
 class libdl::layers::Flatten
 {
 public:
-    Eigen::MatrixXd& forward(libdl::TensorWrapper_Exp& input);
-    libdl::TensorWrapper_Exp& backward(Eigen::MatrixXd& gradients);
+    Flatten(int input_height, int input_width, int gradient_height, int gradient_width);
+
+    Matrixd& forward(TensorWrapper& input);
+    TensorWrapper& backward(Matrixd& gradients);
 
 protected:
 
 private:
-    std::unique_ptr<libdl::TensorWrapper_Exp> input;
-    std::unique_ptr<libdl::TensorWrapper_Exp> gradient;
+    std::unique_ptr<TensorWrapper> input;
+    std::unique_ptr<TensorWrapper> gradient;
 };
 
 
@@ -230,5 +236,94 @@ private:
 /////                            </Flatten>                                /////
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            <Softmax>                                 /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+
+class libdl::layers::Softmax : libdl::layers::Layer<Matrixd>{
+public:
+
+    Matrixd forward(Matrixd);
+    Matrixd backward(Matrixd, double);
+
+protected:
+
+private:
+
+};
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            </Softmax>                                /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            <ReLU>                                    /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+
+class libdl::layers::ReLU
+{
+public:
+
+    Matrixd forward(Matrixd input){
+        return input.unaryExpr([](double e){return ((e > 0)? e : 0);});
+    }
+    Matrixd backward(Matrixd gradients, double lr){
+        return gradients.unaryExpr([](double e){return (e > 0 ? e : 0);});
+    }
+
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            </ReLU>                                   /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            <MaxPool>                                 /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+class libdl::layers::MaxPool: public libdl::layers::Layer<TensorWrapper>
+{
+public:
+    MaxPool(int kernel, int stride);
+
+    TensorWrapper forward(TensorWrapper);
+    TensorWrapper backward(TensorWrapper, double);
+
+protected:
+
+private:
+    std::unique_ptr<TensorWrapper> past_propagation;
+    std::unique_ptr<TensorWrapper> output;
+    int window_size;
+    int stride;
+
+
+    Matrixd max_pooling(Matrixd, Matrixd&);
+
+
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            </MaxPool>                                /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
 
 #endif //LIBDL_LAYERS_LAYER_H

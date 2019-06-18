@@ -50,10 +50,10 @@ SCENARIO("Testing the experimental TensorWrapper", "[TensorWrapper_Exp]"){
 
         WHEN("the tensor is constant"){
             libdl::TensorWrapper_Exp input(3, 28, 28, 1, false);
-            input.set_tensor(Eigen::MatrixXd::Constant(3, 28*28*3, 1));
+            input.set_tensor(Eigen::MatrixXd::Constant(3, 28*28, 1), 28, 28, 1);
 
             libdl::TensorWrapper_Exp filters(16, 3, 3, 1, true);
-            filters.set_tensor(Eigen::MatrixXd::Constant(16, 3*3*3, 1));
+            filters.set_tensor(Eigen::MatrixXd::Constant(16, 3*3, 1), 3, 3, 1);
 
             libdl::TensorWrapper_Exp output(3, 28, 28, 16, false); //same padding=1
             input.correlation(filters, 1, 1, output);

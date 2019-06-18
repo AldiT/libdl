@@ -205,7 +205,7 @@ libdl::TensorWrapper_Exp data_handler::convert_training_data_to_Eigen()
         }
     }
 
-    result.set_tensor(tmp.cast<double>());
+    result.set_tensor(tmp.cast<double>(), 28, 28, 1);
 
     return result;
 }
@@ -222,12 +222,14 @@ libdl::TensorWrapper_Exp data_handler::convert_training_labels_to_Eigen()
         tmp(i, 0) = training_data->at(i)->get_label();
     }
 
-    result.set_tensor(tmp.cast<double>());
+    result.set_tensor(tmp.cast<double>(), 1, 1 , 1);
 
     return result;
 }
 
+//Testing main
 
+/*
 #include <iostream>
 
 int main(){
@@ -249,4 +251,4 @@ int main(){
 
     dh->print_instance(0);
     std::cout << "\nLabel: " << train_labels.get_tensor()(0, 0);
-}
+}*/

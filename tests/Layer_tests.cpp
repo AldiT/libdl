@@ -10,34 +10,116 @@
 #include "TensorWrapper_tests.cpp"
 #include "Layer.h"
 #include "ErrorFunctions.h"
-
 #include "TensorWrapper.h"
+#include "data_handler.h"
 
 using namespace Eigen;
 
 
 
 
-/*
 
 int main(int argc, char* argv[]){
-    int width, height, bpp;
-
-    uint8_t* img = stbi_load("../../data/trainingSet/0/img_366.jpg", &width, &height, &bpp, 1);
-
-    stbi_image_free(img);
-
-    for(int i = 0; i < width; i++){
-        for(int j = 0; j < height; j++){
-            std::cout << img[i*j];
-        }
-    }
-
 
 
     std::cout << "Running tests...\n";
     int result = Catch::Session().run(argc, argv);
 
+    std::unique_ptr<data_handler> dh = std::make_unique<data_handler>();
+
+    dh->read_feature_vector("../data/train-images-idx3-ubyte");
+    dh->read_feature_label("../data/train-labels-idx1-ubyte");
+    dh->split_data();
+    dh->count_classes();
+
+    libdl::TensorWrapper_Exp train_data   = dh->convert_training_data_to_Eigen();
+    libdl::TensorWrapper_Exp train_labels = dh->convert_training_labels_to_Eigen();
+
+    libdl::layers::Convolution2D conv1(3, 16, 1, 1, 1); //28x28x1
+    libdl::layers::ReLU relu1;//28x28x1
+
+    libdl::layers::MaxPool pool1(3, 2);//14x14x16
+
+    libdl::layers::Convolution2D conv2(3, 32, 1, 1, 1);//14x14x32
+    libdl::layers::ReLU relu2;
+    libdl::layers::MaxPool pool2(2, 2);//7x7x32
+
+    libdl::layers::Flatten flatten(7, 7, 7, 7);//7x7*32
+
+    libdl::layers::DenseLayer2D dense1(1568, 500, "dense1"); //224x100
+    libdl::layers::ReLU relu3;
+
+    libdl::layers::DenseLayer2D dense2(500, 10, "dense2");
+
+    libdl::error::CrossEntropy cross_entropy_error(10,
+            train_labels.get_tensor().block(0, 0, 16, 1));
+
+
+    libdl::TensorWrapper_Exp batch(16, 28, 28, 1, false);
+
+
+    libdl::TensorWrapper_Exp out_conv(16, 28, 28, 1, false);
+    Eigen::MatrixXd out_dense(16, 500);
+
+    libdl::TensorWrapper_Exp conv_grads(16, 7, 7, 32, false);
+    Eigen::MatrixXd grads(16, 10);
+
+    double lr = 0.3;
+
+    std::cout << "Error: ";
+    for(int epoch = 0; epoch < 3; epoch++) {
+        for (int b = 0; b < train_data.get_batch_size()/16; b++) {
+            batch.set_tensor(train_data.get_tensor().block(b, 0, 16, 28*28), 28, 28, 1);
+
+            out_conv = conv1.forward(batch);
+            out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
+                    out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+            out_conv = pool1.forward(out_conv);
+            std::cout << "";
+
+            out_conv = conv2.forward(out_conv);
+            out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
+                                out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+            out_conv = pool2.forward(out_conv);
+
+            out_dense = flatten.forward(out_conv);
+
+            out_dense = dense1.forward(out_dense);
+            out_dense = relu3.forward(out_dense);
+
+            out_dense = dense2.forward(out_dense);
+
+            double error = cross_entropy_error.get_error(train_labels.get_tensor().block(0, 0, 16, 1), out_dense);
+
+            std::cout << " " << error;
+
+            grads = cross_entropy_error.get_gradient();
+
+            grads = dense2.backward(grads, lr);
+
+            grads = relu3.backward(grads, lr);
+            grads = dense1.backward(grads, lr);
+
+            conv_grads = flatten.backward(grads);
+
+            conv_grads = pool2.backward(conv_grads, lr);
+            conv_grads.set_tensor(relu2.backward(conv_grads.get_tensor(), lr),
+                    conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
+
+            conv_grads = conv2.backward(conv_grads, lr);
+
+            conv_grads = pool1.backward(conv_grads, lr);
+            conv_grads.set_tensor(relu1.backward(conv_grads.get_tensor(), lr),
+                    conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
+            conv_grads = conv1.backward(conv_grads, lr);
+
+
+        }
+    }
+
+
+
+    /*
     libdl::layers::DenseLayer2D dl2d(2, 2, "Test Layer");
     libdl::layers::DenseLayer2D middle(2, 2, "Middle");
     libdl::layers::DenseLayer2D dl2d_1(2, 1, "Test Layer 2");
@@ -146,12 +228,12 @@ int main(int argc, char* argv[]){
     o3 = sig3.forward(o3);
 
 
-    std::cout << "\nOutput: \n" << o3 << std::endl;
+    std::cout << "\nOutput: \n" << o3 << std::endl;*/
 
 
 
     return 0;
-}*/
+}
 
 
 /*
@@ -174,3 +256,7 @@ SCENARIO("Testing the Convolution Layer", "[ConvolutionLayer]"){
 
     }
 }*/
+
+SCENARIO("Testing maxpool layer", "[MaxPool]"){
+
+}

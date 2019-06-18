@@ -441,7 +441,11 @@ Eigen::MatrixXd& libdl::TensorWrapper_Exp::get_tensor() const{
     return *(this->tensor);
 }
 
-void libdl::TensorWrapper_Exp::set_tensor(Eigen::MatrixXd new_tensor) {
+void libdl::TensorWrapper_Exp::set_tensor(Eigen::MatrixXd new_tensor, int height, int width, int depth) {
+    this->tensor_height = height;
+    this->tensor_width = width;
+    this->tensor_depth = depth;
+
     *(this->tensor) = new_tensor;
 }
 

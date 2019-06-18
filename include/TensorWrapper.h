@@ -105,7 +105,7 @@ public:
     bool is_filter() const;
 
     Eigen::MatrixXd& get_tensor() const;
-    void set_tensor(Eigen::MatrixXd new_tensor);
+    void set_tensor(Eigen::MatrixXd new_tensor, int height, int width, int depth);
 
     /*
     friend std::ostream& operator<< (std::ostream& os, TensorWrapper_Exp wrapper_){
