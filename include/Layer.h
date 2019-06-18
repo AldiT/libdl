@@ -21,6 +21,7 @@ namespace libdl::layers {
     class Sigmoid;
     //template <typename Tensor>
     class Convolution2D;
+    class Flatten;
 }
 
 
@@ -199,6 +200,34 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 /////                                                                      /////
 /////                            </Convolution2D>                          /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            <Flatten>                                 /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+class libdl::layers::Flatten
+{
+public:
+    Eigen::MatrixXd& forward(libdl::TensorWrapper_Exp& input);
+    libdl::TensorWrapper_Exp& backward(Eigen::MatrixXd& gradients);
+
+protected:
+
+private:
+    std::unique_ptr<libdl::TensorWrapper_Exp> input;
+    std::unique_ptr<libdl::TensorWrapper_Exp> gradient;
+};
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            </Flatten>                                /////
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 

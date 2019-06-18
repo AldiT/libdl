@@ -226,3 +226,41 @@ Eigen::MatrixXd libdl::layers::Convolution2D::rotate180(Eigen::MatrixXd filter) 
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            <Flatten>                                 /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+libdl::layers::Flatten::Flatten(int input_height, int input_width, int gradient_height, int gradient_width){
+    this->input = std::make_unique<libdl::TensorWrapper_Exp>(input_height, input_width);
+    this->gradient = std::make_unique<libdl::TensorWrapper_Exp>(gradient_height, gradient_width);
+}
+
+Eigen::MatrixXd& libdl::layers::Flatten::forward(libdl::TensorWrapper_Exp& input) {
+    return input.get_tensor();
+}
+
+
+libdl::TensorWrapper_Exp& libdl::layers::Flatten::backward(Eigen::MatrixXd &gradients) {
+    this->gradient->set_tensor(gradients);
+
+    return *(this->gradient);
+
+}
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            </Flatten>                                /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
