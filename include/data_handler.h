@@ -12,6 +12,10 @@
 #include <string>
 #include <map>
 #include <unordered_set>
+#include "TensorWrapper.h"
+
+typedef Eigen::Matrix<uint8_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Matrix8u;
+typedef Eigen::Matrix<int32_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Matrix32i;
 
 class data_handler
 {
@@ -43,6 +47,10 @@ public:
     std::vector<data*> *get_training_data();
     std::vector<data*> *get_test_data();
     std::vector<data*> *get_validation_data();
+
+    libdl::TensorWrapper_Exp convert_training_data_to_Eigen();
+    libdl::TensorWrapper_Exp convert_training_labels_to_Eigen();
+    void print_instance(int);
 
 };
 

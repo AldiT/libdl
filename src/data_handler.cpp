@@ -3,6 +3,8 @@
 //
 
 #include "data_handler.h"
+#include "TensorWrapper.h"
+#include <cstring>
 
 
 data_handler::data_handler()
@@ -179,6 +181,54 @@ std::vector<data*> *data_handler::get_validation_data()
     return validation_data;
 }
 
+void data_handler::print_instance(int i){
+    for(int j = 0; j < training_data->at(i)->get_feature_vector()->size(); j++){
+        if(j % 28 == 0)
+            printf("\n");
+        printf(" %d ", training_data->at(i)->get_feature_vector()->at(j));
+    }
+}
+
+libdl::TensorWrapper_Exp data_handler::convert_training_data_to_Eigen()
+{
+    int batch_size = training_data->size();
+    int features = training_data->at(0)->get_feature_vector()->size();
+
+    libdl::TensorWrapper_Exp result(batch_size, features);
+
+    Matrix8u tmp(training_data->size(), training_data->at(0)->get_feature_vector()->size());
+
+
+    for(int i = 0; i < batch_size; i++){
+        for(int j = 0; j < features; j++){
+            std::memcpy(&tmp(i, j), &training_data->at(i)->get_feature_vector()->at(j), sizeof(uint8_t));
+        }
+    }
+
+    result.set_tensor(tmp.cast<double>());
+
+    return result;
+}
+
+libdl::TensorWrapper_Exp data_handler::convert_training_labels_to_Eigen()
+{
+    int batch_size = training_data->size();
+
+    libdl::TensorWrapper_Exp result(batch_size, 1);
+
+    Matrix8u tmp(training_data->size(), 1);
+
+    for(int i = 0; i < batch_size; i++){
+        tmp(i, 0) = training_data->at(i)->get_label();
+    }
+
+    result.set_tensor(tmp.cast<double>());
+
+    return result;
+}
+
+
+#include <iostream>
 
 int main(){
     data_handler *dh = new data_handler();
@@ -187,13 +237,16 @@ int main(){
     dh->split_data();
     dh->count_classes();
 
-    auto data = dh->get_training_data();
+    libdl::TensorWrapper_Exp train_data   = dh->convert_training_data_to_Eigen();
+    libdl::TensorWrapper_Exp train_labels = dh->convert_training_labels_to_Eigen();
 
-    for(int i = 0; i < 28; i++)
-    {
+
+    for(int i = 0; i <784; i++){
+        std::cout << train_data.get_tensor().block(0, 0, 1, 784)(0, i) << " ";
         if(i % 28 == 0)
-            printf("\n");
-
-        printf("%lu", data->at(0)->get_feature_vector()->at(i));
+            std::cout << std::endl;
     }
+
+    dh->print_instance(0);
+    std::cout << "\nLabel: " << train_labels.get_tensor()(0, 0);
 }
