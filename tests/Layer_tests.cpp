@@ -46,7 +46,7 @@ int main(int argc, char* argv[]){
 
     libdl::layers::Flatten flatten(7, 7, 7, 7);//7x7*32
 
-    libdl::layers::DenseLayer2D dense1(1568, 500, "dense1"); //224x100
+    libdl::layers::DenseLayer2D dense1(1152, 500, "dense1"); //224x100
     libdl::layers::ReLU relu3;
 
     libdl::layers::DenseLayer2D dense2(500, 10, "dense2");
@@ -56,6 +56,7 @@ int main(int argc, char* argv[]){
 
 
     libdl::TensorWrapper_Exp batch(16, 28, 28, 1, false);
+    std::cout << "Batch created.\n";
 
 
     libdl::TensorWrapper_Exp out_conv(16, 28, 28, 1, false);
@@ -70,48 +71,59 @@ int main(int argc, char* argv[]){
     for(int epoch = 0; epoch < 3; epoch++) {
         for (int b = 0; b < train_data.get_batch_size()/16; b++) {
             batch.set_tensor(train_data.get_tensor().block(b, 0, 16, 28*28), 28, 28, 1);
+            std::cout << "Batch created.\n";
 
             out_conv = conv1.forward(batch);
             out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
                     out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
             out_conv = pool1.forward(out_conv);
-            std::cout << "";
+            std::cout << "First block.\n";
 
             out_conv = conv2.forward(out_conv);
             out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
                                 out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
             out_conv = pool2.forward(out_conv);
+            std::cout << "Second block.\n";
 
             out_dense = flatten.forward(out_conv);
+            std::cout << "Flatten.\n";
 
             out_dense = dense1.forward(out_dense);
             out_dense = relu3.forward(out_dense);
+            std::cout << "Third block.\n";
 
             out_dense = dense2.forward(out_dense);
+            std::cout << "Out.\n";
 
             double error = cross_entropy_error.get_error(train_labels.get_tensor().block(0, 0, 16, 1), out_dense);
 
             std::cout << " " << error;
 
             grads = cross_entropy_error.get_gradient();
+            std::cout << "First block grads.\n";
 
             grads = dense2.backward(grads, lr);
+            std::cout << "Second block grads.\n";
 
             grads = relu3.backward(grads, lr);
             grads = dense1.backward(grads, lr);
+            std::cout << "Third block grads.\n";
 
             conv_grads = flatten.backward(grads);
+            std::cout << "Flatten grads.\n";
 
             conv_grads = pool2.backward(conv_grads, lr);
             conv_grads.set_tensor(relu2.backward(conv_grads.get_tensor(), lr),
                     conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
-
             conv_grads = conv2.backward(conv_grads, lr);
+            std::cout << "Fourth block grads.\n";
+
 
             conv_grads = pool1.backward(conv_grads, lr);
             conv_grads.set_tensor(relu1.backward(conv_grads.get_tensor(), lr),
                     conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
             conv_grads = conv1.backward(conv_grads, lr);
+            std::cout << "Fifth block grads.\n";
 
 
         }
