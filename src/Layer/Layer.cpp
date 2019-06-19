@@ -44,7 +44,7 @@ DenseLayer2D::DenseLayer2D(int input_features, int num_neurons, std::string name
         this->biases = std::make_unique<Eigen::VectorXd>(this->num_neurons);
         this->name = name;
 
-        *(this->weights) = Eigen::MatrixXd::Random(input_features, this->num_neurons);
+        *(this->weights) = Eigen::MatrixXd::Random(input_features, this->num_neurons)/10;
         *(this->biases) = Eigen::VectorXd::Constant(this->num_neurons, 1);
 
     }catch(std::bad_alloc err){
@@ -77,7 +77,6 @@ Eigen::MatrixXd& DenseLayer2D::forward(Eigen::MatrixXd& input) {
         *(this->output) = input * *(this->weights);
 
         this->output->rowwise() += this->biases->transpose();
-
 
 
         return *(this->output);
@@ -137,7 +136,7 @@ Eigen::MatrixXd& Sigmoid::forward(Eigen::MatrixXd& input){
 
     *(this->output) = *(this->input);
 
-    this->output->unaryExpr([this](double e){ return this->sigmoid(e);});
+    *(this->output) = this->output->unaryExpr([this](double e){ return this->sigmoid(e);});
 
     return  *(this->output);
 }
@@ -147,7 +146,7 @@ Eigen::MatrixXd& Sigmoid::backward(Eigen::MatrixXd& gradient, double lr){
     //std::cout << "\nShape of temp:\n" << temp.rows() << "x" << temp.cols() << std::endl;
     //std::cout << "\nShape of gradient: \n" << gradient.rows() << "x" << gradient.cols() << std::endl;
 
-    this->input->unaryExpr([this](double e)
+    *(this->input) = this->input->unaryExpr([this](double e)
                            {return this->sigmoid(e) * (1 - this->sigmoid(e));}).array() * gradient.array();
 
     return *(this->input);
@@ -171,16 +170,16 @@ double Sigmoid::sigmoid(double input){
 ////////////////////////////////////////////////////////////////////////////////
 
 libdl::layers::Convolution2D::Convolution2D(int kernel_size_, int num_filters_, int stride_, int padding_, int input_depth_):
-        kernel_size(kernel_size_), num_filters(num_filters_), stride(stride_), padding(padding_){
+        kernel_size(kernel_size_), num_filters(num_filters_), stride(stride_), padding(padding_), input_depth(input_depth_){
 
 
     //For now only stride 1 works
     this->stride = 1;
 
     this->filters = std::make_unique<libdl::TensorWrapper_Exp>(this->num_filters,
-                                                               this->kernel_size, this->kernel_size, this->input_depth, true);//Initialize filters randomly
-    //this->filters->set_tensor();
+         this->kernel_size, this->kernel_size, this->input_depth, true);//Initialize filters randomly
 
+    //this->filters->set_tensor();
     this->biases = std::make_unique<Eigen::VectorXd>(this->num_filters);
     *(this->biases) = Eigen::VectorXd::Constant(this->num_filters, 1);
     //this->filters = this->weights;
@@ -203,18 +202,20 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::forward(libdl::TensorWra
         this->output = std::make_unique<libdl::TensorWrapper_Exp>(this->input->get_batch_size(), o_rows,
                                                                   o_cols, this->filters->get_batch_size());
 
-
     this->input->correlation(*(this->filters), this->padding, this->stride, *(this->output));
 
     //TODO: Add biases to the output of the layer
 
+    //std::cout << "MAX WEIGHT IN THE FILTER OF CONV: " << this->filters->get_tensor().maxCoeff();
 
     return *(this->output);
 }
 
 libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::backward(libdl::TensorWrapper_Exp& gradients_, double lr){//Multiple 2D gradients
 
-    libdl::TensorWrapper_Exp filter_gradients;
+    libdl::TensorWrapper_Exp filter_gradients(this->filters->get_batch_size(),
+            this->filters->get_tensor_height(), this->filters->get_tensor_width(),
+            this->filters->get_tensor_depth());
 
     filter_gradients = this->input->correlation(gradients_, this->padding, this->stride, filter_gradients);
 
@@ -223,18 +224,14 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::backward(libdl::TensorWr
     *(this->filters) = *(this->filters) + filter_gradients;
 
     //TODO: Update the biases aswell, calculate the gradients for biases as well
+    //std::cout << "Gradient depth: " << gradients_.get_tensor_depth() << " Filter depth: " << this->filters->get_tensor_depth()
+    << "\n";
 
     gradients_ = gradients_.full_convolution(*(this->filters), gradients_);
 
     return gradients_;
 }
 
-
-//Maybe this will not be neccessary: Most probably
-//template <typename Tensor>
-Eigen::MatrixXd libdl::layers::Convolution2D::rotate180(Eigen::MatrixXd filter) {
-    return filter;
-}
 
 //Adds *padding* rows in each direction.
 //template <typename Tensor>
@@ -372,10 +369,10 @@ TensorWrapper& libdl::layers::MaxPool::backward(TensorWrapper& gradient, double)
                         element_count++;
                     }
                 }
-                if (element_count != gradient.get_tensor().cols()) {
+                /*if (element_count != gradient.get_tensor().cols()) {
                     std::cout << "\n\nelement_count does not match!\n\n";
                     throw std::exception();
-                }
+                }*/
             }
         }
 

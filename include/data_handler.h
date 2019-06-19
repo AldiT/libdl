@@ -50,6 +50,8 @@ public:
 
     libdl::TensorWrapper_Exp convert_training_data_to_Eigen();
     libdl::TensorWrapper_Exp convert_training_labels_to_Eigen();
+
+    Eigen::MatrixXd normalize_data();
     void print_instance(int);
 
 };

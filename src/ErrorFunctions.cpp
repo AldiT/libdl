@@ -53,14 +53,24 @@ Vectord libdl::error::ErrorFunctions::get_gradient() {
 
 
 libdl::error::CrossEntropy::CrossEntropy(int num_classes, Vectord targets) {
+    this->num_classes = num_classes;
 
 }
 
 double libdl::error::CrossEntropy::get_error(Vectord targets, Matrixd logits) {
     try{
-        this->logits = std::make_unique<Matrixd>(logits);
+
         if(this->logits == nullptr)
-            throw std::bad_alloc();
+            this->logits = std::make_unique<Matrixd>(logits);
+        else
+            *(this->logits) = logits;
+
+        if(this->targets == nullptr)
+            this->targets = std::make_unique<Vectord>(targets);
+        else
+            *(this->targets) = targets;
+
+        std::cout << "Created logits.\n";
 
         if(targets.rows() != logits.rows())//num of instances should be the same
         {
@@ -69,11 +79,14 @@ double libdl::error::CrossEntropy::get_error(Vectord targets, Matrixd logits) {
 
         double res = 0;
 
+        std::cout << "Calculating error...\n";
+
         //sum over the classes
         for(int instance = 0; instance < logits.rows(); instance++){
-            res += std::log(this->softmax(instance)(targets(instance)));
-        }
+            double out = this->softmax(instance, targets(instance));
 
+            res += std::log(out);
+        }
         return -res;
     }catch(std::invalid_argument &err){
         std::cerr << "Invalid argument: " << err.what() << std::endl;
@@ -91,17 +104,19 @@ Matrixd libdl::error::CrossEntropy::get_gradient() {
     try{
 
         Matrixd gradients(this->logits->rows(), this->logits->cols());
+        gradients = *(this->logits);
         Vectord sums = this->logits->unaryExpr([](double e){return std::exp(e);}).rowwise().sum();
+
 
         for(int row = 0; row < gradients.rows(); row++){
             gradients.row(row) /= sums(row);
         }
 
         for(int instance = 0; instance < this->logits->rows(); instance ++){
-            gradients(instance, (*(this->targets))(instance)) -= 1; //loss gradient
+            int index = (*(this->targets))(instance);
+            gradients(instance, index) -= 1; //loss gradient
 
-            gradients.unaryExpr([this](double e){return e / this->logits->rows();});//Normalization
-
+            gradients = gradients.unaryExpr([this](double e){return e / this->logits->rows();});//Normalization
         }
 
         return -gradients;
@@ -112,13 +127,13 @@ Matrixd libdl::error::CrossEntropy::get_gradient() {
     }
 }
 
-Vectord CrossEntropy::softmax(int instance) {
-    double sum = this->logits->block(instance, 0, 1, this->num_classes).sum();
 
-    return this->logits->block(instance, 0, 1, this->num_classes).unaryExpr([this, sum](double e)
-    {
-        return std::exp(e)/std::exp(sum);
-    });
+double CrossEntropy::softmax(int instance, int index) {
+    double sum = this->logits->block(instance, 0, 1, this->logits->cols()).sum();
+
+    double res = std::exp((*(this->logits))(instance, index))/std::exp(sum);
+
+    return res;
 }
 
 

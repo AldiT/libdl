@@ -36,8 +36,23 @@ int main(int argc, char* argv[]){
     dh->count_classes();
 
     libdl::TensorWrapper_Exp train_data   = dh->convert_training_data_to_Eigen();
+    //Leave it here for now but this is not the main cause of those crazy numbers
+    for(int i = 0; i < train_data.get_batch_size(); i++){
+        double mean = train_data.get_tensor().block(i, 0, 1, train_data.get_tensor().cols()).mean();
+
+        train_data.get_tensor().block(i, 0, 1, train_data.get_tensor().cols()) = train_data.get_tensor().block(i, 0, 1, train_data.get_tensor().cols()).unaryExpr([mean](double e)
+        {
+            return e - mean;
+        });
+    }
+    std::cout << "Data centered!\n";
+
     libdl::TensorWrapper_Exp train_labels = dh->convert_training_labels_to_Eigen();
     dh.reset(nullptr);
+
+    Eigen::MatrixXd test(2, 2); test = Eigen::MatrixXd::Identity(2, 2);
+    std::cout << "Rotate test: \n" << test;
+    std::cout << "\nAfter rotation: \n" << train_data.rotate180(test) << std::endl;
 
     std::cout << "data as twe.\n" << "Size: " << train_data.get_batch_size()
     << " Height: " << train_data.get_tensor_height() << " Width: " << train_data.get_tensor_width()
@@ -51,7 +66,7 @@ int main(int argc, char* argv[]){
     libdl::layers::MaxPool pool1(3, 2);//14x14x16
     std::cout << "pool1.\n"<< " Size till now: " << train_data.get_size() << std::endl;
 
-    libdl::layers::Convolution2D conv2(3, 32, 1, 1, 1);//14x14x32
+    libdl::layers::Convolution2D conv2(3, 16, 1, 1, 16);//14x14x32
     std::cout << "conv2.\n";
     libdl::layers::ReLU relu2;
     std::cout << "relu2.\n";
@@ -61,12 +76,12 @@ int main(int argc, char* argv[]){
     libdl::layers::Flatten flatten(16, 7, 7, 32);//7x7*32
     std::cout << "flatten.\n";
 
-    libdl::layers::DenseLayer2D dense1(1152, 500, "dense1"); //224x100
+    libdl::layers::DenseLayer2D dense1(576, 200, "dense1"); //224x100
     std::cout << "dense1.\n";
     libdl::layers::ReLU relu3;
     std::cout << "relu3.\n";
 
-    libdl::layers::DenseLayer2D dense2(500, 10, "dense2");
+    libdl::layers::DenseLayer2D dense2(200, 10, "dense2");
     std::cout << "dense2.\n";
 
     libdl::error::CrossEntropy cross_entropy_error(10,
@@ -90,23 +105,21 @@ int main(int argc, char* argv[]){
     for(int epoch = 0; epoch < 3; epoch++) {
         for (int b = 0; b < train_data.get_batch_size()/16; b++) {
             batch.set_tensor(train_data.get_tensor().block(b, 0, 16, 28*28), 28, 28, 1);
-            std::cout << "Batch created.\n";
-
-            std::cout << "Size of batch: " << " size: " << batch.get_size()
-            << " height: " << batch.get_tensor_height() << " width: " << batch.get_tensor_width()
-            << " depth: " << batch.get_tensor_depth() << std::endl;
+            std::cout << "Batch created.\n";\
 
             out_conv = conv1.forward(batch);
-            std::cout << "1\n";
+            std::cout << "1.1\n";
             out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
                     out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
-            std::cout << "2\n";
+            std::cout << "1.2\n";
             out_conv = pool1.forward(out_conv);
             std::cout << "First block.\n";
 
             out_conv = conv2.forward(out_conv);
+            std::cout << "2.1\n";
             out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
                                 out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+            std::cout << "2.2\n";
             out_conv = pool2.forward(out_conv);
             std::cout << "Second block.\n";
 
@@ -120,9 +133,11 @@ int main(int argc, char* argv[]){
             out_dense = dense2.forward(out_dense);
             std::cout << "Out.\n";
 
-            double error = cross_entropy_error.get_error(train_labels.get_tensor().block(0, 0, 16, 1), out_dense);
 
-            std::cout << " " << error;
+            double error = cross_entropy_error.get_error(train_labels.get_tensor().block(b, 0, 16, 1), out_dense)/16;
+            std::cout << " batch" << b << " : " << error << std::endl;
+
+            std::cout << "Before first grad.\n";
 
             grads = cross_entropy_error.get_gradient();
             std::cout << "First block grads.\n";
@@ -138,8 +153,10 @@ int main(int argc, char* argv[]){
             std::cout << "Flatten grads.\n";
 
             conv_grads = pool2.backward(conv_grads, lr);
+            std::cout << "After pool backprop.\n";
             conv_grads.set_tensor(relu2.backward(conv_grads.get_tensor(), lr),
                     conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
+            std::cout << "After relu backprop.\n";
             conv_grads = conv2.backward(conv_grads, lr);
             std::cout << "Fourth block grads.\n";
 

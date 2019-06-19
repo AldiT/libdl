@@ -47,7 +47,7 @@ private:
     std::unique_ptr<Vectord> targets;
     std::unique_ptr<Matrixd> logits;
 
-    Vectord softmax(int);
+    double softmax(int, int);
 
 };
 

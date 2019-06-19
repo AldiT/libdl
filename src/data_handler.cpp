@@ -227,6 +227,21 @@ libdl::TensorWrapper_Exp data_handler::convert_training_labels_to_Eigen()
     return result;
 }
 
+Eigen::MatrixXd data_handler::normalize_data()
+{
+    Eigen::MatrixXd data = this->convert_training_data_to_Eigen().get_tensor();
+
+    for(int instance = 0; instance < data.rows(); instance++){
+        double mean = data.block(instance, 0, 1, 28*28).mean();
+        data.block(instance, 0, 1, 28*28).unaryExpr([mean](double e)
+        {
+           return e-mean;
+        });
+    }
+
+    return data;
+}
+
 //Testing main
 
 /*

@@ -183,7 +183,7 @@ protected:
     //Correlation should be the same as convolution in the case of NN so that is what I implement here
     // for simplicity
 
-    Matrixd rotate180(Eigen::MatrixXd filter);
+
 
 
 
@@ -277,11 +277,11 @@ class libdl::layers::ReLU
 public:
 
     Matrixd& forward(Matrixd& input){
-        input.unaryExpr([](double e){return ((e > 0)? e : 0);});
+        input = input.unaryExpr([](double e){return ((e > 0)? e : 0);});
         return input;
     }
     Matrixd& backward(Matrixd& gradients, double lr){
-        gradients.unaryExpr([](double e){return (e > 0 ? e : 0);});
+        gradients = gradients.unaryExpr([](double e){return (e > 0 ? e : 0);});
         return gradients;
     }
 
