@@ -70,7 +70,6 @@ double libdl::error::CrossEntropy::get_error(Vectord targets, Matrixd logits) {
         else
             *(this->targets) = targets;
 
-        std::cout << "Created logits.\n";
 
         if(targets.rows() != logits.rows())//num of instances should be the same
         {
@@ -79,7 +78,6 @@ double libdl::error::CrossEntropy::get_error(Vectord targets, Matrixd logits) {
 
         double res = 0;
 
-        std::cout << "Calculating error...\n";
 
         //sum over the classes
         for(int instance = 0; instance < logits.rows(); instance++){

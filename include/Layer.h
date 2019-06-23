@@ -182,13 +182,15 @@ protected:
 
     //Correlation should be the same as convolution in the case of NN so that is what I implement here
     // for simplicity
+    TensorWrapper filter_conv(TensorWrapper& gradients_);
+    TensorWrapper input_conv (TensorWrapper& gradients_);
 
 
 
 
 
 private:
-    std::unique_ptr<TensorWrapper> output;
+    std::shared_ptr<TensorWrapper> output;
     std::unique_ptr<TensorWrapper> filters; //Shared because it will point to the same address as weights from Layer
                                      // to save memory
     //biases inherited from Layer

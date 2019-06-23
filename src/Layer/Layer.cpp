@@ -195,6 +195,7 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::forward(libdl::TensorWra
         *(this->input) = inputs_;
 
 
+
     int o_rows = (this->input->get_tensor_height() + 2 * this->padding - this->kernel_size)/this->stride + 1;
     int o_cols = (this->input->get_tensor_width() + 2 * this->padding - this->kernel_size)/this->stride + 1;
 
@@ -202,11 +203,9 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::forward(libdl::TensorWra
         this->output = std::make_unique<libdl::TensorWrapper_Exp>(this->input->get_batch_size(), o_rows,
                                                                   o_cols, this->filters->get_batch_size());
 
-    this->input->correlation(*(this->filters), this->padding, this->stride, *(this->output));
+    *(this->output) = this->input->correlation(*(this->filters), this->padding, this->stride);
 
     //TODO: Add biases to the output of the layer
-
-    //std::cout << "MAX WEIGHT IN THE FILTER OF CONV: " << this->filters->get_tensor().maxCoeff();
 
     return *(this->output);
 }
@@ -217,17 +216,76 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::backward(libdl::TensorWr
             this->filters->get_tensor_height(), this->filters->get_tensor_width(),
             this->filters->get_tensor_depth());
 
-    filter_gradients = this->input->correlation(gradients_, this->padding, this->stride, filter_gradients);
-
-    filter_gradients = filter_gradients * lr;
-
-    *(this->filters) = *(this->filters) + filter_gradients;
+    libdl::TensorWrapper_Exp copy_filters(this->filters->get_batch_size(),
+          this->filters->get_tensor_height(), this->filters->get_tensor_width(),
+          this->filters->get_tensor_depth(), false);//Filters need to be rotated for gradient w.r.t input.
 
     //TODO: Update the biases aswell, calculate the gradients for biases as well
-    //std::cout << "Gradient depth: " << gradients_.get_tensor_depth() << " Filter depth: " << this->filters->get_tensor_depth()
-    << "\n";
+    //Biases sometimes are not used in the CNNs so check and decide based on the performance
+    filter_gradients = this->filter_conv(gradients_);
+    gradients_ = this->input_conv(gradients_);
 
-    gradients_ = gradients_.full_convolution(*(this->filters), gradients_);
+
+
+    filter_gradients.get_tensor() = filter_gradients.get_tensor() * lr;
+    this->filters->get_tensor()  += filter_gradients.get_tensor();
+
+    return gradients_;
+}
+
+TensorWrapper libdl::layers::Convolution2D::filter_conv(TensorWrapper &gradients_) {
+
+    TensorWrapper filter_gradients(this->filters->get_batch_size(), this->filters->get_tensor_height(),
+            this->filters->get_tensor_width(), this->filters->get_tensor_depth());
+
+    for(int instance = 0; instance < gradients_.get_batch_size(); instance++){
+
+        for(int gradient_slice = 0; gradient_slice < gradients_.get_tensor_depth(); gradient_slice++){
+
+            for(int input_slice = 0; input_slice < this->input->get_tensor_depth(); input_slice++){
+                filter_gradients.update_slice(gradient_slice, input_slice, TensorWrapper::correlation2D(
+                        this->input->get_slice(instance, input_slice),
+                        gradients_.get_slice(instance, gradient_slice), this->padding));
+            }
+
+        }
+    }
+
+    return filter_gradients;
+}
+
+TensorWrapper libdl::layers::Convolution2D::input_conv(TensorWrapper &gradients_) {
+    TensorWrapper input_gradients(this->input->get_batch_size(), this->input->get_tensor_height(),
+            this->input->get_tensor_width(), this->input->get_tensor_depth());
+
+    libdl::TensorWrapper_Exp temp(this->filters->get_tensor_depth(),
+          this->filters->get_tensor_height(), this->filters->get_tensor_width(), this->filters->get_batch_size(), false);
+
+    libdl::TensorWrapper_Exp rotated_filters(this->filters->get_batch_size(), this->filters->get_tensor_height(),
+            this->filters->get_tensor_width(), this->filters->get_tensor_depth());
+
+    //rotate filters.
+    for(int filter = 0; filter < this->filters->get_batch_size(); filter++){
+        for(int filter_slice = 0; filter_slice < this->filters->get_tensor_depth(); filter_slice++){
+            rotated_filters.update_slice(filter, filter_slice,
+                    libdl::TensorWrapper_Exp::rotate180(this->filters->get_slice(filter, filter_slice)));
+        }
+    }
+
+    //reshape the gradient - experimental TODO: This probably should go in a seperate function.
+    for(int filter = 0; filter < rotated_filters.get_batch_size(); filter++){
+        for(int filter_slice = 0; filter_slice < rotated_filters.get_tensor_depth(); filter_slice++){
+            temp.update_slice(filter_slice, filter, rotated_filters.get_slice(filter, filter_slice));
+        }
+    }
+    std::cout << "Gradient shape before op: " << gradients_.shape() << std::endl;
+    gradients_ = gradients_.correlation(temp, rotated_filters.get_tensor_height()-1);
+
+    if(gradients_.get_tensor().rows() != this->input->get_tensor().rows() ||
+       gradients_.get_tensor().cols() != this->input->get_tensor().cols()){
+        std::cout << "gradients shape" << gradients_.shape() << " input shape: " << this->input->shape() << std::endl;
+    }
+
 
     return gradients_;
 }
@@ -332,9 +390,12 @@ TensorWrapper& libdl::layers::MaxPool::forward(TensorWrapper& input) {
             input.get_tensor_depth(), false);
 
     Matrixd propagate_temp(input.get_tensor_height(), input.get_tensor_width());
+    propagate_temp = Eigen::MatrixXd::Constant(input.get_tensor_height(), input.get_tensor_width(), 0);
 
     for(int instance = 0; instance < input.get_batch_size(); instance++){
         for(int depth = 0; depth < input.get_tensor_depth(); depth++){
+            propagate_temp = Eigen::MatrixXd::Constant(input.get_tensor_height(), input.get_tensor_width(), 0);
+
             auto to_pool = input.get_slice(instance, depth);
             to_pool = this->max_pooling(to_pool, propagate_temp);
             this->output->update_slice(instance, depth, to_pool);
@@ -389,7 +450,7 @@ Matrixd libdl::layers::MaxPool::max_pooling(Matrixd to_pool_, Matrixd& propagati
     Matrixd result((to_pool_.rows()-this->window_size)/this->stride + 1,
                    (to_pool_.cols()-this->window_size)/this->stride + 1);
 
-    Matrixd::Index x_index, y_index;
+    int x_index, y_index;
 
     for(int row = 0; row < result.rows(); row++){
         for (int col = 0; col < result.cols(); col++){

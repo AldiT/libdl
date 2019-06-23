@@ -160,7 +160,7 @@ void data_handler::count_classes()
         }
     }
     num_classes = count;
-    printf("Successfully counted the number of the classes: %lu.\n", num_classes);
+    printf("Successfully counted the number of the classes: %d.\n", num_classes);
 }
 uint32_t data_handler::convert_to_little_endian(const unsigned char* bytes)
 {
