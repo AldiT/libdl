@@ -169,7 +169,7 @@ double Sigmoid::sigmoid(double input){
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
-libdl::layers::Convolution2D::Convolution2D(int kernel_size_, int num_filters_, int stride_, int padding_, int input_depth_):
+libdl::layers::Convolution2D::Convolution2D(int kernel_size_, int num_filters_, int padding_, int stride_, int input_depth_):
         kernel_size(kernel_size_), num_filters(num_filters_), stride(stride_), padding(padding_), input_depth(input_depth_){
 
 
@@ -228,7 +228,7 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::backward(libdl::TensorWr
 
 
     filter_gradients.get_tensor() = filter_gradients.get_tensor() * lr;
-    this->filters->get_tensor()  += filter_gradients.get_tensor();
+    this->filters->get_tensor()  -= filter_gradients.get_tensor();
 
     return gradients_;
 }
@@ -278,8 +278,11 @@ TensorWrapper libdl::layers::Convolution2D::input_conv(TensorWrapper &gradients_
             temp.update_slice(filter_slice, filter, rotated_filters.get_slice(filter, filter_slice));
         }
     }
-    std::cout << "Gradient shape before op: " << gradients_.shape() << std::endl;
+    //std::cout << "Gradient shape before op: " << gradients_.shape() << std::endl;
     gradients_ = gradients_.correlation(temp, rotated_filters.get_tensor_height()-1);
+
+    gradients_ = this->clean_gradient(gradients_);
+
 
     if(gradients_.get_tensor().rows() != this->input->get_tensor().rows() ||
        gradients_.get_tensor().cols() != this->input->get_tensor().cols()){
@@ -290,6 +293,33 @@ TensorWrapper libdl::layers::Convolution2D::input_conv(TensorWrapper &gradients_
     return gradients_;
 }
 
+
+TensorWrapper& libdl::layers::Convolution2D::clean_gradient(TensorWrapper& gradients_) {
+    int x = gradients_.get_tensor_height()-this->input->get_tensor_height()-1,
+        y = gradients_.get_tensor_width()-this->input->get_tensor_width()-1;
+
+    TensorWrapper copy_gradients = gradients_;
+
+    Matrixd temp(this->input->get_tensor_height(), this->input->get_tensor_width());
+
+    gradients_.set_tensor(Matrixd::Constant(this->input->get_batch_size(),
+            this->input->get_tensor_height()*this->input->get_tensor_width()*this->input->get_tensor_depth(), 0),
+            this->input->get_tensor_height(), this->input->get_tensor_width(),
+            this->input->get_tensor_depth());
+
+
+    for (int instance = 0; instance < gradients_.get_batch_size(); instance++){
+        for(int slice = 0; slice < gradients_.get_tensor_depth(); slice++){
+
+            temp = copy_gradients.get_slice(instance,slice).block(x, y,
+                    this->input->get_tensor_height(), this->input->get_tensor_width());
+            gradients_.update_slice(instance, slice, temp);
+        }
+    }
+
+
+    return gradients_;
+}
 
 //Adds *padding* rows in each direction.
 //template <typename Tensor>
@@ -380,7 +410,7 @@ TensorWrapper& libdl::layers::MaxPool::forward(TensorWrapper& input) {
         this->past_propagation = std::make_unique<TensorWrapper>(input);
 
     this->past_propagation->set_tensor(Eigen::MatrixXd::Constant(input.get_batch_size(),
-         input.get_tensor_depth()*input.get_tensor_height()*input.get_tensor_width(), 0),
+         input.get_tensor_depth()*input.get_tensor_height()*input.get_tensor_width(), 0),//set this tensor to 0
          input.get_tensor_height(), input.get_tensor_width(), input.get_tensor_depth());
 
     if(this->output == nullptr)
@@ -402,6 +432,8 @@ TensorWrapper& libdl::layers::MaxPool::forward(TensorWrapper& input) {
             this->past_propagation->update_slice(instance, depth, propagate_temp);
         }
     }
+
+    //std::cout << "\nONE PROPAGATION MATRIX:\n" << this->past_propagation->get_slice(0, 0) << std::endl;
 
     return *(this->output);
 
@@ -450,16 +482,18 @@ Matrixd libdl::layers::MaxPool::max_pooling(Matrixd to_pool_, Matrixd& propagati
     Matrixd result((to_pool_.rows()-this->window_size)/this->stride + 1,
                    (to_pool_.cols()-this->window_size)/this->stride + 1);
 
-    int x_index, y_index;
+    Matrixd::Index x_index, y_index;
 
     for(int row = 0; row < result.rows(); row++){
         for (int col = 0; col < result.cols(); col++){
             result(row, col) = to_pool_.block(row*this->stride, col*this->stride,
                     this->window_size, this->window_size).maxCoeff(&x_index, &y_index);
 
-            propagations_(x_index, y_index) = 1;
+            propagations_(row*this->stride+x_index, col*this->stride+y_index) = 1;
+            //std::cout << " " << x_index << "-" << y_index << " ";
         }
     }
+
 
     return result;
 }

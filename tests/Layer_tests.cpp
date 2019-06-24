@@ -91,13 +91,14 @@ int main(int argc, char* argv[]){
 
     std::cout << "Error: ";
     for(int epoch = 0; epoch < 1; epoch++) {
-        for (int b = 0; b < train_data.get_batch_size()/16 && b < 1; b++) {
+        for (int b = 0; b < train_data.get_batch_size()/16 && b < 10; b++) {
             batch.set_tensor(train_data.get_tensor().block(b, 0, 16, 28*28), 28, 28, 1);
 
             out_conv = conv1.forward(batch);
             out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
                     out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
             out_conv = pool1.forward(out_conv);
+            //std::cout << "POOL OUTPUT: " << out_conv.get_slice(0, 0) << std::endl;
 
             out_conv = conv2.forward(out_conv);
             out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
@@ -117,37 +118,44 @@ int main(int argc, char* argv[]){
 
 
             grads = cross_entropy_error.get_gradient();
-            std::cout << "Gradient shape after error: " << grads.rows() << "x" << grads.cols() << std::endl;
+            //std::cout << "Gradient shape after error: " << grads.rows() << "x" << grads.cols() << std::endl;
 
             grads = dense2.backward(grads, lr);
-            std::cout << "Gradient shape after dense2: " << grads.rows() << "x" << grads.cols() << std::endl;
+            //std::cout << "Gradient shape after dense2: " << grads.rows() << "x" << grads.cols() << std::endl;
 
             grads = relu3.backward(grads, lr);
-            std::cout << "Gradient shape after relu3: " << grads.rows() << "x" << grads.cols() << std::endl;
+            //std::cout << "Gradient shape after relu3: " << grads.rows() << "x" << grads.cols() << std::endl;
             grads = dense1.backward(grads, lr);
-            std::cout << "Gradient shape after dense1: " << grads.rows() << "x" << grads.cols() << std::endl;
+            //std::cout << "Gradient shape after dense1: " << grads.rows() << "x" << grads.cols() << std::endl;
 
             conv_grads = flatten.backward(grads);
-            std::cout << "Gradient shape after flatten: " << conv_grads.shape() << std::endl;
+            //std::cout << "Gradient shape after flatten: " << conv_grads.shape() << std::endl;
+            //std::cout << "Flatten GRADIENT: " << conv_grads.get_slice(0, 0) << std::endl;
 
             conv_grads = pool2.backward(conv_grads, lr);
-            std::cout << "Gradient shape after pool2: " << conv_grads.shape() << std::endl;
+            //std::cout << "Gradient shape after pool2: " << conv_grads.shape() << std::endl;
+            //std::cout << "POOL GRADIENT: " << conv_grads.get_slice(0, 0) << std::endl;
 
             conv_grads.set_tensor(relu2.backward(conv_grads.get_tensor(), lr),
                     conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
-            std::cout << "Gradient shape after relu2: " << conv_grads.shape() << std::endl;
+            //std::cout << "Gradient shape after relu2: " << conv_grads.shape() << std::endl;
+
+            /*std::cout << "First row of gradients: " << conv_grads.get_slice(0, 0).block(0, 0, 1, conv_grads.get_tensor_width())
+            <<std::endl;
+            std::cout << "Second row of gradients: " << conv_grads.get_slice(0, 0).block(1, 0, 1, conv_grads.get_tensor_width())
+                      <<std::endl;*/
 
             conv_grads = conv2.backward(conv_grads, lr);
-            std::cout << "Gradient shape after conv2: " << conv_grads.shape() << std::endl;
+            //std::cout << "Gradient shape after conv2: " << conv_grads.shape() << std::endl;
 
 
             conv_grads = pool1.backward(conv_grads, lr);
-            std::cout << "Gradient shape after flatten: " << conv_grads.shape() << std::endl;
+            //std::cout << "Gradient shape after flatten: " << conv_grads.shape() << std::endl;
             conv_grads.set_tensor(relu1.backward(conv_grads.get_tensor(), lr),
                     conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
-            std::cout << "Gradient shape after relu1: " << conv_grads.shape() << std::endl;
+            //std::cout << "Gradient shape after relu1: " << conv_grads.shape() << std::endl;
             conv_grads = conv1.backward(conv_grads, lr);
-            std::cout << "Gradient shape after conv1: " << conv_grads.shape() << std::endl;
+            //std::cout << "Gradient shape after conv1: " << conv_grads.shape() << std::endl;
 
 
         }

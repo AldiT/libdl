@@ -237,7 +237,7 @@ libdl::TensorWrapper_Exp::TensorWrapper_Exp(int batch_size_, int tensor_height_,
 
         if (this->are_filters) {
             *(this->tensor) = Eigen::MatrixXd::Random(this->batch_size,
-                                                      this->tensor_height * this->tensor_width * this->tensor_depth)/10;
+                                                      this->tensor_height * this->tensor_width * this->tensor_depth)/100;
 
         }
         this->this_size += sizeof(this);
