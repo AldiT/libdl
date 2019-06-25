@@ -52,9 +52,8 @@ Vectord libdl::error::ErrorFunctions::get_gradient() {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-libdl::error::CrossEntropy::CrossEntropy(int num_classes, Vectord targets) {
+libdl::error::CrossEntropy::CrossEntropy(int num_classes) {
     this->num_classes = num_classes;
-
 }
 
 double libdl::error::CrossEntropy::get_error(Vectord targets, Matrixd logits) {
@@ -98,6 +97,55 @@ double libdl::error::CrossEntropy::get_error(Vectord targets, Matrixd logits) {
     }
 }
 
+Vectord libdl::error::CrossEntropy::predictions(Matrixd logits, Vectord targets) {
+    try {
+        if (this->logits == nullptr)
+            this->logits = std::make_unique<Matrixd>(logits);
+        else
+            *(this->logits) = logits;
+
+
+        if (this->targets == nullptr)
+            this->targets = std::make_unique<Vectord>(targets);
+        else
+            *(this->targets) = targets;
+
+        if (targets.rows() != logits.rows())//num of instances should be the same
+        {
+            throw std::invalid_argument("CrossEntropy::get_error: number of instances does not match!");
+        }
+
+        Vectord predictions(this->targets->rows());
+        Vectord predicted(this->targets->rows());
+        int index;
+
+        for (int i = 0; i < this->targets->rows(); i++) {
+            predicted(i) = this->logits->row(i).maxCoeff(&index);
+            predictions(i) = index;
+        }
+
+        //printing
+        std::cout << "Prediction results: \n";
+        for(int i = 0; i < this->targets->rows(); i++){
+            std::cout << "Prediction: " << predictions(i) << " Label: " << (*(this->targets))(i) << std::endl;
+        }
+
+
+        return predictions;
+    }catch (std::invalid_argument &err){
+        std::cerr << "Invalid argument: " << err.what() << std::endl;
+        std::exit(-1);
+    }catch(std::bad_alloc &err){
+        std::cerr << "Bad alloc: " << err.what() << std::endl;
+        std::exit(-1);
+    }catch(std::exception &err){
+        std::cerr << "Unexcpected error: " << err.what() << std::endl;
+        std::exit(-1);
+    }
+
+}
+
+
 Matrixd libdl::error::CrossEntropy::get_gradient() {
     try{
 
@@ -117,7 +165,7 @@ Matrixd libdl::error::CrossEntropy::get_gradient() {
             gradients = gradients.unaryExpr([this](double e){return e / this->logits->rows();});//Normalization
         }
 
-        return -gradients;
+        return - gradients;
 
     }catch(std::exception &err){
         std::cerr << "Unexcpected error: " << err.what() << std::endl;
@@ -127,9 +175,10 @@ Matrixd libdl::error::CrossEntropy::get_gradient() {
 
 
 double CrossEntropy::softmax(int instance, int index) {
-    double sum = this->logits->block(instance, 0, 1, this->logits->cols()).sum();
+    Vectord sums = this->logits->unaryExpr([](double e){return std::exp(e);}).rowwise().sum();
+    //double sum = this->logits->block(instance, 0, 1, this->logits->cols()).sum();
 
-    double res = std::exp((*(this->logits))(instance, index))/std::exp(sum);
+    double res = std::exp((*(this->logits))(instance, index))/sums(instance);
 
     return res;
 }

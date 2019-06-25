@@ -35,10 +35,12 @@ private:
 class libdl::error::CrossEntropy
 {
 public:
-    CrossEntropy(int num_classes, Vectord targets);
+    CrossEntropy(int num_classes);
 
     double get_error(Vectord targets, Matrixd logits);
     Matrixd get_gradient();
+
+    Vectord predictions(Matrixd logits, Vectord targets);
 
 protected:
 

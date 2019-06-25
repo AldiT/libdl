@@ -194,7 +194,7 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::forward(libdl::TensorWra
     else
         *(this->input) = inputs_;
 
-
+    //*(this->input) = this->pad(*(this->input));
 
     int o_rows = (this->input->get_tensor_height() + 2 * this->padding - this->kernel_size)/this->stride + 1;
     int o_cols = (this->input->get_tensor_width() + 2 * this->padding - this->kernel_size)/this->stride + 1;
@@ -216,10 +216,6 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::backward(libdl::TensorWr
             this->filters->get_tensor_height(), this->filters->get_tensor_width(),
             this->filters->get_tensor_depth());
 
-    libdl::TensorWrapper_Exp copy_filters(this->filters->get_batch_size(),
-          this->filters->get_tensor_height(), this->filters->get_tensor_width(),
-          this->filters->get_tensor_depth(), false);//Filters need to be rotated for gradient w.r.t input.
-
     //TODO: Update the biases aswell, calculate the gradients for biases as well
     //Biases sometimes are not used in the CNNs so check and decide based on the performance
     filter_gradients = this->filter_conv(gradients_);
@@ -230,13 +226,41 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::backward(libdl::TensorWr
     filter_gradients.get_tensor() = filter_gradients.get_tensor() * lr;
     this->filters->get_tensor()  -= filter_gradients.get_tensor();
 
+    gradients_ = this->clean_gradient(gradients_);
+
     return gradients_;
 }
+/*
+TensorWrapper& libdl::layers::Convolution2D::pad(TensorWrapper & to_pad_) {
 
+    try{
+        int o_rows = (to_pad_.get_tensor_height() + 2*this->padding);
+        int o_cols = (to_pad_.get_tensor_width() + 2*this->padding);
+
+        TensorWrapper res(to_pad_.get_batch_size(), o_rows, o_cols, to_pad_.get_tensor_depth());
+
+        for (int i = 0; i < to_pad_.get_batch_size(); i++){
+            for(int depth = 0; depth < to_pad_.get_tensor_depth(); depth++){
+
+                res.update_slice(i, depth, TensorWrapper::pad(to_pad_.get_slice(i, depth), this->padding));
+            }
+        }
+
+        to_pad_.set_tensor(res.get_tensor(), o_rows, o_cols, res.get_tensor_depth());
+
+        return to_pad_;
+    }catch (std::exception &err){
+        std::cerr << "Convolution2D::pad: An unexpected error happend: " << err.what() << std::endl;
+        std::exit(-1);
+    }
+
+}
+*/
 TensorWrapper libdl::layers::Convolution2D::filter_conv(TensorWrapper &gradients_) {
 
     TensorWrapper filter_gradients(this->filters->get_batch_size(), this->filters->get_tensor_height(),
             this->filters->get_tensor_width(), this->filters->get_tensor_depth());
+
 
     for(int instance = 0; instance < gradients_.get_batch_size(); instance++){
 
@@ -281,13 +305,13 @@ TensorWrapper libdl::layers::Convolution2D::input_conv(TensorWrapper &gradients_
     //std::cout << "Gradient shape before op: " << gradients_.shape() << std::endl;
     gradients_ = gradients_.correlation(temp, rotated_filters.get_tensor_height()-1);
 
-    gradients_ = this->clean_gradient(gradients_);
+    //gradients_ = this->clean_gradient(gradients_);
 
-
+    /*
     if(gradients_.get_tensor().rows() != this->input->get_tensor().rows() ||
        gradients_.get_tensor().cols() != this->input->get_tensor().cols()){
         std::cout << "gradients shape" << gradients_.shape() << " input shape: " << this->input->shape() << std::endl;
-    }
+    }*/
 
 
     return gradients_;

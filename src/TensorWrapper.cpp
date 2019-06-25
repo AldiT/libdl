@@ -373,10 +373,10 @@ TensorWrapper_Exp& libdl::TensorWrapper_Exp::full_convolution(libdl::TensorWrapp
     return this->correlation(filters, filters.get_tensor_height()-1, 1);
 }
 
-Eigen::MatrixXd libdl::TensorWrapper_Exp::correlation2D(Eigen::MatrixXd m1, Eigen::MatrixXd m2, int padding, int stride) {
+Eigen::MatrixXd libdl::TensorWrapper_Exp::correlation2D(Eigen::MatrixXd m1, Eigen::MatrixXd kernels, int padding, int stride) {
 
-    int o_rows = ((m1.rows() + (2 * padding) - m2.rows())/stride) + 1;
-    int o_cols = (m1.cols() + (2 * padding) - m2.cols())/stride + 1;
+    int o_rows = ((m1.rows() + (2 * padding) - kernels.rows())/stride) + 1;
+    int o_cols = (m1.cols() + (2 * padding) - kernels.cols())/stride + 1;
 
     libdl::TensorWrapper_Exp::pad(m1, padding);//Working as it should
 
@@ -384,8 +384,8 @@ Eigen::MatrixXd libdl::TensorWrapper_Exp::correlation2D(Eigen::MatrixXd m1, Eige
 
     for(int i = 0; i < o_rows; i++){
         for(int j = 0; j < o_cols; j++){
-            output(i, j) = (m1.block(i, j, m2.rows(), m2.cols()).array()*
-                            m2.array()).sum();
+            output(i, j) = (m1.block(i, j, kernels.rows(), kernels.cols()).array()*
+                    kernels.array()).sum();
         }
     }
 
@@ -393,7 +393,7 @@ Eigen::MatrixXd libdl::TensorWrapper_Exp::correlation2D(Eigen::MatrixXd m1, Eige
     return output;
 }
 
-Eigen::MatrixXd libdl::TensorWrapper_Exp::pad(Eigen::MatrixXd& to_pad_, int padding) {
+Eigen::MatrixXd& libdl::TensorWrapper_Exp::pad(Eigen::MatrixXd& to_pad_, int padding) {
     if(padding == 0){
         return to_pad_;
     }else{

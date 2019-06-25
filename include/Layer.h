@@ -184,6 +184,7 @@ protected:
     // for simplicity
     TensorWrapper filter_conv(TensorWrapper& gradients_);
     TensorWrapper input_conv (TensorWrapper& gradients_);
+    TensorWrapper& pad(TensorWrapper&);
 
     TensorWrapper& clean_gradient(TensorWrapper&);
 
