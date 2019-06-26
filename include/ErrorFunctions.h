@@ -7,6 +7,7 @@
 
 #include <memory>
 #include "Eigen/Dense"
+#include <vector>
 
 namespace libdl::error{
     class ErrorFunctions;
@@ -38,7 +39,7 @@ public:
     CrossEntropy(int num_classes);
 
     double get_error(Vectord targets, Matrixd logits);
-    Matrixd get_gradient();
+    Matrixd get_gradient(Matrixd logits, Vectord targets , int);
 
     Vectord predictions(Matrixd logits, Vectord targets);
 
@@ -49,7 +50,11 @@ private:
     std::unique_ptr<Vectord> targets;
     std::unique_ptr<Matrixd> logits;
 
-    double softmax(int, int);
+    std::vector<double> errors;
+
+    double avg = 0;
+
+    Vectord softmax();
 
 };
 

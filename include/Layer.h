@@ -182,7 +182,7 @@ protected:
 
     //Correlation should be the same as convolution in the case of NN so that is what I implement here
     // for simplicity
-    TensorWrapper filter_conv(TensorWrapper& gradients_);
+    TensorWrapper filter_conv(TensorWrapper& gradients_, TensorWrapper&);
     TensorWrapper input_conv (TensorWrapper& gradients_);
     TensorWrapper& pad(TensorWrapper&);
 
@@ -323,7 +323,7 @@ private:
     int stride;
 
 
-    Matrixd max_pooling(Matrixd, Matrixd&);
+    void max_pooling();
 
 
 };

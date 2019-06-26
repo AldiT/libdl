@@ -40,6 +40,7 @@ SCENARIO("Testing the experimental TensorWrapper", "[TensorWrapper_Exp]"){
             libdl::TensorWrapper_Exp filters(16, 3, 3, 1, true);
             auto correlation = twe.correlation(filters, 1, 1);
 
+
             THEN("Check the shapes of the outputs") {//These are very dumb tests
                 REQUIRE(correlation.get_batch_size() == 3);
                 REQUIRE(correlation.get_tensor_height() == 28);
@@ -102,7 +103,34 @@ SCENARIO("Testing the experimental TensorWrapper", "[TensorWrapper_Exp]"){
             std::cout << t.get_tensor() << std::endl;*/
             REQUIRE(2 == 2);
         }
+
     }
+    /*
+
+    GIVEN("Some layers"){
+        WHEN("A maxpool layer is given an input"){
+            std::cout << "Inside";
+            libdl::layers::MaxPool pool1(2, 2);
+            Matrixd input(4, 4);
+            input << 1, 2, 3, 4,
+                    1, 2, 3, 4,
+                    1, 2, 3, 4,
+                    1, 2, 3, 4;
+
+            Matrixd expected_output(2, 2);
+            expected_output << 2, 4,
+                    2, 4;
+
+            libdl::TensorWrapper_Exp input_tensor(1, 4, 4, 1);
+            input_tensor.set_tensor(input, 4, 4, 1);
+            libdl::TensorWrapper_Exp out(1, 2,2, 1);
+            out.set_tensor(expected_output, 2, 2, 1);
+
+            std::cout << "Before";
+            std::cout << "Output: \n" << pool1.forward(input_tensor).get_tensor() << std::endl;
+            REQUIRE((pool1.forward(input_tensor).get_tensor()) == (out.get_tensor()));
+        }
+    }*/
 
 
 

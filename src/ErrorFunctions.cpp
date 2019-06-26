@@ -54,6 +54,7 @@ Vectord libdl::error::ErrorFunctions::get_gradient() {
 
 libdl::error::CrossEntropy::CrossEntropy(int num_classes) {
     this->num_classes = num_classes;
+    this->errors = std::vector<double>();
 }
 
 double libdl::error::CrossEntropy::get_error(Vectord targets, Matrixd logits) {
@@ -75,15 +76,16 @@ double libdl::error::CrossEntropy::get_error(Vectord targets, Matrixd logits) {
             throw std::invalid_argument("CrossEntropy::get_error: number of instances does not match!");
         }
 
+        std::cout << "Logits before error: " << *(this->logits) << std::endl;
         double res = 0;
+        for (int i = 0 ; i < this->logits->rows(); i++){
+            res += std::log((*(this->logits))(i, targets(i)));
+            std::cout << "Log of this: " << (*(this->logits))(i, targets(i)) << std::endl;
+        }
 
 
         //sum over the classes
-        for(int instance = 0; instance < logits.rows(); instance++){
-            double out = this->softmax(instance, targets(instance));
 
-            res += std::log(out);
-        }
         return -res;
     }catch(std::invalid_argument &err){
         std::cerr << "Invalid argument: " << err.what() << std::endl;
@@ -146,26 +148,64 @@ Vectord libdl::error::CrossEntropy::predictions(Matrixd logits, Vectord targets)
 }
 
 
-Matrixd libdl::error::CrossEntropy::get_gradient() {
+Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets , int iteration) {
     try{
+
+        if (this->logits == nullptr)
+            this->logits = std::make_unique<Matrixd>(logits);
+        else
+            *(this->logits) = logits;
+
+
+        if (this->targets == nullptr)
+            this->targets = std::make_unique<Vectord>(targets);
+        else
+            *(this->targets) = targets;
+
+        Vectord predictions = this->softmax();
+
+        double res = 0;
+
+        for (int i = 0 ; i < this->logits->rows(); i++){
+            res += std::log((*(this->logits))(i, targets(i)));
+            //std::cout << "Log of this: " << (*(this->logits))(i, targets(i)) << std::endl;
+            avg += -res;
+        }
+
+        this->errors.push_back(-res);
+
+        if(iteration % 10 == 0 && iteration != 0) {
+            std::cout << "\n[Error: " << avg / (targets.rows()*10) << "; Iteration: " << iteration << "]\n";
+            avg = 0;
+        }
 
         Matrixd gradients(this->logits->rows(), this->logits->cols());
         gradients = *(this->logits);
-        Vectord sums = this->logits->unaryExpr([](double e){return std::exp(e);}).rowwise().sum();
 
 
+
+        /*
         for(int row = 0; row < gradients.rows(); row++){
             gradients.row(row) /= sums(row);
-        }
+        }*/
 
         for(int instance = 0; instance < this->logits->rows(); instance ++){
             int index = (*(this->targets))(instance);
             gradients(instance, index) -= 1; //loss gradient
 
-            gradients = gradients.unaryExpr([this](double e){return e / this->logits->rows();});//Normalization
         }
 
-        return - gradients;
+        gradients = gradients.unaryExpr([this](double e){
+            if(e > 50){
+                e = 50;
+            }else if(e < -50){
+                e = -50;
+            }
+
+            return e / this->logits->rows();
+        });//Normalization
+
+        return gradients;
 
     }catch(std::exception &err){
         std::cerr << "Unexcpected error: " << err.what() << std::endl;
@@ -174,13 +214,24 @@ Matrixd libdl::error::CrossEntropy::get_gradient() {
 }
 
 
-double CrossEntropy::softmax(int instance, int index) {
+Vectord CrossEntropy::softmax() {
+    Vectord maximums = this->logits->rowwise().maxCoeff();
+
+    this->logits->colwise() -= maximums;
+
     Vectord sums = this->logits->unaryExpr([](double e){return std::exp(e);}).rowwise().sum();
     //double sum = this->logits->block(instance, 0, 1, this->logits->cols()).sum();
 
-    double res = std::exp((*(this->logits))(instance, index))/sums(instance);
+    *(this->logits) = this->logits->unaryExpr([](double e){ return std::exp(e);});
 
-    return res;
+    for(int i = 0; i < this->logits->rows(); i++){
+        this->logits->row(i) /= sums(i);
+    }
+
+    if(this->logits->minCoeff() < 0)
+        std::cout << "LOGIT SMALLER THAN 0 STILL SOME PROBLEM HERE.\n";
+
+    return this->logits->rowwise().maxCoeff();
 }
 
 

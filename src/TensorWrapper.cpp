@@ -237,9 +237,9 @@ libdl::TensorWrapper_Exp::TensorWrapper_Exp(int batch_size_, int tensor_height_,
 
         if (this->are_filters) {
             *(this->tensor) = Eigen::MatrixXd::Random(this->batch_size,
-                                                      this->tensor_height * this->tensor_width * this->tensor_depth)/100;
-
+                                                      this->tensor_height * this->tensor_width * this->tensor_depth) /10;
         }
+
         this->this_size += sizeof(this);
     }catch(std::bad_alloc &err){
         std::cout << "TensorWrapper_Exp::TensorWrapper_Exp(...): Not enough memory: " << err.what() << std::endl;
@@ -299,23 +299,21 @@ const TensorWrapper_Exp libdl::TensorWrapper_Exp::operator+(TensorWrapper_Exp& a
 }
 
 const TensorWrapper_Exp libdl::TensorWrapper_Exp::operator*(double weight) const{
-    *(this->tensor) *= weight;
+    auto temp = *(this->tensor) * weight;
 
-    return *this;
+    TensorWrapper_Exp res(*this);
+    res.set_tensor(temp, this->tensor_height, this->tensor_width, this->tensor_depth);
+
+    return res;
 }
 
 TensorWrapper_Exp& libdl::TensorWrapper_Exp::correlation(libdl::TensorWrapper_Exp& filters, int padding, int stride) {
     try {
 
-        /*if(!filters.is_filter())
-            throw std::invalid_argument("(filters) are not filters!");*/
 
         int o_rows = ((this->get_tensor_height() + (2 * padding) - filters.get_tensor_height())/stride) + 1;
         int o_cols = (this->get_tensor_width() + (2 * padding) - filters.get_tensor_width())/stride + 1;
 
-        /*if(output.get_batch_size() != this->batch_size || output.get_tensor_height() != o_rows ||
-            output.get_tensor_width() != o_cols || output.get_tensor_depth() != filters.get_batch_size())
-            throw std::invalid_argument("output has not the right shape");*/
 
         libdl::TensorWrapper_Exp *output = new libdl::TensorWrapper_Exp(
                 this->get_batch_size(), o_rows, o_cols, filters.get_batch_size());
@@ -323,11 +321,15 @@ TensorWrapper_Exp& libdl::TensorWrapper_Exp::correlation(libdl::TensorWrapper_Ex
         output->set_tensor(Eigen::MatrixXd::Constant(this->get_batch_size(), o_rows*o_cols*filters.get_batch_size(), 0),
                 o_rows, o_cols, filters.get_batch_size());
 
+        libdl::TensorWrapper_Exp padded_tensor(this->batch_size, this->tensor_height+2*padding,
+                this->tensor_width+2*padding, this->tensor_depth);
+
 
         Eigen::MatrixXd temp(o_rows, o_cols);
 
         //std::cout << "Before the for loops.\n";
         //std::cout << "This shape: " << this->tensor_height << "x" << this->tensor_width << std::endl;
+
 
         for (int instance = 0; instance < this->get_batch_size(); instance++) {
             for (int filter = 0; filter < filters.get_batch_size(); filter++) {
@@ -342,16 +344,22 @@ TensorWrapper_Exp& libdl::TensorWrapper_Exp::correlation(libdl::TensorWrapper_Ex
                     auto filter_slice = filters.get_slice(filter, slice);
 
                     //std::cout << "instance_slice shape: " << instance_slice.rows() << "x" << instance_slice.cols() << std::endl;
-                    //std::cout << "temp shape: " << o_rows << "x" << o_cols << std::endl;
-                    auto respond = libdl::TensorWrapper_Exp::correlation2D(instance_slice, filter_slice, padding, stride);
-                    //std::cout << "respond shape: " << respond.rows() << "x" << respond.cols() << std::endl;
+
+                    padded_tensor.update_slice(instance, slice, libdl::TensorWrapper_Exp::pad(instance_slice, padding));
+                    auto respond = libdl::TensorWrapper_Exp::correlation2D(padded_tensor.get_slice(instance, slice),
+                            filter_slice, 0, stride);
                     temp = temp + respond;
 
                 }
                 //std::cout << "Updating output.\n";
+
+
                 output->update_slice(instance, filter, temp);
             }
         }
+
+        //this->set_tensor(padded_tensor.get_tensor(), padded_tensor.get_tensor_height(), padded_tensor.get_tensor_width(),
+         //                padded_tensor.get_tensor_depth());
         //std::cout << "Output shape: " << output->get_batch_size() << "x" << output->get_tensor_height()
         //<< "x" << output->get_tensor_width() << "x" << output->get_tensor_depth() << std::endl;
         return *output;
@@ -431,8 +439,8 @@ Eigen::MatrixXd libdl::TensorWrapper_Exp::get_slice(int instance_, int depth_) c
         if(instance_ < 0 || instance_ > this->batch_size)
             throw std::invalid_argument("instance_");
 
-        if(depth_ < 0 || depth_ > this->tensor_depth) {
-            //std::cout << "DEPTH: " << depth_ << " tensor_depth: " << this->tensor_depth << std::endl;
+        if(depth_ < 0 || depth_ >= this->tensor_depth) {
+            std::cout << "DEPTH: " << depth_ << " tensor_depth: " << this->tensor_depth << std::endl;
             throw std::invalid_argument("depth_");
         }
 
@@ -441,7 +449,8 @@ Eigen::MatrixXd libdl::TensorWrapper_Exp::get_slice(int instance_, int depth_) c
 
 
         for(int row = 0; row < this->tensor_height; row++){
-            res.block(row, 0, 1, this->tensor_width) = this->tensor->block(instance_, row*this->tensor_width, 1, this->tensor_width);
+            res.row(row) = this->tensor->block(instance_, (row*this->tensor_width + depth_ * (tensor_width*tensor_height)),
+                    1, this->tensor_width);
         }
 
         return res;
@@ -469,7 +478,8 @@ void libdl::TensorWrapper_Exp::update_slice(int instance_, int depth_, Eigen::Ma
             throw std::invalid_argument("new_slice_");*/
 
         for(int row = 0; row < new_slice_.rows(); row++){
-            this->tensor->block(instance_, row*this->tensor_width, 1, this->tensor_width) = new_slice_.row(row);
+            this->tensor->block(instance_, (row*this->tensor_width + depth_ * (tensor_width*tensor_height)),
+                    1, this->tensor_width) = new_slice_.row(row);
         }
 
     }catch(std::invalid_argument & err){
