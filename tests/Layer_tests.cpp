@@ -2,132 +2,261 @@
 // Created by Aldi Topalli on 2019-05-08.
 //
 
-//#define CATCH_CONFIG_RUNNER
+#define CATCH_CONFIG_RUNNER
 
 #include <iostream>
-//#include "catch.hpp"
+#include "catch.hpp"
 #include "Eigen/Dense"
 #include "TensorWrapper_tests.cpp"
 #include "Layer.h"
 #include "ErrorFunctions.h"
+#include "TensorWrapper.h"
+#include "data_handler.h"
 
 using namespace Eigen;
 
+
+
+
+
 int main(int argc, char* argv[]){
 
-    //int result = Catch::Session().run(argc, argv);
 
-    libdl::layers::DenseLayer2D dl2d(2, 2, "Test Layer");
-    libdl::layers::DenseLayer2D middle(2, 2, "Middle");
-    libdl::layers::DenseLayer2D dl2d_1(2, 1, "Test Layer 2");
+    std::cout << "Running tests...\n";
+    int result = Catch::Session().run(argc, argv);
 
-    libdl::layers::Sigmoid sig1;
-    libdl::layers::Sigmoid sig2;
-    libdl::layers::Sigmoid sig3;
+    /*
+    std::cout << "ROTATION IS HAPPENDING HERE.\n";
 
+    Eigen::Transform t(AngleAxisd());
 
-
-    MatrixXd input(5, 2);
-    input(0, 0) = 0;
-    input(0, 1) = 1;
-
-    input(1, 0) = 1;
-    input(1, 1) = 1;
-
-    input(2, 0) = 1;
-    input(2, 1) = 0;
-
-    input(3, 0) = 0;
-    input(3, 1) = 0;
-
-    input(4, 0) = 0;
-    input(4, 1) = 0;
-
-    VectorXd labels(5);
-    labels(0) = 1;
-    labels(1) = 0;
-    labels(2) = 1;
-    labels(3) = 0;
-    labels(4) = 0;
-
-    libdl::error::ErrorFunctions e(1, labels);
+    std::cout << "END OF THE ROTATION.\n";*/
 
 
-    Eigen::MatrixXd out1;
-    Eigen::MatrixXd out2;
-    Eigen::MatrixXd out3;
-    Eigen::MatrixXd grads;
+    std::cout << "Downloading data.\n";
+    std::unique_ptr<data_handler> dh = std::make_unique<data_handler>();
 
-    double alpha = 0.5;
+    dh->read_feature_vector("../data/train-images-idx3-ubyte");
+    std::cout << "Downloading features.\n";
+    dh->read_feature_label("../data/train-labels-idx1-ubyte");
+    std::cout << "Downloading labels.\n";
+    dh->split_data();
+    dh->count_classes();
 
-    std::cout << "Error: ";
-    for (int i = 0; i < 4000; i++){
-        out1 = dl2d.forward(input);
-        out1 = sig1.forward(out1);
-        //std::cout << "Out layer 1: \n" << out1 << std::endl;
+    libdl::TensorWrapper_Exp train_data   = dh->convert_training_data_to_Eigen();
+    //Leave it here for now but this is not the main cause of those crazy numbers
+    /*
+    for(int i = 0; i < train_data.get_batch_size(); i++){
+        double mean = train_data.get_tensor().block(i, 0, 1, train_data.get_tensor().cols()).mean();
 
 
-        out2 = middle.forward(out1);
-        out2 = sig2.forward(out2);
-        //std::cout << "Out layer 2: \n" << out2 << std::endl;
+        train_data.get_tensor().block(i, 0, 1, train_data.get_tensor().cols()) = train_data.get_tensor().block(i, 0, 1, train_data.get_tensor().cols()).unaryExpr([mean](double e)
+        {
+            return e - mean;
+        });
+    }
+    std::cout << "Data centered!\n";*/
 
-        out3 = dl2d_1.forward(out2);
-        out3 = sig3.forward(out3);
-        //std::cout << "Out layer 3: \n" << out3 << std::endl;
 
-        auto err = e.get_error(labels, out3);
+    libdl::TensorWrapper_Exp train_labels = dh->convert_training_labels_to_Eigen();
+    dh.reset(nullptr);
 
-        if(i % 10000 == 0){
-            std::cout << err << " ";
+
+    int batch_size = 4;
+    double lr = 1e-1;
+
+
+    libdl::layers::Convolution2D conv1_1(3, 32, 0, 1, 1); //28x28x1
+    libdl::layers::Convolution2D conv1_2(3, 32, 0, 1, 16);//not used
+    libdl::layers::ReLU relu1;//28x28x1
+
+    libdl::layers::MaxPool pool1(2, 2);//14x14x16
+
+
+    libdl::layers::Convolution2D conv2_1(3, 64, 0, 1, 32);//14x14x32
+    libdl::layers::Convolution2D conv2_2(3, 64, 0, 1, 32);//not used
+    libdl::layers::ReLU relu2;
+    libdl::layers::MaxPool pool2(2, 2);//13x13x32
+
+    libdl::layers::Flatten flatten(batch_size, 5, 5, 64);//7x7*32
+
+
+    libdl::layers::DenseLayer2D dense1(7744, 700, "dense1"); //224x100
+    libdl::layers::ReLU relu3;
+
+
+    libdl::layers::DenseLayer2D dense2(700, 350, "dense2");
+    libdl::layers::ReLU relu4;
+
+    libdl::layers::DenseLayer2D dense3(350, 10, "dense3");
+
+
+    libdl::error::CrossEntropy cross_entropy_error(10);
+
+    libdl::TensorWrapper_Exp batch(batch_size, 28, 28, 1, false);
+
+
+    libdl::TensorWrapper_Exp out_conv(batch_size, 28, 28, 1, false);
+    Eigen::MatrixXd out_dense(batch_size, 4608);
+
+    libdl::TensorWrapper_Exp conv_grads(batch_size, 3, 3, 16, false);
+    Eigen::MatrixXd grads(batch_size, 10);
+
+
+
+    std::cout << "\nTRAINING PHASE.\n";
+    std::cout << "===================================================================\n";
+
+    for(int epoch = 0; epoch < 50; epoch++) {
+        for (int b = 0; b < train_data.get_batch_size()/batch_size && b < 10; b++) {
+            batch.set_tensor(train_data.get_tensor().block(b*batch_size, 0, batch_size, 28*28), 28, 28, 1);
+
+            out_conv = conv1_1.forward(batch);
+            //out_conv = conv1_2.forward(batch);
+            out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
+                    out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+            out_conv = pool1.forward(out_conv);
+
+            out_conv = conv2_1.forward(out_conv);
+            //out_conv = conv2_2.forward(out_conv);
+            out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
+                                out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+            //out_conv = pool2.forward(out_conv);
+
+            out_dense = flatten.forward(out_conv);
+
+            out_dense = dense1.forward(out_dense);
+            out_dense = relu3.forward(out_dense);
+
+            out_dense = dense2.forward(out_dense);
+            out_dense = relu4.forward(out_dense);
+
+            out_dense = dense3.forward(out_dense);
+
+
+            //Backward pass
+
+            grads = cross_entropy_error.get_gradient(out_dense, train_labels.get_tensor().block(b*batch_size, 0, batch_size, 1), b+1);
+            //std::cout << "Avg: " << grads.mean() << std::endl;
+
+            /*
+            if(b % 10 == 0) {
+                double error =
+                        cross_entropy_error.get_error(train_labels.get_tensor().block(b, 0, batch_size, 1), out_dense) / 16;
+                std::cout << "[Batch: " << b << "; Error: " << error << ";]\n";
+            }*/
+
+            //std::cout << "CE Gradient shape: " << grads.rows() << "x" << grads.cols() << std::endl;
+
+            grads = dense3.backward(grads, lr);
+            //std::cout << "Avg: " << grads.mean() << std::endl;
+            //std::cout << "d3 Gradient shape: " << grads.rows() << "x" << grads.cols() << std::endl;
+
+            grads = relu4.backward(grads, lr);
+            //std::cout << "Avg: " << grads.mean() << std::endl;
+            //std::cout << "3\n";
+            grads = dense2.backward(grads, lr);
+            //std::cout << "Avg: " << grads.mean() << std::endl;
+            //std::cout << "d2 Gradient shape: " << grads.rows() << "x" << grads.cols() << std::endl;
+
+            grads = relu3.backward(grads, lr);
+            //std::cout << "Avg: " << grads.mean() << std::endl;
+            //std::cout << "5\n";
+            grads = dense1.backward(grads, lr);
+            //std::cout << "Avg: " << grads.mean() << std::endl;
+            //std::cout << "d1 Gradient shape: " << grads.rows() << "x" << grads.cols() << std::endl;
+
+            conv_grads = flatten.backward(grads);
+            //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
+            //std::cout << "F Gradient shape: " << conv_grads.shape() << std::endl;
+
+            //conv_grads = pool2.backward(conv_grads, lr);
+            //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
+            //std::cout << "P2 Gradient shape: " << conv_grads.shape() << std::endl;
+
+            conv_grads.set_tensor(relu2.backward(conv_grads.get_tensor(), lr),
+                    conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
+            //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
+            //std::cout << "r2 Gradient shape: " << conv_grads.shape() << std::endl;
+
+            //conv_grads = conv2_2.backward(conv_grads, lr);
+            //std::cout << "c2_2 Gradient shape: " << conv_grads.shape() << std::endl;
+            conv_grads = conv2_1.backward(conv_grads, lr);
+            //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
+            //std::cout << "c2_1 Gradient shape: " << conv_grads.shape() << std::endl;
+
+            conv_grads = pool1.backward(conv_grads, lr);
+            //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
+            //std::cout << "p1 Gradient shape: " << conv_grads.shape() << std::endl;
+            conv_grads.set_tensor(relu1.backward(conv_grads.get_tensor(), lr),
+                    conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
+            //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
+            //std::cout << "r1 Gradient shape: " << conv_grads.shape() << std::endl;
+            //conv_grads = conv1_2.backward(conv_grads, lr);
+            //std::cout << "c1_2 Gradient shape: " << conv_grads.shape() << std::endl;
+            conv_grads = conv1_1.backward(conv_grads, lr);
+            //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
+            //std::cout << "c1_1 Gradient shape: " << conv_grads.shape() << std::endl;
+
         }
+    }
 
-        grads = e.get_gradient();
+    std::cout << "\nTESTING PHASE.\n";
+    std::cout << "===================================================================\n";
 
-        grads = sig3.backward(grads, alpha);
-        grads = dl2d_1.backward(grads, alpha);
+    for (int b = 0; b < train_data.get_batch_size()/batch_size && b < 10; b++) {
+        batch.set_tensor(train_data.get_tensor().block(b*batch_size, 0, batch_size, 28*28), 28, 28, 1);
 
-        grads = sig2.backward(grads, alpha);
-        grads = middle.backward(grads, alpha);
+        out_conv = conv1_1.forward(batch);
+        //out_conv = conv1_2.forward(batch);
+        out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
+                            out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+        out_conv = pool1.forward(out_conv);
 
-        grads = sig1.backward(grads, alpha);
-        grads = dl2d.backward(grads, alpha);
+        out_conv = conv2_1.forward(out_conv);
+        //out_conv = conv2_2.forward(out_conv);
+        out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
+                            out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+        //out_conv = pool2.forward(out_conv);
+
+        out_dense = flatten.forward(out_conv);
+
+        out_dense = dense1.forward(out_dense);
+        out_dense = relu3.forward(out_dense);
+
+        out_dense = dense2.forward(out_dense);
+        out_dense = relu4.forward(out_dense);
+
+        out_dense = dense3.forward(out_dense);
+
+
+        Vectord predictions = cross_entropy_error.predictions(out_dense,
+                train_labels.get_tensor().block(b*batch_size, 0, batch_size, 1));
 
     }
 
-    //Here I test new input points
-
-    Eigen::MatrixXd test_in(5, 2);
-
-    test_in(0, 0) = 1; // 1
-    test_in(0, 1) = 0;
-
-    test_in(1, 0) = 1; // 1
-    test_in(1, 1) = 0;
-
-    test_in(2, 0) = 1;
-    test_in(2, 1) = 1; // 0
-
-    test_in(3, 0) = 1;
-    test_in(3, 1) = 1; // 0
-
-    test_in(4, 0) = 0; // 1
-    test_in(4, 1) = 1;
-
-    Eigen::MatrixXd o1;
-    Eigen::MatrixXd o2;
-    Eigen::MatrixXd o3;
-
-    o1 = dl2d.forward(test_in);
-    o1 = sig1.forward(o1);
-    o2 = middle.forward(o1);
-    o2 = sig2.forward(o2);
-    o3 = dl2d_1.forward(o2);
-    o3 = sig3.forward(o3);
-
-
-    std::cout << "\nOutput: \n" << o3 << std::endl;
-
-    //You can also test it by instead providing a matrix with a different input
 
     return 0;
 }
+
+
+/*
+SCENARIO("Testing the Convolution Layer", "[ConvolutionLayer]"){
+    GIVEN("A convolution layer"){
+        libdl::layers::Convolution2D conv(3, 16, 1, 1, 3);
+
+        libdl::TensorWrapper_Exp input(16, 28, 28, 3);
+        input.set_tensor(Eigen::MatrixXd::Constant(16, 28*28*3, 1));
+
+
+        WHEN("random input goes through the layer"){
+            libdl::TensorWrapper_Exp output(16, 28, 28, 16);
+            output = conv.forward(input);
+
+            std::cout << "Output slice: " << output.get_slice(0, 0) << std::endl;
+
+        }
+
+
+    }
+}*/

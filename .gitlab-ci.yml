@@ -6,6 +6,8 @@ stages:
 build-linux-gcc:
   stage: compile
   script:
+    - rm -rf extern/pybind11
+    - git clone https://github.com/pybind/pybind11.git extern/pybind11 --recursive
     - mkdir -p build
     - cd build
     - cmake ..
@@ -21,6 +23,8 @@ build-linux-gcc:
 build-linux-clang:
   stage: compile
   script:
+    - rm -rf extern/pybind11
+    - git clone https://github.com/pybind/pybind11.git extern/pybind11 --recursive
     - mkdir -p build
     - cd build
     - cmake .. -DCMAKE_CXX_COMPILER=/usr/bin/clang++

@@ -8,3 +8,5 @@ CMakeCache.txt
 libdl.dSYM/
 testmain.dSYM/
 .idea/
+libdl.egg-info/
+example.cpython-36m-darwin.so
