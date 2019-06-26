@@ -136,7 +136,7 @@ int main(int argc, char* argv[]){
 
             //Backward pass
 
-            grads = cross_entropy_error.get_gradient(out_dense, train_labels.get_tensor().block(b*batch_size, 0, batch_size, 1), b+1);
+            grads = cross_entropy_error.get_gradient(out_dense, train_labels.get_tensor().block(b*batch_size, 0, batch_size, 1), (epoch+1)*(b+1));
             //std::cout << "Avg: " << grads.mean() << std::endl;
 
             /*

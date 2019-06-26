@@ -175,7 +175,7 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
         this->errors.push_back(-res);
 
         if(iteration % 10 == 0 && iteration != 0) {
-            std::cout << "\n[Error: " << avg / (targets.rows()*10) << "; Iteration: " << iteration << "]\n";
+            std::cout << "\n[Error: " << avg / (targets.rows()*10) << "; Epoch: " << iteration/10 << "]\n";
             avg = 0;
         }
 
