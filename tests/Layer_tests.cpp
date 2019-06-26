@@ -8,7 +8,6 @@
 #include "catch.hpp"
 #include "Eigen/Dense"
 #include "TensorWrapper_tests.cpp"
-//#include "tests.cpp"
 #include "Layer.h"
 #include "ErrorFunctions.h"
 #include "TensorWrapper.h"

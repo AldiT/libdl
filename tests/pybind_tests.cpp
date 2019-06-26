@@ -1,6 +1,7 @@
 //
 // Created by Aldi Topalli on 2019-06-16.
 //
+/*
 #include <iostream>
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
@@ -18,7 +19,7 @@ Eigen::MatrixXd print(Eigen::MatrixXd &m){
 
     return m;
 }
-/*
+
 void train(){
     std::cout << "Training...\n";
 
@@ -132,11 +133,11 @@ void train(){
 
     std::cout << "\nOutput: \n" << o3 << std::endl;
 
-}*/
+}
 
 
 PYBIND11_MODULE(example, m){
 
     m.def("print", &print, "");
     //m.def("train", &train, "");
-}
+}*/
