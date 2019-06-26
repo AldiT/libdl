@@ -62,7 +62,7 @@ int main(int argc, char* argv[]){
     dh.reset(nullptr);
 
 
-    int batch_size = 4;
+    int batch_size = 4, batch_limit=10;
     double lr = 1e-1;
 
 
@@ -108,7 +108,7 @@ int main(int argc, char* argv[]){
     std::cout << "===================================================================\n";
 
     for(int epoch = 0; epoch < 50; epoch++) {
-        for (int b = 0; b < train_data.get_batch_size()/batch_size && b < 10; b++) {
+        for (int b = 0; b < train_data.get_batch_size()/batch_size && b < batch_limit; b++) {
             batch.set_tensor(train_data.get_tensor().block(b*batch_size, 0, batch_size, 28*28), 28, 28, 1);
 
             out_conv = conv1_1.forward(batch);
@@ -204,7 +204,7 @@ int main(int argc, char* argv[]){
     std::cout << "\nTESTING PHASE.\n";
     std::cout << "===================================================================\n";
 
-    for (int b = 0; b < train_data.get_batch_size()/batch_size && b < 10; b++) {
+    for (int b = 0; b < train_data.get_batch_size()/batch_size && b < batch_limit; b++) {
         batch.set_tensor(train_data.get_tensor().block(b*batch_size, 0, batch_size, 28*28), 28, 28, 1);
 
         out_conv = conv1_1.forward(batch);

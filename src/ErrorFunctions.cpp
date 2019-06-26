@@ -106,6 +106,7 @@ Vectord libdl::error::CrossEntropy::predictions(Matrixd logits, Vectord targets)
         else
             *(this->logits) = logits;
 
+        double acc = 0;
 
         if (this->targets == nullptr)
             this->targets = std::make_unique<Vectord>(targets);
@@ -118,12 +119,15 @@ Vectord libdl::error::CrossEntropy::predictions(Matrixd logits, Vectord targets)
         }
 
         Vectord predictions(this->targets->rows());
-        Vectord predicted(this->targets->rows());
+        Vectord predicted_class(this->targets->rows());
         int index;
 
         for (int i = 0; i < this->targets->rows(); i++) {
-            predicted(i) = this->logits->row(i).maxCoeff(&index);
-            predictions(i) = index;
+            predictions(i) = this->logits->row(i).maxCoeff(&index);
+            predicted_class(i) = index;
+
+            if(predicted_class(i) == targets(i))
+                acc += 1;
         }
 
         //printing
@@ -131,6 +135,8 @@ Vectord libdl::error::CrossEntropy::predictions(Matrixd logits, Vectord targets)
         for(int i = 0; i < this->targets->rows(); i++){
             std::cout << "Prediction: " << predictions(i) << " Label: " << (*(this->targets))(i) << std::endl;
         }
+
+        std::cout << "Test accuracy: " << acc/target.rows() << std::endl;
 
 
         return predictions;
