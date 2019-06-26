@@ -118,10 +118,9 @@ int main(int argc, char* argv[]){
             out_conv = pool1.forward(out_conv);
 
             out_conv = conv2_1.forward(out_conv);
-            //out_conv = conv2_2.forward(out_conv);
             out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
                                 out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
-            //out_conv = pool2.forward(out_conv);
+
 
             out_dense = flatten.forward(out_conv);
 
@@ -170,7 +169,6 @@ int main(int argc, char* argv[]){
             //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
             //std::cout << "F Gradient shape: " << conv_grads.shape() << std::endl;
 
-            //conv_grads = pool2.backward(conv_grads, lr);
             //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
             //std::cout << "P2 Gradient shape: " << conv_grads.shape() << std::endl;
 
@@ -179,8 +177,6 @@ int main(int argc, char* argv[]){
             //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
             //std::cout << "r2 Gradient shape: " << conv_grads.shape() << std::endl;
 
-            //conv_grads = conv2_2.backward(conv_grads, lr);
-            //std::cout << "c2_2 Gradient shape: " << conv_grads.shape() << std::endl;
             conv_grads = conv2_1.backward(conv_grads, lr);
             //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
             //std::cout << "c2_1 Gradient shape: " << conv_grads.shape() << std::endl;
@@ -192,8 +188,6 @@ int main(int argc, char* argv[]){
                     conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
             //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
             //std::cout << "r1 Gradient shape: " << conv_grads.shape() << std::endl;
-            //conv_grads = conv1_2.backward(conv_grads, lr);
-            //std::cout << "c1_2 Gradient shape: " << conv_grads.shape() << std::endl;
             conv_grads = conv1_1.backward(conv_grads, lr);
             //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
             //std::cout << "c1_1 Gradient shape: " << conv_grads.shape() << std::endl;
@@ -208,16 +202,15 @@ int main(int argc, char* argv[]){
         batch.set_tensor(train_data.get_tensor().block(b*batch_size, 0, batch_size, 28*28), 28, 28, 1);
 
         out_conv = conv1_1.forward(batch);
-        //out_conv = conv1_2.forward(batch);
+
         out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
                             out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
         out_conv = pool1.forward(out_conv);
 
         out_conv = conv2_1.forward(out_conv);
-        //out_conv = conv2_2.forward(out_conv);
+
         out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
                             out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
-        //out_conv = pool2.forward(out_conv);
 
         out_dense = flatten.forward(out_conv);
 
