@@ -40,10 +40,12 @@ DenseLayer2D::DenseLayer2D(int input_features, int num_neurons, std::string name
     try {
 
         this->num_neurons = num_neurons;
+
         this->weights = std::make_unique<Eigen::MatrixXd>(input_features, this->num_neurons);
         this->biases = std::make_unique<Eigen::VectorXd>(this->num_neurons);
         this->name = name;
 
+        srand((unsigned int) time(0));
         *(this->weights) = Eigen::MatrixXd::Random(input_features, this->num_neurons)/10;
         *(this->biases) = Eigen::VectorXd::Constant(this->num_neurons, 0.01);
 
@@ -61,8 +63,9 @@ Eigen::MatrixXd& DenseLayer2D::forward(Eigen::MatrixXd& input) {
 
         if(this->input == nullptr)
             this->input = std::make_unique<Eigen::MatrixXd>(input);
-        else
-            *(this->input) = input;
+
+
+        *(this->input) = input;
 
 
         if(this->output == nullptr)
@@ -132,8 +135,9 @@ Eigen::MatrixXd& Sigmoid::forward(Eigen::MatrixXd& input){
 
     if(this->input == nullptr)
         this->input = std::make_unique<Eigen::MatrixXd>(input);
-    else
-        *(this->input) = input;
+
+
+    *(this->input) = input;
 
     if(this->output == nullptr)
         this->output = std::make_unique<Eigen::MatrixXd>(input.rows(), input.cols());
@@ -195,8 +199,8 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::forward(libdl::TensorWra
 
     if(this->input == nullptr)
         this->input = std::make_unique<libdl::TensorWrapper_Exp>(inputs_); //operator=
-    else
-        *(this->input) = inputs_;
+
+    *(this->input) = inputs_;
 
     //*(this->input) = this->pad(*(this->input));
 
@@ -207,7 +211,13 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::forward(libdl::TensorWra
         this->output = std::make_unique<libdl::TensorWrapper_Exp>(this->input->get_batch_size(), o_rows,
                                                                   o_cols, this->filters->get_batch_size());
 
+
+
     *(this->output) = this->input->correlation(*(this->filters), this->padding, this->stride);
+
+    std::cout << "Output:\n" << this->output->get_slice(0, 0) << std::endl;
+    std::cout << "Output:\n" << this->output->get_slice(0, 1) << std::endl;
+    std::cout << "Output:\n" << this->output->get_slice(0, 2) << std::endl;
 
 
     //std::cout << "OUTPUT shape conv: " << this->output->shape() << std::endl;
@@ -400,6 +410,8 @@ Eigen::MatrixXd& libdl::layers::Flatten::forward(libdl::TensorWrapper_Exp& input
     this->input->set_tensor(input.get_tensor(), input.get_tensor_height(), input.get_tensor_width(),
             input.get_tensor_depth());
 
+    std::cout << "Output:\n" << this->input->get_slice(0, 0) << std::endl;
+
     return input.get_tensor();
 }
 
@@ -457,8 +469,8 @@ libdl::layers::MaxPool::MaxPool(int kernel, int stride) {
 TensorWrapper& libdl::layers::MaxPool::forward(TensorWrapper& input) {
     if(this->input == nullptr)
         this->input = std::make_unique<TensorWrapper>(input);
-    else
-        *(this->input) = input;
+
+    *(this->input) = input;
 
     if(this->past_propagation == nullptr)
         this->past_propagation = std::make_unique<TensorWrapper>(input.get_batch_size(), input.get_tensor_height(),
@@ -477,6 +489,10 @@ TensorWrapper& libdl::layers::MaxPool::forward(TensorWrapper& input) {
 
 
     this->max_pooling();
+
+    std::cout << "Output:\n" << this->output->get_slice(0, 0) << std::endl;
+    std::cout << "Output:\n" << this->output->get_slice(0, 1) << std::endl;
+
 
     return *(this->output);
 

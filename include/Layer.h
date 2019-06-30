@@ -175,7 +175,9 @@ public:
     TensorWrapper& forward(TensorWrapper& input_);
     TensorWrapper& backward(TensorWrapper& gradients_, double lr);
 
-
+    Matrixd get_filters(){
+        return this->filters->get_tensor();
+    }
 protected:
     //protected because later I might want to implement some fancy convolution layer to perform segmantation or whatever
     //methods
@@ -187,6 +189,8 @@ protected:
     TensorWrapper& pad(TensorWrapper&);
 
     TensorWrapper& clean_gradient(TensorWrapper&);
+
+
 
 
 
@@ -283,6 +287,9 @@ public:
 
     Matrixd& forward(Matrixd& input){
         input = input.unaryExpr([](double e){return ((e > 0)? e : 0);});
+
+        std::cout << "Output relu:\n" << input.row(0) << std::endl;
+
         return input;
     }
     Matrixd& backward(Matrixd& gradients, double lr){

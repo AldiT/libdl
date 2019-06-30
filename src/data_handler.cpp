@@ -5,6 +5,7 @@
 #include "data_handler.h"
 #include "TensorWrapper.h"
 #include <cstring>
+#include <iostream>
 
 
 data_handler::data_handler()
@@ -194,11 +195,11 @@ libdl::TensorWrapper_Exp data_handler::convert_training_data_to_Eigen()
     int batch_size = training_data->size();
     int features = training_data->at(0)->get_feature_vector()->size();
 
-    libdl::TensorWrapper_Exp result(batch_size, features);
+    libdl::TensorWrapper_Exp result(batch_size, 28, 28, 1, false);
 
     Matrix8u tmp(training_data->size(), training_data->at(0)->get_feature_vector()->size());
 
-
+    std::cout << "Features: " << features << std::endl;
     for(int i = 0; i < batch_size; i++){
         for(int j = 0; j < features; j++){
             std::memcpy(&tmp(i, j), &training_data->at(i)->get_feature_vector()->at(j), sizeof(uint8_t));

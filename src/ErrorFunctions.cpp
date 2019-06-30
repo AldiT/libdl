@@ -133,10 +133,10 @@ Vectord libdl::error::CrossEntropy::predictions(Matrixd logits, Vectord targets)
         //printing
         std::cout << "Prediction results: \n";
         for(int i = 0; i < this->targets->rows(); i++){
-            std::cout << "Prediction: " << predictions(i) << " Label: " << (*(this->targets))(i) << std::endl;
+            std::cout << "Prediction: " << predicted_class(i) << " Label: " << (*(this->targets))(i) << std::endl;
         }
 
-        std::cout << "Test accuracy: " << acc/target.rows() << std::endl;
+        std::cout << "Test accuracy: " << acc/targets.rows() << std::endl;
 
 
         return predictions;
@@ -180,10 +180,7 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
 
         this->errors.push_back(-res);
 
-        if(iteration % 10 == 0 && iteration != 0) {
-            std::cout << "\n[Error: " << avg / (targets.rows()*10) << "; Epoch: " << iteration/10 << "]\n";
-            avg = 0;
-        }
+
 
         Matrixd gradients(this->logits->rows(), this->logits->cols());
         gradients = *(this->logits);
@@ -210,6 +207,13 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
 
             return e / this->logits->rows();
         });//Normalization
+
+        if(iteration % 10 == 0 && iteration != 0) {
+            std::cout << "\n[Error: " << avg / (targets.rows()*10) << "; Epoch: " << iteration/10 << "]\n";
+            avg = 0;
+            std::cout << "Gradients: " << gradients << std::endl;
+            std::cout << "Logits: \n" << *(this->logits) << std::endl;
+        }
 
         return gradients;
 

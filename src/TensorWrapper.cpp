@@ -236,6 +236,7 @@ libdl::TensorWrapper_Exp::TensorWrapper_Exp(int batch_size_, int tensor_height_,
 
 
         if (this->are_filters) {
+            srand((unsigned int) time(0));
             *(this->tensor) = Eigen::MatrixXd::Random(this->batch_size,
                                                       this->tensor_height * this->tensor_width * this->tensor_depth) /10;
         }
@@ -385,6 +386,8 @@ Eigen::MatrixXd libdl::TensorWrapper_Exp::correlation2D(Eigen::MatrixXd m1, Eige
 
     int o_rows = ((m1.rows() + (2 * padding) - kernels.rows())/stride) + 1;
     int o_cols = (m1.cols() + (2 * padding) - kernels.cols())/stride + 1;
+
+
 
     libdl::TensorWrapper_Exp::pad(m1, padding);//Working as it should
 
