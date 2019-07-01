@@ -162,6 +162,7 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
         else
             *(this->logits) = logits;
 
+        //std::cout << "Logits before any change: " << logits << std::endl;
 
         if (this->targets == nullptr)
             this->targets = std::make_unique<Vectord>(targets);
@@ -208,8 +209,8 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
             return e / this->logits->rows();
         });//Normalization
 
-        if(iteration % 10 == 0 && iteration != 0) {
-            std::cout << "\n[Error: " << avg / (targets.rows()*10) << "; Epoch: " << iteration/10 << "]\n";
+        if(iteration % 4 == 0 && iteration != 0) {
+            std::cout << "\n[Error: " << avg / (targets.rows()*4) << "; Epoch: " << iteration/4 << "]\n";
             avg = 0;
             std::cout << "Gradients: " << gradients << std::endl;
             std::cout << "Logits: \n" << *(this->logits) << std::endl;

@@ -46,42 +46,34 @@ int main(int argc, char* argv[]){
     libdl::TensorWrapper_Exp train_data   = dh->convert_training_data_to_Eigen();
     //Leave it here for now but this is not the main cause of those crazy numbers
     /*
-    for(int i = 0; i < train_data.get_batch_size(); i++){
-        double mean = train_data.get_tensor().block(i, 0, 1, train_data.get_tensor().cols()).mean();
+    */
 
-
-        train_data.get_tensor().block(i, 0, 1, train_data.get_tensor().cols()) = train_data.get_tensor().block(i, 0, 1, train_data.get_tensor().cols()).unaryExpr([mean](double e)
-        {
-            return e - mean;
-        });
-    }
-    std::cout << "Data centered!\n";*/
 
 
     libdl::TensorWrapper_Exp train_labels = dh->convert_training_labels_to_Eigen();
     dh.reset(nullptr);
 
 
-    int batch_size = 10, batch_limit=1;
-    double lr = 5e-1;
+    int batch_size = 16, batch_limit=4;
+    double lr = 1e-2;
 
 
-    libdl::layers::Convolution2D conv1_1(3, 32, 0, 1, 1); //28x28x1
-    libdl::layers::Convolution2D conv1_2(3, 32, 0, 1, 16);//not used
+    libdl::layers::Convolution2D conv1_1("conv1", 3, 32, 0, 1, 1); //28x28x1
+    //ibdl::layers::Convolution2D conv1_2(3, 32, 0, 1, 16);//not used
     libdl::layers::ReLU relu1;//28x28x1
 
     libdl::layers::MaxPool pool1(2, 2);//14x14x16
 
 
-    libdl::layers::Convolution2D conv2_1(3, 32, 0, 1, 32);//14x14x32
-    libdl::layers::Convolution2D conv2_2(3, 64, 0, 1, 32);//not used
+    libdl::layers::Convolution2D conv2_1("conv2", 3, 32, 0, 1, 32);//14x14x32
+    //libdl::layers::Convolution2D conv2_2(3, 64, 0, 1, 32);//not used
     libdl::layers::ReLU relu2;
     libdl::layers::MaxPool pool2(2, 2);//13x13x32
 
     libdl::layers::Flatten flatten(batch_size, 5, 5, 64);//7x7*32
 
 
-    libdl::layers::DenseLayer2D dense1(5184, 700, "dense1"); //224x100
+    libdl::layers::DenseLayer2D dense1(3872, 700, "dense1"); //224x100
     libdl::layers::ReLU relu3;
 
 
@@ -116,21 +108,27 @@ int main(int argc, char* argv[]){
     std::cout << "===================================================================\n";
 
     for(int epoch = 0; epoch < 50; epoch++) {
+
+        if(epoch %10 == 0 && epoch != 0){
+            lr = 1/std::sqrt(epoch) *lr;
+        }
+
         for (int b = 0; b < train_data.get_batch_size()/batch_size && b < batch_limit; b++) {
             iteration += 1;
             batch.set_tensor(train_data.get_tensor().block(b*batch_size, 0, batch_size, 28*28), 28, 28, 1);
+            batch.get_tensor() /= 255;
 
             out_conv = conv1_1.forward(batch);
-            std::cout << "Out of conv1 :\n" << (out_conv.get_slice(0, 0) == out_conv.get_slice(1, 0)) << std::endl;
+            //std::cout << "Out of conv1 :\n" << out_conv.get_slice(0, 0) << std::endl;
 
-            out_conv = conv1_2.forward(batch);
+            //out_conv = conv1_2.forward(batch);
             out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
                     out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
             out_conv = pool1.forward(out_conv);
 
             out_conv = conv2_1.forward(out_conv);
-            out_conv = conv2_2.forward(out_conv);
-            std::cout << "Out of conv2 :\n" << (out_conv.get_slice(0, 0) == out_conv.get_slice(1, 0)) << std::endl;
+            //out_conv = conv2_2.forward(out_conv);
+            //std::cout << "Out of conv2 :\n" << out_conv.get_slice(0, 0) << std::endl;
             out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
                                 out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
 
@@ -139,19 +137,19 @@ int main(int argc, char* argv[]){
 
 
             out_dense = dense1.forward(out_dense);
-            std::cout << "Out of dense1 :\n" << (out_dense.row(0) == out_dense.row(1)) << std::endl;
+            //std::cout << "Out of dense1 :\n" << out_dense << std::endl;
             out_dense = relu3.forward(out_dense);
 
             out_dense = dense2.forward(out_dense);
-            std::cout << "Out of dense2 :\n" << (out_dense.row(0) == out_dense.row(1)) << std::endl;
+            //std::cout << "Out of dense2 :\n" << out_dense << std::endl;
             out_dense = relu4.forward(out_dense);
 
             out_dense = dense3.forward(out_dense);
-            std::cout << "Out of dense3 :\n" << (out_dense.row(0) == out_dense.row(1)) << std::endl;
+            //std::cout << "Out of dense3 :\n" << out_dense << std::endl;
 
             //Backward pass
 
-            grads = cross_entropy_error.get_gradient(out_dense, train_labels.get_tensor().block(b*batch_size, 0, batch_size, 1), iteration);
+            grads = cross_entropy_error.get_gradient(out_dense, train_labels.get_tensor().block(b*batch_size, 0, batch_size, 1), (epoch+1));
             //std::cout << "Avg: " << grads.mean() << std::endl;
 
             /*
@@ -193,7 +191,7 @@ int main(int argc, char* argv[]){
             //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
             //std::cout << "r2 Gradient shape: " << conv_grads.shape() << std::endl;
 
-            conv_grads = conv2_2.backward(conv_grads, lr);
+            //conv_grads = conv2_2.backward(conv_grads, lr);
             conv_grads = conv2_1.backward(conv_grads, lr);
             //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
             //std::cout << "c2_1 Gradient shape: " << conv_grads.shape() << std::endl;
@@ -205,7 +203,7 @@ int main(int argc, char* argv[]){
                     conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
             //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
             //std::cout << "r1 Gradient shape: " << conv_grads.shape() << std::endl;
-            conv_grads = conv1_2.backward(conv_grads, lr);
+            //conv_grads = conv1_2.backward(conv_grads, lr);
             conv_grads = conv1_1.backward(conv_grads, lr);
             //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
             //std::cout << "c1_1 Gradient shape: " << conv_grads.shape() << std::endl;
@@ -224,8 +222,8 @@ int main(int argc, char* argv[]){
     std::cout << "\nTESTING PHASE.\n";
     std::cout << "===================================================================\n";
 
-    for (int b = 0; b < train_data.get_batch_size()/batch_size && b < batch_limit; b++) {
-        batch.set_tensor(train_data.get_tensor().block(b*batch_size, 0, batch_size, 28*28), 28, 28, 1);
+    for (int b = 1; b < train_data.get_batch_size()/batch_size && b < 2; b++) {
+        batch.set_tensor(train_data.get_tensor().block(b*500, 0, 50, 28*28), 28, 28, 1);
 
         out_conv = conv1_1.forward(batch);
 

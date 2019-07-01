@@ -166,7 +166,7 @@ private:
 class libdl::layers::Convolution2D : libdl::layers::Layer<TensorWrapper>{
 public:
     //constructor
-    Convolution2D(int kernel_size_=3, int num_filters_=16, int padding_=0, int stride_=1, int input_depth_=3);
+    Convolution2D(std::string, int kernel_size_=3, int num_filters_=16, int padding_=0, int stride_=1, int input_depth_=3);
 
     Convolution2D(Matrixd filter);
 
@@ -201,6 +201,7 @@ private:
     std::unique_ptr<TensorWrapper> filters; //Shared because it will point to the same address as weights from Layer
                                      // to save memory
     //biases inherited from Layer
+    std::string name;
     int num_filters;
     int kernel_size;
     int input_depth;
@@ -288,7 +289,7 @@ public:
     Matrixd& forward(Matrixd& input){
         input = input.unaryExpr([](double e){return ((e > 0)? e : 0);});
 
-        std::cout << "Output relu:\n" << input.row(0) << std::endl;
+        //std::cout << "Output relu:\n" << input.row(0) << std::endl;
 
         return input;
     }

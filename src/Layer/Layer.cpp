@@ -82,10 +82,13 @@ Eigen::MatrixXd& DenseLayer2D::forward(Eigen::MatrixXd& input) {
 
         this->output->rowwise() += this->biases->transpose();
 
+
+
+        //std::cout << "Input Layer " << this->name << " weights: \n" << *(this->input) << std::endl;
+
+        //std::cout << "Weights avg layer " << this->name << " : " << this->weights->mean() << std::endl;
         //std::cout << "Max weight: " << this->weights->maxCoeff() << std::endl;
         //std::cout << "Min weight: " << this->weights->minCoeff() << std::endl;
-
-
         return *(this->output);
 
     }catch (const std::string msg){
@@ -104,6 +107,10 @@ Eigen::MatrixXd& DenseLayer2D::backward(Eigen::MatrixXd& gradient, double lr) {
     *(this->biases) -= lr * gradient.colwise().sum().transpose()/gradient.rows();
 
     gradient = gradient * this->weights->transpose();
+
+    //std::cout << "Gradients avg layer " << this->name << " : " << gradient.mean() << std::endl;
+    //std::cout << "Max weight: " << gradient.maxCoeff() << std::endl;
+    //std::cout << "Min weight: " << gradient.minCoeff() << std::endl;
 
     return gradient;
 }
@@ -177,11 +184,11 @@ double Sigmoid::sigmoid(double input){
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
-libdl::layers::Convolution2D::Convolution2D(int kernel_size_, int num_filters_, int padding_, int stride_, int input_depth_):
-        kernel_size(kernel_size_), num_filters(num_filters_), stride(stride_), padding(padding_), input_depth(input_depth_){
+libdl::layers::Convolution2D::Convolution2D(std::string name_, int kernel_size_, int num_filters_, int padding_, int stride_, int input_depth_):
+       name(name_), kernel_size(kernel_size_), num_filters(num_filters_), stride(stride_), padding(padding_), input_depth(input_depth_){
 
 
-    //For now only stride 1 works
+    //For now only stride 1 worcks
     this->stride = 1;
 
     this->filters = std::make_unique<libdl::TensorWrapper_Exp>(this->num_filters,
@@ -212,17 +219,25 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::forward(libdl::TensorWra
                                                                   o_cols, this->filters->get_batch_size());
 
 
-
+    auto start_correlation = std::chrono::system_clock::now();
     *(this->output) = this->input->correlation(*(this->filters), this->padding, this->stride);
+    auto end_correlation = std::chrono::system_clock::now();
 
-    std::cout << "Output:\n" << this->output->get_slice(0, 0) << std::endl;
-    std::cout << "Output:\n" << this->output->get_slice(0, 1) << std::endl;
-    std::cout << "Output:\n" << this->output->get_slice(0, 2) << std::endl;
+    std::chrono::duration<double> correlation_duration = end_correlation-start_correlation;
+   // std::cout << "Forward pass of layer " << this->name << " took: " << correlation_duration.count() << std::endl;
 
+    //std::cout << "Output:\n" << this->output->get_slice(0, 0) << std::endl;
+    //std::cout << "Output:\n" << this->output->get_slice(0, 1) << std::endl;
+    //std::cout << "Output:\n" << this->output->get_slice(0, 2) << std::endl;
+
+    //std::cout << "Input layer " << this->name << " filters, instance 1 : \n" << this->input->get_slice(0, 0) << std::endl;
+    //std::cout << "Input layer " << this->name << " filters, instance 2 : \n" << this->input->get_slice(1, 0) << std::endl;
 
     //std::cout << "OUTPUT shape conv: " << this->output->shape() << std::endl;
 
     //TODO: Add biases to the output of the layer
+
+    //std::cout << "Filters avg layer " << this->name << ": " << this->filters->get_tensor().mean() << std::endl;
 
     //std::cout << "Max weight: " << this->filters->get_tensor().maxCoeff() << std::endl;
     //std::cout << "Min weight: " << this->filters->get_tensor().minCoeff() << std::endl;
@@ -245,11 +260,25 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::backward(libdl::TensorWr
     //std::cout << "Input shape: " << this->input->shape() << std::endl;
     //std::cout << "taking filter grads\n";
 
+    auto filter_conv_start = std::chrono::system_clock::now();
     filter_gradients = this->filter_conv(gradients_, filter_gradients);
+    auto filter_conv_end = std::chrono::system_clock::now();
+
+    std::chrono::duration<double> filter_conv_duration = filter_conv_end-filter_conv_start;
+    //std::cout << "Filter conv of layer " << this->name << " took: " << filter_conv_duration.count() << std::endl;
 
     //std::cout << "filter: " << filter_gradients.shape() << " f: " << f.shape() << std::endl;
     //std::cout << "taking grads\n";
+
+
+
+
+    auto input_conv_start = std::chrono::system_clock::now();
     gradients_ = this->input_conv(gradients_);
+    auto input_conv_end = std::chrono::system_clock::now();
+
+    std::chrono::duration<double> input_conv_duration = input_conv_end-input_conv_start;
+    //std::cout << "Input conv of layer " << this->name << " took: " << input_conv_duration.count() << std::endl;
 
 
     //std::cout << "updating filters\n";
@@ -257,9 +286,16 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::backward(libdl::TensorWr
     filter_gradients.get_tensor() = filter_gradients.get_tensor() * lr;
     //std::cout << "Pas :\n" << filter_gradients.get_tensor() << std::endl;
 
-    this->filters->get_tensor()  -= filter_gradients.get_tensor();
+    this->filters->get_tensor()  += filter_gradients.get_tensor();
 
 
+
+    //std::cout << "Gradients avg layer " << this->name << " : " << gradients_.get_tensor().mean() << std::endl;
+    //std::cout << "A filter slice: \n" << this->filters->get_slice(0, 0) << std::endl;
+    //std::cout << "gradient slice: \n" << filter_gradients.get_slice(0, 0) << std::endl;
+
+    //std::cout << "Max weight: " << gradients_.get_tensor().maxCoeff() << std::endl;
+    //std::cout << "Min weight: " << gradients_.get_tensor().minCoeff() << std::endl;
 
     return gradients_;
 }
@@ -297,7 +333,7 @@ TensorWrapper libdl::layers::Convolution2D::filter_conv(TensorWrapper &gradients
     for(int gradient_slice = 0; gradient_slice < gradients_.get_tensor_depth(); gradient_slice++){
 
         for(int input_slice = 0; input_slice < this->input->get_tensor_depth(); input_slice++){
-
+            temp = Eigen::MatrixXd::Constant(temp.rows(), temp.cols(), 0);
 
             for(int instance = 0; instance < gradients_.get_batch_size(); instance++){
                 temp += TensorWrapper::correlation2D(
@@ -410,7 +446,7 @@ Eigen::MatrixXd& libdl::layers::Flatten::forward(libdl::TensorWrapper_Exp& input
     this->input->set_tensor(input.get_tensor(), input.get_tensor_height(), input.get_tensor_width(),
             input.get_tensor_depth());
 
-    std::cout << "Output:\n" << this->input->get_slice(0, 0) << std::endl;
+    //std::cout << "Output:\n" << this->input->get_slice(0, 0) << std::endl;
 
     return input.get_tensor();
 }
@@ -487,11 +523,15 @@ TensorWrapper& libdl::layers::MaxPool::forward(TensorWrapper& input) {
             input.get_tensor_depth(), false);
 
 
-
+    auto max_pool_start = std::chrono::system_clock::now();
     this->max_pooling();
+    auto max_pool_end = std::chrono::system_clock::now();
 
-    std::cout << "Output:\n" << this->output->get_slice(0, 0) << std::endl;
-    std::cout << "Output:\n" << this->output->get_slice(0, 1) << std::endl;
+    std::chrono::duration<double> max_pool_duration = max_pool_end-max_pool_start;
+    //std::cout << "Max Pool took : " << max_pool_duration.count() << std::endl;
+
+    //std::cout << "Output:\n" << this->output->get_slice(0, 0) << std::endl;
+    //std::cout << "Output:\n" << this->output->get_slice(0, 1) << std::endl;
 
 
     return *(this->output);
@@ -512,6 +552,7 @@ TensorWrapper& libdl::layers::MaxPool::backward(TensorWrapper& gradient, double)
            this->input->get_tensor_width(), this->input->get_tensor_depth());
 
 
+        auto mp_backprop_start = std::chrono::system_clock::now();
 
         for (int instance = 0; instance < gradient.get_batch_size(); instance++) {
             int element_count = 0, index = 0;
@@ -534,6 +575,10 @@ TensorWrapper& libdl::layers::MaxPool::backward(TensorWrapper& gradient, double)
                 throw std::exception();
             }
         }
+
+        auto mp_backprop_end = std::chrono::system_clock::now();
+        std::chrono::duration<double> backprop_duration = mp_backprop_end-mp_backprop_start;
+        //std::cout << "Max pool backprop took: " << backprop_duration.count() << std::endl;
 
         return *(this->backward_gradient);
 
