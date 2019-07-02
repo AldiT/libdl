@@ -166,7 +166,8 @@ private:
 class libdl::layers::Convolution2D : libdl::layers::Layer<TensorWrapper>{
 public:
     //constructor
-    Convolution2D(std::string, int kernel_size_=3, int num_filters_=16, int padding_=0, int stride_=1, int input_depth_=3);
+    Convolution2D(std::string, int kernel_size_=3, int num_filters_=16, int padding_=0, int stride_=1,
+            int input_depth_=3, int input_neurons_=144);
 
     Convolution2D(Matrixd filter);
 

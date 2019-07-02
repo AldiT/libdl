@@ -54,23 +54,23 @@ int main(int argc, char* argv[]){
     dh.reset(nullptr);
 
 
-    int batch_size = 16, batch_limit=4;
+    int batch_size = 1, batch_limit=100;
     double lr = 1e-2;
 
 
-    libdl::layers::Convolution2D conv1_1("conv1", 3, 32, 0, 1, 1); //28x28x1
+    libdl::layers::Convolution2D conv1_1("conv1", 3, 32, 0, 1, 1, 28*28); //28x28x1
     //ibdl::layers::Convolution2D conv1_2(3, 32, 0, 1, 16);//not used
     libdl::layers::ReLU relu1;//28x28x1
 
     libdl::layers::MaxPool pool1(2, 2);//14x14x16
 
 
-    libdl::layers::Convolution2D conv2_1("conv2", 3, 32, 0, 1, 32);//14x14x32
+    libdl::layers::Convolution2D conv2_1("conv2", 3, 32, 0, 1, 32, 2*2*32);//14x14x32
     //libdl::layers::Convolution2D conv2_2(3, 64, 0, 1, 32);//not used
     libdl::layers::ReLU relu2;
     libdl::layers::MaxPool pool2(2, 2);//13x13x32
 
-    libdl::layers::Flatten flatten(batch_size, 5, 5, 64);//7x7*32
+    libdl::layers::Flatten flatten(batch_size, 11, 11, 64);//7x7*32
 
 
     libdl::layers::DenseLayer2D dense1(3872, 700, "dense1"); //224x100
@@ -107,7 +107,7 @@ int main(int argc, char* argv[]){
     std::cout << "\nTRAINING PHASE.\n";
     std::cout << "===================================================================\n";
 
-    for(int epoch = 0; epoch < 50; epoch++) {
+    for(int epoch = 0; epoch < 20; epoch++) {
 
         if(epoch %10 == 0 && epoch != 0){
             lr = 1/std::sqrt(epoch) *lr;
@@ -119,7 +119,6 @@ int main(int argc, char* argv[]){
             batch.get_tensor() /= 255;
 
             out_conv = conv1_1.forward(batch);
-            //std::cout << "Out of conv1 :\n" << out_conv.get_slice(0, 0) << std::endl;
 
             //out_conv = conv1_2.forward(batch);
             out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
@@ -128,7 +127,6 @@ int main(int argc, char* argv[]){
 
             out_conv = conv2_1.forward(out_conv);
             //out_conv = conv2_2.forward(out_conv);
-            //std::cout << "Out of conv2 :\n" << out_conv.get_slice(0, 0) << std::endl;
             out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
                                 out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
 
@@ -137,76 +135,38 @@ int main(int argc, char* argv[]){
 
 
             out_dense = dense1.forward(out_dense);
-            //std::cout << "Out of dense1 :\n" << out_dense << std::endl;
             out_dense = relu3.forward(out_dense);
 
             out_dense = dense2.forward(out_dense);
-            //std::cout << "Out of dense2 :\n" << out_dense << std::endl;
             out_dense = relu4.forward(out_dense);
 
             out_dense = dense3.forward(out_dense);
-            //std::cout << "Out of dense3 :\n" << out_dense << std::endl;
 
             //Backward pass
 
-            grads = cross_entropy_error.get_gradient(out_dense, train_labels.get_tensor().block(b*batch_size, 0, batch_size, 1), (epoch+1));
-            //std::cout << "Avg: " << grads.mean() << std::endl;
+            grads = cross_entropy_error.get_gradient(out_dense, train_labels.get_tensor().block(b*batch_size, 0, batch_size, 1), iteration);
 
-            /*
-            if(b % 10 == 0) {
-                double error =
-                        cross_entropy_error.get_error(train_labels.get_tensor().block(b, 0, batch_size, 1), out_dense) / 16;
-                std::cout << "[Batch: " << b << "; Error: " << error << ";]\n";
-            }*/
-
-            //std::cout << "CE Gradient shape: " << grads.rows() << "x" << grads.cols() << std::endl;
 
             grads = dense3.backward(grads, lr);
-            //std::cout << "Avg: " << grads.mean() << std::endl;
-            //std::cout << "d3 Gradient shape: " << grads.rows() << "x" << grads.cols() << std::endl;
 
             grads = relu4.backward(grads, lr);
-            //std::cout << "Avg: " << grads.mean() << std::endl;
-            //std::cout << "3\n";
             grads = dense2.backward(grads, lr);
-            //std::cout << "Avg: " << grads.mean() << std::endl;
-            //std::cout << "d2 Gradient shape: " << grads.rows() << "x" << grads.cols() << std::endl;
 
             grads = relu3.backward(grads, lr);
-            //std::cout << "Avg: " << grads.mean() << std::endl;
-            //std::cout << "5\n";
             grads = dense1.backward(grads, lr);
-            //std::cout << "Avg: " << grads.mean() << std::endl;
-            //std::cout << "d1 Gradient shape: " << grads.rows() << "x" << grads.cols() << std::endl;
 
             conv_grads = flatten.backward(grads);
-            //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
-            //std::cout << "F Gradient shape: " << conv_grads.shape() << std::endl;
-
-            //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
-            //std::cout << "P2 Gradient shape: " << conv_grads.shape() << std::endl;
-
             conv_grads.set_tensor(relu2.backward(conv_grads.get_tensor(), lr),
                     conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
-            //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
-            //std::cout << "r2 Gradient shape: " << conv_grads.shape() << std::endl;
 
             //conv_grads = conv2_2.backward(conv_grads, lr);
             conv_grads = conv2_1.backward(conv_grads, lr);
-            //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
-            //std::cout << "c2_1 Gradient shape: " << conv_grads.shape() << std::endl;
 
             conv_grads = pool1.backward(conv_grads, lr);
-            //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
-            //std::cout << "p1 Gradient shape: " << conv_grads.shape() << std::endl;
             conv_grads.set_tensor(relu1.backward(conv_grads.get_tensor(), lr),
                     conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
-            //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
-            //std::cout << "r1 Gradient shape: " << conv_grads.shape() << std::endl;
             //conv_grads = conv1_2.backward(conv_grads, lr);
             conv_grads = conv1_1.backward(conv_grads, lr);
-            //std::cout << "Avg: " << conv_grads.get_tensor().mean() << std::endl;
-            //std::cout << "c1_1 Gradient shape: " << conv_grads.shape() << std::endl;
 
         }
     }
@@ -222,21 +182,30 @@ int main(int argc, char* argv[]){
     std::cout << "\nTESTING PHASE.\n";
     std::cout << "===================================================================\n";
 
-    for (int b = 1; b < train_data.get_batch_size()/batch_size && b < 2; b++) {
-        batch.set_tensor(train_data.get_tensor().block(b*500, 0, 50, 28*28), 28, 28, 1);
+
+    Matrixd predictions(50, 10);
+    int i = 0;
+
+    for (int b = 200; b < train_data.get_batch_size()/batch_size && b < 250; b++) {
+        iteration += 1;
+        batch.set_tensor(train_data.get_tensor().block(b*batch_size, 0, batch_size, 28*28), 28, 28, 1);
+        batch.get_tensor() /= 255;
 
         out_conv = conv1_1.forward(batch);
 
+        //out_conv = conv1_2.forward(batch);
         out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
                             out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
         out_conv = pool1.forward(out_conv);
 
         out_conv = conv2_1.forward(out_conv);
-
+        //out_conv = conv2_2.forward(out_conv);
         out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
                             out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
 
+
         out_dense = flatten.forward(out_conv);
+
 
         out_dense = dense1.forward(out_dense);
         out_dense = relu3.forward(out_dense);
@@ -246,11 +215,48 @@ int main(int argc, char* argv[]){
 
         out_dense = dense3.forward(out_dense);
 
-
-        Vectord predictions = cross_entropy_error.predictions(out_dense,
-                train_labels.get_tensor().block(b*batch_size, 0, batch_size, 1));
+        predictions.row(i) = out_dense;
+        i++;
 
     }
+    Vectord p = cross_entropy_error.predictions(predictions,
+                                                          train_labels.get_tensor().block(200, 0, 50, 1));
+
+    /*
+    libdl::TensorWrapper_Exp test_batch(50, 28, 28, 1, false);
+    test_batch.set_tensor(train_data.get_tensor().block(200, 0, 50, 28*28), 28, 28, 1);
+    test_batch.get_tensor() /= 255;
+
+
+    std::cout << train_data.get_tensor().block(200, 0, 50, 28*28).rows() << std::endl;
+
+    out_conv = conv1_1.forward(test_batch);
+
+    out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
+                        out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+    out_conv = pool1.forward(out_conv);
+
+    out_conv = conv2_1.forward(out_conv);
+
+    out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
+                        out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+
+    out_dense = flatten.forward(out_conv);
+
+    out_dense = dense1.forward(out_dense);
+    out_dense = relu3.forward(out_dense);
+
+    out_dense = dense2.forward(out_dense);
+    out_dense = relu4.forward(out_dense);
+
+    out_dense = dense3.forward(out_dense);
+
+
+    Vectord predictions = cross_entropy_error.predictions(out_dense,
+            train_labels.get_tensor().block(200, 0, 50, 1));
+
+     */
+
 
 
     return 0;

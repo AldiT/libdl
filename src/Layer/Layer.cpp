@@ -9,6 +9,7 @@
 #include "Eigen/Dense"
 #include "spdlog/spdlog.h"
 #include <cmath>
+#include <random>
 
 using namespace libdl::layers;
 
@@ -45,8 +46,17 @@ DenseLayer2D::DenseLayer2D(int input_features, int num_neurons, std::string name
         this->biases = std::make_unique<Eigen::VectorXd>(this->num_neurons);
         this->name = name;
 
-        srand((unsigned int) time(0));
-        *(this->weights) = Eigen::MatrixXd::Random(input_features, this->num_neurons)/10;
+
+
+        //Eigen::MatrixXd::Random(input_features, this->num_neurons)/10;
+        *(this->weights) = this->weights->unaryExpr([input_features](double e){
+            unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+            std::default_random_engine generator(seed);
+            std::normal_distribution<double> normal_dist(0, 2/std::sqrt(input_features));
+
+            return normal_dist(generator);
+        });
+
         *(this->biases) = Eigen::VectorXd::Constant(this->num_neurons, 0.01);
 
     }catch(std::bad_alloc err){
@@ -61,7 +71,7 @@ Eigen::MatrixXd& DenseLayer2D::forward(Eigen::MatrixXd& input) {
 
     try{
 
-        if(this->input == nullptr)
+        if(this->input == nullptr || input.rows() != this->input->rows())
             this->input = std::make_unique<Eigen::MatrixXd>(input);
 
 
@@ -103,14 +113,14 @@ Eigen::MatrixXd& DenseLayer2D::forward(Eigen::MatrixXd& input) {
 Eigen::MatrixXd& DenseLayer2D::backward(Eigen::MatrixXd& gradient, double lr) {
 
     //update weights
-    *(this->weights) -= lr * (this->input->transpose() * gradient)/gradient.rows(); // replace 4 by N
-    *(this->biases) -= lr * gradient.colwise().sum().transpose()/gradient.rows();
+    *(this->weights) -= lr * (this->input->transpose() * gradient); // replace 4 by N
+    *(this->biases) -= lr * gradient.colwise().sum().transpose();
 
     gradient = gradient * this->weights->transpose();
 
-    //std::cout << "Gradients avg layer " << this->name << " : " << gradient.mean() << std::endl;
-    //std::cout << "Max weight: " << gradient.maxCoeff() << std::endl;
-    //std::cout << "Min weight: " << gradient.minCoeff() << std::endl;
+    std::cout << "Gradients avg layer " << this->name << " : " << gradient.mean() << std::endl;
+    std::cout << "Max weight: " << gradient.maxCoeff() << std::endl;
+    std::cout << "Min weight: " << gradient.minCoeff() << std::endl;
 
     return gradient;
 }
@@ -184,7 +194,8 @@ double Sigmoid::sigmoid(double input){
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
-libdl::layers::Convolution2D::Convolution2D(std::string name_, int kernel_size_, int num_filters_, int padding_, int stride_, int input_depth_):
+libdl::layers::Convolution2D::Convolution2D(std::string name_, int kernel_size_, int num_filters_,
+        int padding_, int stride_, int input_depth_, int input_neurons_):
        name(name_), kernel_size(kernel_size_), num_filters(num_filters_), stride(stride_), padding(padding_), input_depth(input_depth_){
 
 
@@ -194,7 +205,16 @@ libdl::layers::Convolution2D::Convolution2D(std::string name_, int kernel_size_,
     this->filters = std::make_unique<libdl::TensorWrapper_Exp>(this->num_filters,
          this->kernel_size, this->kernel_size, this->input_depth, true);//Initialize filters randomly
 
-    //this->filters->set_tensor();
+    this->filters->set_tensor(this->filters->get_tensor().unaryExpr([input_neurons_](double e){
+            unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+            std::default_random_engine generator(seed);
+            std::normal_distribution<double> normal_dist(0, 2/std::sqrt(input_neurons_));
+
+            return normal_dist(generator);
+        }), this->filters->get_tensor_height(), this->filters->get_tensor_width(), this->filters->get_tensor_depth());
+
+    std::cout << "One slice:\n" << this->filters->get_slice(0, 0) << std::endl;
+
     this->biases = std::make_unique<Eigen::VectorXd>(this->num_filters);
     *(this->biases) = Eigen::VectorXd::Constant(this->num_filters, 1);
     //this->filters = this->weights;
@@ -204,9 +224,8 @@ libdl::layers::Convolution2D::Convolution2D(std::string name_, int kernel_size_,
 
 libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::forward(libdl::TensorWrapper_Exp& inputs_){//this should be multiple 2D images
 
-    if(this->input == nullptr)
+    if(this->input == nullptr || inputs_.get_batch_size() != this->input->get_batch_size())
         this->input = std::make_unique<libdl::TensorWrapper_Exp>(inputs_); //operator=
-
     *(this->input) = inputs_;
 
     //*(this->input) = this->pad(*(this->input));
@@ -286,6 +305,12 @@ libdl::TensorWrapper_Exp& libdl::layers::Convolution2D::backward(libdl::TensorWr
     filter_gradients.get_tensor() = filter_gradients.get_tensor() * lr;
     //std::cout << "Pas :\n" << filter_gradients.get_tensor() << std::endl;
 
+    std::cout << "Layer " << this->name << "\n";
+    std::cout << "Filter gradient max: " << filter_gradients.get_tensor().maxCoeff() << std::endl;
+    std::cout << "Filter gradient min: " << filter_gradients.get_tensor().minCoeff() << std::endl;
+    std::cout << "Filter gradient mean: " << filter_gradients.get_tensor().mean() << std::endl;
+
+
     this->filters->get_tensor()  += filter_gradients.get_tensor();
 
 
@@ -342,11 +367,12 @@ TensorWrapper libdl::layers::Convolution2D::filter_conv(TensorWrapper &gradients
 
             }
 
-            filter_gradients.update_slice(gradient_slice, input_slice, temp/gradients_.get_batch_size());
+            filter_gradients.update_slice(gradient_slice, input_slice, temp);
         }
 
     }
 
+    //filter_gradients.get_tensor() /= gradients_.get_batch_size();
 
     return filter_gradients;
 }
@@ -503,7 +529,7 @@ libdl::layers::MaxPool::MaxPool(int kernel, int stride) {
 }
 
 TensorWrapper& libdl::layers::MaxPool::forward(TensorWrapper& input) {
-    if(this->input == nullptr)
+    if(this->input == nullptr || input.get_batch_size() != this->input->get_batch_size())
         this->input = std::make_unique<TensorWrapper>(input);
 
     *(this->input) = input;

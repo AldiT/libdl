@@ -115,6 +115,7 @@ Vectord libdl::error::CrossEntropy::predictions(Matrixd logits, Vectord targets)
 
         if (targets.rows() != logits.rows())//num of instances should be the same
         {
+            std::cout << "Target: " << targets.rows() << " logits: " << logits.rows() << std::endl;
             throw std::invalid_argument("CrossEntropy::get_error: number of instances does not match!");
         }
 
@@ -159,15 +160,15 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
 
         if (this->logits == nullptr)
             this->logits = std::make_unique<Matrixd>(logits);
-        else
-            *(this->logits) = logits;
+
+        *(this->logits) = logits;
 
         //std::cout << "Logits before any change: " << logits << std::endl;
 
         if (this->targets == nullptr)
             this->targets = std::make_unique<Vectord>(targets);
-        else
-            *(this->targets) = targets;
+
+        *(this->targets) = targets;
 
         Vectord predictions = this->softmax();
 
@@ -199,6 +200,8 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
 
         }
 
+
+
         gradients = gradients.unaryExpr([this](double e){
             if(e > 50){
                 e = 50;
@@ -209,8 +212,9 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
             return e / this->logits->rows();
         });//Normalization
 
-        if(iteration % 4 == 0 && iteration != 0) {
-            std::cout << "\n[Error: " << avg / (targets.rows()*4) << "; Epoch: " << iteration/4 << "]\n";
+        if(iteration % 20 == 0 && iteration != 0) {
+            std::cout << "\nIteration: " << iteration << std::endl;
+            std::cout << "[Error: " << avg / (targets.rows()*20) << "; Epoch: " << iteration/20 << "]\n";
             avg = 0;
             std::cout << "Gradients: " << gradients << std::endl;
             std::cout << "Logits: \n" << *(this->logits) << std::endl;
