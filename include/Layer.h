@@ -43,10 +43,10 @@ class libdl::layers::Layer {
         ~Layer() {};
 
         //forward pass function
-        virtual Tensor& forward(Tensor& input) = 0;
+        virtual Tensor forward(Tensor& input) = 0;
 
         //backward pass function
-        virtual Tensor& backward(Tensor& gradient, double lr) = 0;
+        virtual Tensor backward(Tensor& gradient, double lr) = 0;
 
 
 
@@ -82,10 +82,10 @@ class libdl::layers::Layer {
 class libdl::layers::DenseLayer2D: protected libdl::layers::Layer<Eigen::MatrixXd>{
 public:
 
-    DenseLayer2D(int, int, std::string);
+    DenseLayer2D(int, int, std::string, int);
 
-    Matrixd& forward(Matrixd&);
-    Matrixd& backward(Matrixd& , double );
+    Matrixd forward(Matrixd&);
+    Matrixd backward(Matrixd& , double );
 
 
     int rows(){
@@ -135,8 +135,8 @@ protected:
 class libdl::layers::Sigmoid : libdl::layers::Layer<Matrixd>{
 public:
 
-    Matrixd& forward(Matrixd& input);
-    Matrixd& backward(Matrixd& gradients, double lr);
+    Matrixd forward(Matrixd& input);
+    Matrixd backward(Matrixd& gradients, double lr);
 
 
 protected:
@@ -173,8 +173,8 @@ public:
 
 
 
-    TensorWrapper& forward(TensorWrapper& input_);
-    TensorWrapper& backward(TensorWrapper& gradients_, double lr);
+    TensorWrapper forward(TensorWrapper& input_);
+    TensorWrapper backward(TensorWrapper& gradients_, double lr);
 
     Matrixd get_filters(){
         return this->filters->get_tensor();
@@ -231,8 +231,8 @@ class libdl::layers::Flatten
 public:
     Flatten(int batch_size, int height, int width, int depth);
 
-    Matrixd& forward(TensorWrapper& input);
-    TensorWrapper& backward(Matrixd& gradients);
+    Matrixd forward(TensorWrapper& input);
+    TensorWrapper backward(Matrixd& gradients);
 
 protected:
 
@@ -259,8 +259,8 @@ private:
 class libdl::layers::Softmax : libdl::layers::Layer<Matrixd>{
 public:
 
-    Matrixd& forward(Matrixd&);
-    Matrixd& backward(Matrixd&, double);
+    Matrixd forward(Matrixd&);
+    Matrixd backward(Matrixd&, double);
 
 protected:
 
@@ -287,14 +287,14 @@ class libdl::layers::ReLU
 {
 public:
 
-    Matrixd& forward(Matrixd& input){
+    Matrixd forward(Matrixd& input){
         input = input.unaryExpr([](double e){return ((e > 0)? e : 0);});
 
         //std::cout << "Output relu:\n" << input.row(0) << std::endl;
 
         return input;
     }
-    Matrixd& backward(Matrixd& gradients, double lr){
+    Matrixd backward(Matrixd& gradients, double lr){
         gradients = gradients.unaryExpr([](double e){return (e > 0 ? e : 0);});
         return gradients;
     }
@@ -319,8 +319,8 @@ class libdl::layers::MaxPool: public libdl::layers::Layer<TensorWrapper>
 public:
     MaxPool(int kernel, int stride);
 
-    TensorWrapper& forward(TensorWrapper&);
-    TensorWrapper& backward(TensorWrapper&, double);
+    TensorWrapper forward(TensorWrapper&);
+    TensorWrapper backward(TensorWrapper&, double);
 
 protected:
 

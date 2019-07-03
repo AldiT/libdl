@@ -134,7 +134,7 @@ Vectord libdl::error::CrossEntropy::predictions(Matrixd logits, Vectord targets)
         //printing
         std::cout << "Prediction results: \n";
         for(int i = 0; i < this->targets->rows(); i++){
-            std::cout << "Prediction: " << predicted_class(i) << " Label: " << (*(this->targets))(i) << std::endl;
+            std::cout << "Prediction: " << predicted_class(i) << " Logit: " << predictions(i) << " Label: " << (*(this->targets))(i) << std::endl;
         }
 
         std::cout << "Test accuracy: " << acc/targets.rows() << std::endl;
@@ -172,15 +172,11 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
 
         Vectord predictions = this->softmax();
 
-        double res = 0;
 
         for (int i = 0 ; i < this->logits->rows(); i++){
-            res += std::log((*(this->logits))(i, targets(i)));
-            //std::cout << "Log of this: " << (*(this->logits))(i, targets(i)) << std::endl;
-            avg += -res;
+            avg += -std::log((*(this->logits))(i, targets(i)));
         }
 
-        this->errors.push_back(-res);
 
 
 
@@ -216,7 +212,7 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
             std::cout << "\nIteration: " << iteration << std::endl;
             std::cout << "[Error: " << avg / (targets.rows()*20) << "; Epoch: " << iteration/20 << "]\n";
             avg = 0;
-            std::cout << "Gradients: " << gradients << std::endl;
+            std::cout << "Gradients:\n" << gradients << std::endl;
             std::cout << "Logits: \n" << *(this->logits) << std::endl;
         }
 
@@ -231,6 +227,7 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
 
 Vectord CrossEntropy::softmax() {
     Vectord maximums = this->logits->rowwise().maxCoeff();
+    std::cout << maximums << std::endl;
 
     this->logits->colwise() -= maximums;
 

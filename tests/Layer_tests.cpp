@@ -53,19 +53,22 @@ int main(int argc, char* argv[]){
     libdl::TensorWrapper_Exp train_labels = dh->convert_training_labels_to_Eigen();
     dh.reset(nullptr);
 
+    std::cout << "First image:\n" << train_data.get_slice(0, 0) << std::endl;
+    std::cout << "First train label: " << train_labels.get_tensor()(0, 0) << std::endl;
 
-    int batch_size = 1, batch_limit=100;
-    double lr = 1e-2;
+
+    int batch_size = 1, batch_limit=20;
+    double lr = 1e-3;
 
 
-    libdl::layers::Convolution2D conv1_1("conv1", 3, 32, 0, 1, 1, 28*28); //28x28x1
+    libdl::layers::Convolution2D conv1_1("conv1", 3, 32, 0, 1, 1, 4); //28x28x1
     //ibdl::layers::Convolution2D conv1_2(3, 32, 0, 1, 16);//not used
     libdl::layers::ReLU relu1;//28x28x1
 
     libdl::layers::MaxPool pool1(2, 2);//14x14x16
 
 
-    libdl::layers::Convolution2D conv2_1("conv2", 3, 32, 0, 1, 32, 2*2*32);//14x14x32
+    libdl::layers::Convolution2D conv2_1("conv2", 3, 32, 0, 1, 32, 1);//14x14x32
     //libdl::layers::Convolution2D conv2_2(3, 64, 0, 1, 32);//not used
     libdl::layers::ReLU relu2;
     libdl::layers::MaxPool pool2(2, 2);//13x13x32
@@ -73,14 +76,14 @@ int main(int argc, char* argv[]){
     libdl::layers::Flatten flatten(batch_size, 11, 11, 64);//7x7*32
 
 
-    libdl::layers::DenseLayer2D dense1(3872, 700, "dense1"); //224x100
+    libdl::layers::DenseLayer2D dense1(3872, 700, "dense1", 288); //224x100
     libdl::layers::ReLU relu3;
 
 
-    libdl::layers::DenseLayer2D dense2(700, 350, "dense2");
+    libdl::layers::DenseLayer2D dense2(700, 350, "dense2", 700);
     libdl::layers::ReLU relu4;
 
-    libdl::layers::DenseLayer2D dense3(350, 10, "dense3");
+    libdl::layers::DenseLayer2D dense3(350, 10, "dense3", 350);
 
 
     libdl::error::CrossEntropy cross_entropy_error(10);
@@ -96,10 +99,20 @@ int main(int argc, char* argv[]){
 
     std::cout << "Some insights before \"Training\"" << std::endl;
     std::cout << "conv1 filters avg: " << conv1_1.get_filters().mean() << std::endl;
+    std::cout << "conv1 filters max: " << conv1_1.get_filters().maxCoeff() << std::endl;
+    std::cout << "conv1 filters min: " << conv1_1.get_filters().minCoeff() << std::endl;
     std::cout << "conv2 filters avg: " << conv2_1.get_filters().mean() << std::endl;
+    std::cout << "conv2 filters max: " << conv2_1.get_filters().maxCoeff() << std::endl;
+    std::cout << "conv2 filters min: " << conv2_1.get_filters().minCoeff() << std::endl;
     std::cout << "dense1 weigths avg: " <<  dense1.get_weights().mean() << std::endl;
+    std::cout << "dense1 weigths max: " <<  dense1.get_weights().maxCoeff() << std::endl;
+    std::cout << "dense1 weigths min: " <<  dense1.get_weights().minCoeff() << std::endl;
     std::cout << "dense2 weights avg: " << dense2.get_weights().mean() << std::endl;
+    std::cout << "dense2 weights avg: " << dense2.get_weights().maxCoeff() << std::endl;
+    std::cout << "dense2 weights avg: " << dense2.get_weights().minCoeff() << std::endl;
     std::cout << "dense3 weights avg: " << dense3.get_weights().mean() << std::endl;
+    std::cout << "dense3 weights avg: " << dense3.get_weights().maxCoeff() << std::endl;
+    std::cout << "dense3 weights avg: " << dense3.get_weights().minCoeff() << std::endl;
 
     int iteration = 0;
     std::cout << "\nAre training samples all the same: " << (train_data.get_slice(0, 0) == train_data.get_slice(1, 0)) << std::endl;
@@ -107,11 +120,12 @@ int main(int argc, char* argv[]){
     std::cout << "\nTRAINING PHASE.\n";
     std::cout << "===================================================================\n";
 
-    for(int epoch = 0; epoch < 20; epoch++) {
+    for(int epoch = 0; epoch < 5; epoch++) {
 
-        if(epoch %10 == 0 && epoch != 0){
-            lr = 1/std::sqrt(epoch) *lr;
-        }
+        //if(epoch %10 == 0 && epoch != 0){
+        //    lr = 1/std::sqrt(epoch) *lr;
+        //}
+        std::cout << "First label: " << train_labels.get_tensor()(0, 0) << std::endl;
 
         for (int b = 0; b < train_data.get_batch_size()/batch_size && b < batch_limit; b++) {
             iteration += 1;
@@ -173,20 +187,30 @@ int main(int argc, char* argv[]){
 
     std::cout << "Some insights after \"Training\"" << std::endl;
     std::cout << "conv1 filters avg: " << conv1_1.get_filters().mean() << std::endl;
+    std::cout << "conv1 filters max: " << conv1_1.get_filters().maxCoeff() << std::endl;
+    std::cout << "conv1 filters min: " << conv1_1.get_filters().minCoeff() << std::endl;
     std::cout << "conv2 filters avg: " << conv2_1.get_filters().mean() << std::endl;
+    std::cout << "conv2 filters max: " << conv2_1.get_filters().maxCoeff() << std::endl;
+    std::cout << "conv2 filters min: " << conv2_1.get_filters().minCoeff() << std::endl;
     std::cout << "dense1 weigths avg: " <<  dense1.get_weights().mean() << std::endl;
+    std::cout << "dense1 weigths max: " <<  dense1.get_weights().maxCoeff() << std::endl;
+    std::cout << "dense1 weigths min: " <<  dense1.get_weights().minCoeff() << std::endl;
     std::cout << "dense2 weights avg: " << dense2.get_weights().mean() << std::endl;
+    std::cout << "dense2 weights max: " << dense2.get_weights().maxCoeff() << std::endl;
+    std::cout << "dense2 weights min: " << dense2.get_weights().minCoeff() << std::endl;
     std::cout << "dense3 weights avg: " << dense3.get_weights().mean() << std::endl;
+    std::cout << "dense3 weights max: " << dense3.get_weights().maxCoeff() << std::endl;
+    std::cout << "dense3 weights min: " << dense3.get_weights().minCoeff() << std::endl;
 
 
     std::cout << "\nTESTING PHASE.\n";
     std::cout << "===================================================================\n";
 
 
-    Matrixd predictions(50, 10);
+    Matrixd predictions(10, 10);
     int i = 0;
 
-    for (int b = 200; b < train_data.get_batch_size()/batch_size && b < 250; b++) {
+    for (int b = 0; b < train_data.get_batch_size()/batch_size && b < batch_limit/2; b++) {
         iteration += 1;
         batch.set_tensor(train_data.get_tensor().block(b*batch_size, 0, batch_size, 28*28), 28, 28, 1);
         batch.get_tensor() /= 255;
@@ -220,7 +244,7 @@ int main(int argc, char* argv[]){
 
     }
     Vectord p = cross_entropy_error.predictions(predictions,
-                                                          train_labels.get_tensor().block(200, 0, 50, 1));
+                                                          train_labels.get_tensor().block(200, 0, 10, 1));
 
     /*
     libdl::TensorWrapper_Exp test_batch(50, 28, 28, 1, false);
