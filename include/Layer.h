@@ -176,8 +176,11 @@ public:
     TensorWrapper forward(TensorWrapper& input_);
     TensorWrapper backward(TensorWrapper& gradients_, double lr);
 
-    Matrixd get_filters(){
+    Matrixd& get_filters(){
         return this->filters->get_tensor();
+    }
+    void set_filters(TensorWrapper& new_filters){
+        *(this->filters) = new_filters;
     }
 protected:
     //protected because later I might want to implement some fancy convolution layer to perform segmantation or whatever
@@ -192,7 +195,7 @@ protected:
     TensorWrapper& clean_gradient(TensorWrapper&);
 
 
-
+    TensorWrapper& convolution(TensorWrapper&, TensorWrapper&, int, int);
 
 
 
@@ -288,16 +291,27 @@ class libdl::layers::ReLU
 public:
 
     Matrixd forward(Matrixd& input){
-        input = input.unaryExpr([](double e){return ((e > 0)? e : 0);});
+
+        if(this->input == nullptr)
+            this->input = std::make_unique<Matrixd>(input);
+
+        *(this->input) = input;
+
+        auto output = input.unaryExpr([](double e){return ((e > 0)? e : 0.001*e);});
 
         //std::cout << "Output relu:\n" << input.row(0) << std::endl;
 
-        return input;
+        return output;
     }
     Matrixd backward(Matrixd& gradients, double lr){
-        gradients = gradients.unaryExpr([](double e){return (e > 0 ? e : 0);});
+
+        gradients = gradients.array() * this->input->unaryExpr([](double e){return (e > 0 ? 1 : 0.001);}).array();
+
         return gradients;
     }
+
+private:
+    std::unique_ptr<Matrixd> input;
 
 };
 

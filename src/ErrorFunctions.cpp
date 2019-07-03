@@ -103,15 +103,15 @@ Vectord libdl::error::CrossEntropy::predictions(Matrixd logits, Vectord targets)
     try {
         if (this->logits == nullptr)
             this->logits = std::make_unique<Matrixd>(logits);
-        else
-            *(this->logits) = logits;
+
+        *(this->logits) = logits;
 
         double acc = 0;
 
         if (this->targets == nullptr)
             this->targets = std::make_unique<Vectord>(targets);
-        else
-            *(this->targets) = targets;
+
+        *(this->targets) = targets;
 
         if (targets.rows() != logits.rows())//num of instances should be the same
         {
@@ -121,6 +121,8 @@ Vectord libdl::error::CrossEntropy::predictions(Matrixd logits, Vectord targets)
 
         Vectord predictions(this->targets->rows());
         Vectord predicted_class(this->targets->rows());
+
+        predictions = this->softmax();
         int index;
 
         for (int i = 0; i < this->targets->rows(); i++) {
@@ -227,7 +229,6 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
 
 Vectord CrossEntropy::softmax() {
     Vectord maximums = this->logits->rowwise().maxCoeff();
-    std::cout << maximums << std::endl;
 
     this->logits->colwise() -= maximums;
 

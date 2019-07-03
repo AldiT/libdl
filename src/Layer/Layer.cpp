@@ -49,10 +49,10 @@ DenseLayer2D::DenseLayer2D(int input_features, int num_neurons, std::string name
 
 
         //Eigen::MatrixXd::Random(input_features, this->num_neurons)/10;
-        *(this->weights) = this->weights->unaryExpr([num_neurons](double e){
+        *(this->weights) = this->weights->unaryExpr([num_neurons, input_features](double e){
             unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
             std::default_random_engine generator(seed);
-            std::normal_distribution<double> normal_dist(0, 0.05);//2/std::sqrt(num_neurons)
+            std::normal_distribution<double> normal_dist(0, 0.01);//2/std::sqrt(num_neurons)
 
             return normal_dist(generator);
         });
@@ -202,7 +202,7 @@ libdl::layers::Convolution2D::Convolution2D(std::string name_, int kernel_size_,
         int padding_, int stride_, int input_depth_, int input_neurons_):
        name(name_), kernel_size(kernel_size_), num_filters(num_filters_), stride(stride_), padding(padding_), input_depth(input_depth_){
 
-
+    std::cout << "Inside the constructor.\n";
     //For now only stride 1 worcks
     this->stride = 1;
 
@@ -211,7 +211,7 @@ libdl::layers::Convolution2D::Convolution2D(std::string name_, int kernel_size_,
 
     double variance = 0.01;
     if(input_neurons_ != 0)
-        variance = 2/std::sqrt((3*3*input_depth_) / input_neurons_);
+        variance = 2/std::sqrt(input_neurons_);
     //std::cout << "The value of variance: " << variance << std::endl;
 
     this->filters->set_tensor(this->filters->get_tensor().unaryExpr([variance](double e){
@@ -219,7 +219,7 @@ libdl::layers::Convolution2D::Convolution2D(std::string name_, int kernel_size_,
             std::default_random_engine generator(seed);
 
 
-            std::normal_distribution<double> normal_dist(0, 0.01);//2/std::sqrt(input_neurons_)
+            std::normal_distribution<double> normal_dist(0, variance);//2/std::sqrt(input_neurons_)
 
             return normal_dist(generator);
         }), this->filters->get_tensor_height(), this->filters->get_tensor_width(), this->filters->get_tensor_depth());
@@ -278,7 +278,7 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::forward(libdl::TensorWrap
 
 libdl::TensorWrapper_Exp libdl::layers::Convolution2D::backward(libdl::TensorWrapper_Exp& gradients_, double lr){//Multiple 2D gradients
 
-    libdl::TensorWrapper_Exp filter_gradients(this->filters->get_batch_size(),
+    libdl::TensorWrapper_Exp filter_gradients(this->filters->get_batch_size(), // batch refers to kernel
             this->filters->get_tensor_height(), this->filters->get_tensor_width(),
             this->filters->get_tensor_depth());
 
@@ -323,7 +323,7 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::backward(libdl::TensorWra
     //std::cout << "Filter gradient mean: " << filter_gradients.get_tensor().mean() << std::endl;
 
 
-    this->filters->get_tensor()  += filter_gradients.get_tensor();
+    this->filters->get_tensor() -= filter_gradients.get_tensor();
 
 
 
@@ -331,37 +331,66 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::backward(libdl::TensorWra
     //std::cout << "A filter slice: \n" << this->filters->get_slice(0, 0) << std::endl;
     //std::cout << "gradient slice: \n" << filter_gradients.get_slice(0, 0) << std::endl;
 
-    //std::cout << "Max weight: " << gradients_.get_tensor().maxCoeff() << std::endl;
-    //std::cout << "Min weight: " << gradients_.get_tensor().minCoeff() << std::endl;
+    //std::cout << "Max gradient: " << gradients_.get_tensor().maxCoeff() << std::endl;
+    //std::cout << "Min gradient: " << gradients_.get_tensor().minCoeff() << std::endl;
 
     return gradients_;
 }
-/*
-TensorWrapper& libdl::layers::Convolution2D::pad(TensorWrapper & to_pad_) {
+
+
+
+
+
+
+TensorWrapper& libdl::layers::Convolution2D::convolution(TensorWrapper& input, TensorWrapper& filters, int padding, int stride){
 
     try{
-        int o_rows = (to_pad_.get_tensor_height() + 2*this->padding);
-        int o_cols = (to_pad_.get_tensor_width() + 2*this->padding);
+        if(input.get_tensor_depth() != filters.get_tensor_depth())
+            throw std::invalid_argument("Depth of filters and input does not match!");
 
-        TensorWrapper res(to_pad_.get_batch_size(), o_rows, o_cols, to_pad_.get_tensor_depth());
+        int o_rows = (input.get_tensor_height() + 2*padding - filters.get_tensor_height()) / stride + 1;
+        int o_cols = (input.get_tensor_width() + 2*padding - filters.get_tensor_width()) / stride + 1;
 
-        for (int i = 0; i < to_pad_.get_batch_size(); i++){
-            for(int depth = 0; depth < to_pad_.get_tensor_depth(); depth++){
 
-                res.update_slice(i, depth, TensorWrapper::pad(to_pad_.get_slice(i, depth), this->padding));
+        if(this->output == nullptr)
+            this->output = std::make_unique<TensorWrapper>(input.get_batch_size(), o_rows, o_cols, filters.get_batch_size());
+
+        Matrixd temp_sum(o_rows, o_cols);
+
+        for(int filter_num = 0; filter_num < filters.get_batch_size(); filter_num++){
+
+            temp_sum = Eigen::MatrixXd::Constant(o_rows, o_cols, 0);
+
+            for(int slice_num = 0; slice_num < input.get_tensor_depth(); slice_num++){
+
             }
+
         }
 
-        to_pad_.set_tensor(res.get_tensor(), o_rows, o_cols, res.get_tensor_depth());
 
-        return to_pad_;
-    }catch (std::exception &err){
-        std::cerr << "Convolution2D::pad: An unexpected error happend: " << err.what() << std::endl;
+
+    }catch(std::invalid_argument &err){
+        std::cout << "Convolution2D::convolution: Invalid arguments given!\n"
+                  << "Details: " << err.what();
+        std::cout << "Arguments: \n"
+                  << "input shape: " << input.shape()
+                  << " filter shape: " << filters.shape()
+                  << " padding: " << padding << " stride: " << stride << std::endl;
+        std::exit(-1);
+    }catch(std::exception &err){
+        std::cout << "Convolution2D::convolution: Unknown exception!\n";
         std::exit(-1);
     }
 
+
+
+
 }
-*/
+
+
+
+
+
 TensorWrapper libdl::layers::Convolution2D::filter_conv(TensorWrapper &gradients_, TensorWrapper& filter_gradients) {
 
 

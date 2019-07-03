@@ -16,6 +16,27 @@
 using namespace Eigen;
 
 
+TensorWrapper get_stratified_batch(TensorWrapper& data, TensorWrapper& labels, TensorWrapper& batch_labels, int batch_size){
+    TensorWrapper batch(20, 28, 28, 1);
+    std::vector<int> labels_cnt(10);
+    int index = 0;
+
+    for(int img = 0; img < data.get_batch_size(); img++){
+        if(labels_cnt[labels.get_tensor()(img)] == 2)
+            continue;
+        else{
+            batch.update_slice(index, 0, data.get_slice(img, 0));
+            batch_labels.update_slice(index, 0, labels.get_slice(img, 0));
+            index++;
+        }
+
+        if(index == 20)
+            break;
+    }
+
+    return batch;
+}
+
 
 
 
@@ -53,27 +74,29 @@ int main(int argc, char* argv[]){
     libdl::TensorWrapper_Exp train_labels = dh->convert_training_labels_to_Eigen();
     dh.reset(nullptr);
 
-    std::cout << "First image:\n" << train_data.get_slice(0, 0) << std::endl;
-    std::cout << "First train label: " << train_labels.get_tensor()(0, 0) << std::endl;
+    for(int i = 0; i < 10; i++) {
+        std::cout << "First image:\n" << train_data.get_slice(i, 0) << std::endl;
+        std::cout << "First train label: " << train_labels.get_tensor()(i, 0) << std::endl;
+    }
 
 
     int batch_size = 1, batch_limit=20;
-    double lr = 1e-3;
+    double lr = 1e-2;
 
 
-    libdl::layers::Convolution2D conv1_1("conv1", 3, 32, 0, 1, 1, 4); //28x28x1
+    libdl::layers::Convolution2D conv1_1("conv1", 3, 16, 0, 1, 1, 28*28); //28x28x1
     //ibdl::layers::Convolution2D conv1_2(3, 32, 0, 1, 16);//not used
     libdl::layers::ReLU relu1;//28x28x1
 
     libdl::layers::MaxPool pool1(2, 2);//14x14x16
 
 
-    libdl::layers::Convolution2D conv2_1("conv2", 3, 32, 0, 1, 32, 1);//14x14x32
+    libdl::layers::Convolution2D conv2_1("conv2", 3, 32, 0, 1, 16, 3*3*32/4);//14x14x32
     //libdl::layers::Convolution2D conv2_2(3, 64, 0, 1, 32);//not used
     libdl::layers::ReLU relu2;
     libdl::layers::MaxPool pool2(2, 2);//13x13x32
 
-    libdl::layers::Flatten flatten(batch_size, 11, 11, 64);//7x7*32
+    libdl::layers::Flatten flatten(batch_size, 11, 11, 32);//7x7*32
 
 
     libdl::layers::DenseLayer2D dense1(3872, 700, "dense1", 288); //224x100
@@ -115,22 +138,30 @@ int main(int argc, char* argv[]){
     std::cout << "dense3 weights avg: " << dense3.get_weights().minCoeff() << std::endl;
 
     int iteration = 0;
-    std::cout << "\nAre training samples all the same: " << (train_data.get_slice(0, 0) == train_data.get_slice(1, 0)) << std::endl;
+
+    TensorWrapper batch_labels(20, train_labels.get_tensor_height(), train_labels.get_tensor_width(), train_labels.get_tensor_depth());
+
+    std::cout << "===================================================================\n";
+
+    std::cout << "LABELS:  " << train_labels.get_tensor().block(0, 0, 20, 1) << std::endl;
+    std::cout << "===================================================================\n";
+
 
     std::cout << "\nTRAINING PHASE.\n";
     std::cout << "===================================================================\n";
 
-    for(int epoch = 0; epoch < 5; epoch++) {
+    for(int epoch = 0; epoch < 20; epoch++) {
 
-        //if(epoch %10 == 0 && epoch != 0){
-        //    lr = 1/std::sqrt(epoch) *lr;
+        //if(epoch %2 == 0 && epoch != 0){
+        //    lr = 4/std::sqrt(epoch) *lr;
+        //    std::cout << "New lr: "<< lr << std::endl;
         //}
-        std::cout << "First label: " << train_labels.get_tensor()(0, 0) << std::endl;
 
         for (int b = 0; b < train_data.get_batch_size()/batch_size && b < batch_limit; b++) {
             iteration += 1;
             batch.set_tensor(train_data.get_tensor().block(b*batch_size, 0, batch_size, 28*28), 28, 28, 1);
-            batch.get_tensor() /= 255;
+            double mean = batch.get_tensor().mean();
+            batch.get_tensor() = batch.get_tensor().unaryExpr([mean](double e){return e - mean;}) / 255;
 
             out_conv = conv1_1.forward(batch);
 
@@ -210,10 +241,11 @@ int main(int argc, char* argv[]){
     Matrixd predictions(10, 10);
     int i = 0;
 
-    for (int b = 0; b < train_data.get_batch_size()/batch_size && b < batch_limit/2; b++) {
+    for (int b = 0; b < train_data.get_batch_size()/batch_size && b < 10; b++) {
         iteration += 1;
         batch.set_tensor(train_data.get_tensor().block(b*batch_size, 0, batch_size, 28*28), 28, 28, 1);
-        batch.get_tensor() /= 255;
+        double mean = batch.get_tensor().mean();
+        batch.get_tensor() = batch.get_tensor().unaryExpr([mean](double e){return e - mean;}) / 255;
 
         out_conv = conv1_1.forward(batch);
 
@@ -244,7 +276,7 @@ int main(int argc, char* argv[]){
 
     }
     Vectord p = cross_entropy_error.predictions(predictions,
-                                                          train_labels.get_tensor().block(200, 0, 10, 1));
+                                                          train_labels.get_tensor().block(0, 0, 10, 1));
 
     /*
     libdl::TensorWrapper_Exp test_batch(50, 28, 28, 1, false);
