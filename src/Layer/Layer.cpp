@@ -202,8 +202,7 @@ libdl::layers::Convolution2D::Convolution2D(std::string name_, int kernel_size_,
         int padding_, int stride_, int input_depth_, int input_neurons_):
        name(name_), kernel_size(kernel_size_), num_filters(num_filters_), stride(stride_), padding(padding_), input_depth(input_depth_){
 
-    std::cout << "Inside the constructor.\n";
-    //For now only stride 1 worcks
+    //For now only stride 1 works
     this->stride = 1;
 
     this->filters = std::make_unique<libdl::TensorWrapper_Exp>(this->num_filters,
@@ -212,7 +211,7 @@ libdl::layers::Convolution2D::Convolution2D(std::string name_, int kernel_size_,
     double variance = 0.01;
     if(input_neurons_ != 0)
         variance = 2/std::sqrt(input_neurons_);
-    //std::cout << "The value of variance: " << variance << std::endl;
+    std::cout << "The value of variance: " << variance << std::endl;
 
     this->filters->set_tensor(this->filters->get_tensor().unaryExpr([variance](double e){
             unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -336,57 +335,6 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::backward(libdl::TensorWra
 
     return gradients_;
 }
-
-
-
-
-
-
-TensorWrapper& libdl::layers::Convolution2D::convolution(TensorWrapper& input, TensorWrapper& filters, int padding, int stride){
-
-    try{
-        if(input.get_tensor_depth() != filters.get_tensor_depth())
-            throw std::invalid_argument("Depth of filters and input does not match!");
-
-        int o_rows = (input.get_tensor_height() + 2*padding - filters.get_tensor_height()) / stride + 1;
-        int o_cols = (input.get_tensor_width() + 2*padding - filters.get_tensor_width()) / stride + 1;
-
-
-        if(this->output == nullptr)
-            this->output = std::make_unique<TensorWrapper>(input.get_batch_size(), o_rows, o_cols, filters.get_batch_size());
-
-        Matrixd temp_sum(o_rows, o_cols);
-
-        for(int filter_num = 0; filter_num < filters.get_batch_size(); filter_num++){
-
-            temp_sum = Eigen::MatrixXd::Constant(o_rows, o_cols, 0);
-
-            for(int slice_num = 0; slice_num < input.get_tensor_depth(); slice_num++){
-
-            }
-
-        }
-
-
-
-    }catch(std::invalid_argument &err){
-        std::cout << "Convolution2D::convolution: Invalid arguments given!\n"
-                  << "Details: " << err.what();
-        std::cout << "Arguments: \n"
-                  << "input shape: " << input.shape()
-                  << " filter shape: " << filters.shape()
-                  << " padding: " << padding << " stride: " << stride << std::endl;
-        std::exit(-1);
-    }catch(std::exception &err){
-        std::cout << "Convolution2D::convolution: Unknown exception!\n";
-        std::exit(-1);
-    }
-
-
-
-
-}
-
 
 
 

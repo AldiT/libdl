@@ -27,10 +27,11 @@ TensorWrapper get_stratified_batch(TensorWrapper& data, TensorWrapper& labels, T
         else{
             batch.update_slice(index, 0, data.get_slice(img, 0));
             batch_labels.update_slice(index, 0, labels.get_slice(img, 0));
+            labels_cnt[labels.get_tensor()(img)]++;
             index++;
         }
 
-        if(index == 20)
+        if(index == batch_size)
             break;
     }
 
@@ -74,14 +75,9 @@ int main(int argc, char* argv[]){
     libdl::TensorWrapper_Exp train_labels = dh->convert_training_labels_to_Eigen();
     dh.reset(nullptr);
 
-    for(int i = 0; i < 10; i++) {
-        std::cout << "First image:\n" << train_data.get_slice(i, 0) << std::endl;
-        std::cout << "First train label: " << train_labels.get_tensor()(i, 0) << std::endl;
-    }
-
 
     int batch_size = 1, batch_limit=20;
-    double lr = 1e-2;
+    double lr = 9e-3;//If increased above a threshhold higher than this one, the gradients will explode.
 
 
     libdl::layers::Convolution2D conv1_1("conv1", 3, 16, 0, 1, 1, 28*28); //28x28x1
@@ -91,7 +87,7 @@ int main(int argc, char* argv[]){
     libdl::layers::MaxPool pool1(2, 2);//14x14x16
 
 
-    libdl::layers::Convolution2D conv2_1("conv2", 3, 32, 0, 1, 16, 3*3*32/4);//14x14x32
+    libdl::layers::Convolution2D conv2_1("conv2", 3, 32, 0, 1, 16, 3*3*32);//14x14x32
     //libdl::layers::Convolution2D conv2_2(3, 64, 0, 1, 32);//not used
     libdl::layers::ReLU relu2;
     libdl::layers::MaxPool pool2(2, 2);//13x13x32
@@ -118,52 +114,78 @@ int main(int argc, char* argv[]){
     Eigen::MatrixXd out_dense(batch_size, 4608);
 
     libdl::TensorWrapper_Exp conv_grads(batch_size, 3, 3, 16, false);
-    Eigen::MatrixXd grads(batch_size, 10);
-
-    std::cout << "Some insights before \"Training\"" << std::endl;
-    std::cout << "conv1 filters avg: " << conv1_1.get_filters().mean() << std::endl;
-    std::cout << "conv1 filters max: " << conv1_1.get_filters().maxCoeff() << std::endl;
-    std::cout << "conv1 filters min: " << conv1_1.get_filters().minCoeff() << std::endl;
-    std::cout << "conv2 filters avg: " << conv2_1.get_filters().mean() << std::endl;
-    std::cout << "conv2 filters max: " << conv2_1.get_filters().maxCoeff() << std::endl;
-    std::cout << "conv2 filters min: " << conv2_1.get_filters().minCoeff() << std::endl;
-    std::cout << "dense1 weigths avg: " <<  dense1.get_weights().mean() << std::endl;
-    std::cout << "dense1 weigths max: " <<  dense1.get_weights().maxCoeff() << std::endl;
-    std::cout << "dense1 weigths min: " <<  dense1.get_weights().minCoeff() << std::endl;
-    std::cout << "dense2 weights avg: " << dense2.get_weights().mean() << std::endl;
-    std::cout << "dense2 weights avg: " << dense2.get_weights().maxCoeff() << std::endl;
-    std::cout << "dense2 weights avg: " << dense2.get_weights().minCoeff() << std::endl;
-    std::cout << "dense3 weights avg: " << dense3.get_weights().mean() << std::endl;
-    std::cout << "dense3 weights avg: " << dense3.get_weights().maxCoeff() << std::endl;
-    std::cout << "dense3 weights avg: " << dense3.get_weights().minCoeff() << std::endl;
+    Eigen::MatrixXd grads(batch_limit, 10);
 
     int iteration = 0;
 
-    TensorWrapper batch_labels(20, train_labels.get_tensor_height(), train_labels.get_tensor_width(), train_labels.get_tensor_depth());
+    TensorWrapper batch_labels(batch_limit, train_labels.get_tensor_height(), train_labels.get_tensor_width(), train_labels.get_tensor_depth());
+    batch = get_stratified_batch(train_data, train_labels, batch_labels, batch_limit);
+    //normalize
+    batch.get_tensor() /= 255;
 
+    TensorWrapper b_temp(1, 28, 28, 1);
+
+    std::cout << "\nBefore Training predictions.\n";
     std::cout << "===================================================================\n";
 
-    std::cout << "LABELS:  " << train_labels.get_tensor().block(0, 0, 20, 1) << std::endl;
-    std::cout << "===================================================================\n";
+    Matrixd predictions(10, 10);
+    int index = 0;
 
+    for (int b = 0; b < train_data.get_batch_size()/batch_size && b < 10; b++) {
+        iteration += 1;
+        
+
+        b_temp.set_tensor(batch.get_tensor().block(b, 0, 1, 28*28), 28, 28, 1);
+
+        out_conv = conv1_1.forward(b_temp);
+
+        //out_conv = conv1_2.forward(batch);
+        out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
+                            out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+        out_conv = pool1.forward(out_conv);
+
+        out_conv = conv2_1.forward(out_conv);
+        //out_conv = conv2_2.forward(out_conv);
+        out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
+                            out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+
+
+        out_dense = flatten.forward(out_conv);
+
+
+        out_dense = dense1.forward(out_dense);
+        out_dense = relu3.forward(out_dense);
+
+        out_dense = dense2.forward(out_dense);
+        out_dense = relu4.forward(out_dense);
+
+        out_dense = dense3.forward(out_dense);
+
+        predictions.row(index) = out_dense;
+        index++;
+
+    }
+    Vectord initial_prediction = cross_entropy_error.predictions(predictions, batch_labels.get_tensor().block(0, 0, 10, 1));
+
+
+
+    
 
     std::cout << "\nTRAINING PHASE.\n";
     std::cout << "===================================================================\n";
+    
+    for(int epoch = 0; epoch < 40; epoch++) {
 
-    for(int epoch = 0; epoch < 20; epoch++) {
-
-        //if(epoch %2 == 0 && epoch != 0){
-        //    lr = 4/std::sqrt(epoch) *lr;
+        //if(epoch % 10 == 0 && epoch != 0){
+        //    lr = 2.3/std::sqrt(epoch) *lr;
         //    std::cout << "New lr: "<< lr << std::endl;
         //}
 
         for (int b = 0; b < train_data.get_batch_size()/batch_size && b < batch_limit; b++) {
             iteration += 1;
-            batch.set_tensor(train_data.get_tensor().block(b*batch_size, 0, batch_size, 28*28), 28, 28, 1);
-            double mean = batch.get_tensor().mean();
-            batch.get_tensor() = batch.get_tensor().unaryExpr([mean](double e){return e - mean;}) / 255;
+            b_temp.set_tensor(batch.get_tensor().block(b, 0, 1, 28*28), 28, 28, 1);
 
-            out_conv = conv1_1.forward(batch);
+            out_conv = conv1_1.forward(b_temp);
 
             //out_conv = conv1_2.forward(batch);
             out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
@@ -189,7 +211,7 @@ int main(int argc, char* argv[]){
 
             //Backward pass
 
-            grads = cross_entropy_error.get_gradient(out_dense, train_labels.get_tensor().block(b*batch_size, 0, batch_size, 1), iteration);
+            grads = cross_entropy_error.get_gradient(out_dense, batch_labels.get_tensor().block(b, 0, batch_size, 1), iteration);
 
 
             grads = dense3.backward(grads, lr);
@@ -216,38 +238,20 @@ int main(int argc, char* argv[]){
         }
     }
 
-    std::cout << "Some insights after \"Training\"" << std::endl;
-    std::cout << "conv1 filters avg: " << conv1_1.get_filters().mean() << std::endl;
-    std::cout << "conv1 filters max: " << conv1_1.get_filters().maxCoeff() << std::endl;
-    std::cout << "conv1 filters min: " << conv1_1.get_filters().minCoeff() << std::endl;
-    std::cout << "conv2 filters avg: " << conv2_1.get_filters().mean() << std::endl;
-    std::cout << "conv2 filters max: " << conv2_1.get_filters().maxCoeff() << std::endl;
-    std::cout << "conv2 filters min: " << conv2_1.get_filters().minCoeff() << std::endl;
-    std::cout << "dense1 weigths avg: " <<  dense1.get_weights().mean() << std::endl;
-    std::cout << "dense1 weigths max: " <<  dense1.get_weights().maxCoeff() << std::endl;
-    std::cout << "dense1 weigths min: " <<  dense1.get_weights().minCoeff() << std::endl;
-    std::cout << "dense2 weights avg: " << dense2.get_weights().mean() << std::endl;
-    std::cout << "dense2 weights max: " << dense2.get_weights().maxCoeff() << std::endl;
-    std::cout << "dense2 weights min: " << dense2.get_weights().minCoeff() << std::endl;
-    std::cout << "dense3 weights avg: " << dense3.get_weights().mean() << std::endl;
-    std::cout << "dense3 weights max: " << dense3.get_weights().maxCoeff() << std::endl;
-    std::cout << "dense3 weights min: " << dense3.get_weights().minCoeff() << std::endl;
-
 
     std::cout << "\nTESTING PHASE.\n";
     std::cout << "===================================================================\n";
 
 
-    Matrixd predictions(10, 10);
-    int i = 0;
+    index = 0;
 
     for (int b = 0; b < train_data.get_batch_size()/batch_size && b < 10; b++) {
         iteration += 1;
-        batch.set_tensor(train_data.get_tensor().block(b*batch_size, 0, batch_size, 28*28), 28, 28, 1);
-        double mean = batch.get_tensor().mean();
-        batch.get_tensor() = batch.get_tensor().unaryExpr([mean](double e){return e - mean;}) / 255;
+        
 
-        out_conv = conv1_1.forward(batch);
+        b_temp.set_tensor(batch.get_tensor().block(b, 0, 1, 28*28), 28, 28, 1);
+
+        out_conv = conv1_1.forward(b_temp);
 
         //out_conv = conv1_2.forward(batch);
         out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
@@ -271,71 +275,13 @@ int main(int argc, char* argv[]){
 
         out_dense = dense3.forward(out_dense);
 
-        predictions.row(i) = out_dense;
-        i++;
+        predictions.row(index) = out_dense;
+        index++;
 
     }
-    Vectord p = cross_entropy_error.predictions(predictions,
-                                                          train_labels.get_tensor().block(0, 0, 10, 1));
-
-    /*
-    libdl::TensorWrapper_Exp test_batch(50, 28, 28, 1, false);
-    test_batch.set_tensor(train_data.get_tensor().block(200, 0, 50, 28*28), 28, 28, 1);
-    test_batch.get_tensor() /= 255;
-
-
-    std::cout << train_data.get_tensor().block(200, 0, 50, 28*28).rows() << std::endl;
-
-    out_conv = conv1_1.forward(test_batch);
-
-    out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
-                        out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
-    out_conv = pool1.forward(out_conv);
-
-    out_conv = conv2_1.forward(out_conv);
-
-    out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
-                        out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
-
-    out_dense = flatten.forward(out_conv);
-
-    out_dense = dense1.forward(out_dense);
-    out_dense = relu3.forward(out_dense);
-
-    out_dense = dense2.forward(out_dense);
-    out_dense = relu4.forward(out_dense);
-
-    out_dense = dense3.forward(out_dense);
-
-
-    Vectord predictions = cross_entropy_error.predictions(out_dense,
-            train_labels.get_tensor().block(200, 0, 50, 1));
-
-     */
+    Vectord p = cross_entropy_error.predictions(predictions, batch_labels.get_tensor().block(0, 0, 10, 1));
 
 
 
     return 0;
 }
-
-
-/*
-SCENARIO("Testing the Convolution Layer", "[ConvolutionLayer]"){
-    GIVEN("A convolution layer"){
-        libdl::layers::Convolution2D conv(3, 16, 1, 1, 3);
-
-        libdl::TensorWrapper_Exp input(16, 28, 28, 3);
-        input.set_tensor(Eigen::MatrixXd::Constant(16, 28*28*3, 1));
-
-
-        WHEN("random input goes through the layer"){
-            libdl::TensorWrapper_Exp output(16, 28, 28, 16);
-            output = conv.forward(input);
-
-            std::cout << "Output slice: " << output.get_slice(0, 0) << std::endl;
-
-        }
-
-
-    }
-}*/

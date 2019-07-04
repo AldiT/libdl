@@ -193,13 +193,7 @@ protected:
     TensorWrapper& pad(TensorWrapper&);
 
     TensorWrapper& clean_gradient(TensorWrapper&);
-
-
-    TensorWrapper& convolution(TensorWrapper&, TensorWrapper&, int, int);
-
-
-
-
+    
 private:
     std::shared_ptr<TensorWrapper> output;
     std::unique_ptr<TensorWrapper> filters; //Shared because it will point to the same address as weights from Layer
