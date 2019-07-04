@@ -15,12 +15,16 @@
 
 
 ### The whole program is set up on the Layer_tests.cpp file under tests folder (this is where **main** function is)
- In **line 65** is specified the batch size, in **line 110** and **111** are specified how many batches to train on(b<10)
- this due to the fact that the library is painfully slow for now... and also here is where the number of epochs is also specified.
+ In **line 79** are specified some of the hyperparameters(batch_size, batch_limit, lr).
+ I train only on a small batch, this due to the fact that the library is painfully slow for now... so batch_limit is a provisional hyperparameter due to above mentioned circumctances.
 
- Suggestion: As I mentioned, the library is very slow for the moment, so to prove that it is actually training, I would
- use overfiting on a single image. To do that you need to set epoch on **line 110** to smth like ~10 and set the batch_limit
- provisional condition from 10 to 1 on (**line 65**), also batch_size on **line 65** to 1.
+ On my computer I reach up to 0.9 accuracy on the batch after ~10 minutes.
+ There should be three phases of output:
+    1. Before training
+    2. Training
+    3. Test
+
+I will be reachable by email all day if you have any further questions.
 
 
  ## Find main function on: tests/Layer_tests.cpp
