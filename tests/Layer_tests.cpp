@@ -77,7 +77,7 @@ int main(int argc, char* argv[]){
 
 
     int batch_size = 1, batch_limit=20;
-    double lr = 9e-3;//If increased above a threshhold higher than this one, the gradients will explode.
+    double lr = 1e-2;//If increased above a threshhold higher than this one, the gradients will explode.
 
 
     libdl::layers::Convolution2D conv1_1("conv1", 3, 16, 0, 1, 1, 28*28); //28x28x1
@@ -176,10 +176,10 @@ int main(int argc, char* argv[]){
     
     for(int epoch = 0; epoch < 40; epoch++) {
 
-        //if(epoch % 10 == 0 && epoch != 0){
-        //    lr = 2.3/std::sqrt(epoch) *lr;
-        //    std::cout << "New lr: "<< lr << std::endl;
-        //}
+        if(epoch % 10 == 0 && epoch != 0){
+            lr = 2.3/std::sqrt(epoch) *lr;
+            std::cout << "New lr: "<< lr << std::endl;
+        }
 
         for (int b = 0; b < train_data.get_batch_size()/batch_size && b < batch_limit; b++) {
             iteration += 1;
