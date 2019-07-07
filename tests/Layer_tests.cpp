@@ -77,7 +77,7 @@ int main(int argc, char* argv[]){
 
 
     int batch_size = 1, batch_limit=20;
-    double lr = 1e-2;//If increased above a threshhold higher than this one, the gradients will explode.
+    double lr = 9e-2;//If increased above a threshhold the gradients will explode.
 
 
     libdl::layers::Convolution2D conv1_1("conv1", 3, 16, 0, 1, 1, 28*28); //28x28x1
