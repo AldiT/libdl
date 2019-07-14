@@ -58,6 +58,16 @@ SCENARIO("Aldis tests", "[Aldi]"){
             std::cout << pool1.backward(pool1.forward(input_tensor), 0.1).get_tensor() << std::endl;*/
         }
 
+        WHEN("A tensor needs to be padded."){
+            TensorWrapper tensor(4, 4, 4, 1, true);
+            std::cout << "Before: \n" << tensor.get_slice(0, 0) << std::endl;
+            libdl::layers::Convolution2D conv_test_pad("Testing padding", 3, 4, 1, 1, 1);
+            tensor = conv_test_pad.pad(tensor);
+
+            std::cout << "Out: \n" << tensor.get_slice(0, 0) << std::endl;
+
+        }
+
     }
 
 }

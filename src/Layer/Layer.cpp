@@ -445,6 +445,43 @@ TensorWrapper& libdl::layers::Convolution2D::clean_gradient(TensorWrapper& gradi
 
 //Adds *padding* rows in each direction.
 //template <typename Tensor>
+TensorWrapper& libdl::layers::Convolution2D::pad(TensorWrapper& tensor_){
+    try{
+        int o_rows  = (tensor_.get_tensor_height() + 2 * this->padding);
+        int o_cols = (tensor_.get_tensor_width() + 2* this->padding);
+
+        TensorWrapper temp(tensor_.get_batch_size(), o_rows, o_cols, tensor_.get_tensor_depth());
+
+        temp.set_tensor(Matrixd::Constant(tensor_.get_batch_size(), 
+        o_rows * o_cols * tensor_.get_tensor_depth(), 0), o_rows, o_cols, tensor_.get_tensor_depth());
+
+        int tensor_row = 0;
+        for(int instance = 0; instance < temp.get_batch_size(); instance++){
+            tensor_row = 0;
+
+            for(int row = 0; row < temp.get_tensor().cols(); row += temp.get_tensor_width()){
+                
+                if(row / temp.get_tensor_width() < this->padding)//first rows
+                    continue;
+
+                if(row == temp.get_tensor().cols() - this->padding * temp.get_tensor_width())//last rows
+                    break;
+
+                temp.get_tensor().block(instance, row + this->padding, 1, tensor_.get_tensor_width()) 
+                            = tensor_.get_tensor().block(instance, tensor_row, 1, tensor_.get_tensor_width());
+                tensor_row += tensor_.get_tensor_width(); //go to next row
+                
+            }
+        }
+
+        tensor_ = temp;
+
+        return tensor_;
+    }catch(std::exception &exp){
+        std::cout << "Convolution2D::pad: Unexpected error happend: " << exp.what() << std::endl;
+        std::exit(-1);
+    }
+}
 
 
 

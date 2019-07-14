@@ -182,6 +182,8 @@ public:
     void set_filters(TensorWrapper& new_filters){
         *(this->filters) = new_filters;
     }
+    
+    TensorWrapper& pad(TensorWrapper&);
 protected:
     //protected because later I might want to implement some fancy convolution layer to perform segmantation or whatever
     //methods
@@ -190,7 +192,7 @@ protected:
     // for simplicity
     TensorWrapper filter_conv(TensorWrapper& gradients_, TensorWrapper&);
     TensorWrapper input_conv (TensorWrapper& gradients_);
-    TensorWrapper& pad(TensorWrapper&);
+    
 
     TensorWrapper& clean_gradient(TensorWrapper&);
     
