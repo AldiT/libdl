@@ -483,6 +483,16 @@ TensorWrapper& libdl::layers::Convolution2D::pad(TensorWrapper& tensor_){
     }
 }
 
+TensorWrapper& libdl::layers::Convolution2D::stride_in_backprop(TensorWrapper& tensor){
+    try{//rename the function to dilation
+        //TODO: put spaces in between gradient matrix to account for stride in backprop.
+
+        return tensor;
+    }catch(std::exception &exp){
+        std::cout << "Convolution2D::pad: Unexpected error happend: " << exp.what() << std::endl;
+        std::exit(-1);
+    }
+}
 
 
 

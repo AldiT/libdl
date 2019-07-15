@@ -184,6 +184,9 @@ public:
     }
     
     TensorWrapper& pad(TensorWrapper&);
+    //rename to dilation
+    TensorWrapper& stride_in_backprop(TensorWrapper&);
+
 protected:
     //protected because later I might want to implement some fancy convolution layer to perform segmantation or whatever
     //methods
