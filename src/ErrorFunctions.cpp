@@ -77,9 +77,12 @@ double libdl::error::CrossEntropy::get_error(Vectord targets, Matrixd logits) {
         }
 
         std::cout << "Logits before error: " << *(this->logits) << std::endl;
+        
+        Matrixd m = *(this->logits);
+        //(*(this->logits))(i, targets(i)).dot(Matrixd::Constant(1, 1, 1)) 
         double res = 0;
         for (int i = 0 ; i < this->logits->rows(); i++){
-            res += std::log((*(this->logits))(i, targets(i)));
+            res += std::log(m(i, targets(i)));
             std::cout << "Log of this: " << (*(this->logits))(i, targets(i)) << std::endl;
         }
 
@@ -176,7 +179,7 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
 
 
         for (int i = 0 ; i < this->logits->rows(); i++){
-            avg += -std::log((*(this->logits))(i, targets(i)));
+            avg += -std::log((*(this->logits))(i, targets(i)).dot(Matrixd::Constant(1, 1, 1)));
         }
 
 

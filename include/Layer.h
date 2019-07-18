@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include "Eigen/Dense"
+#include "Eigen/Core"
 #include "TensorWrapper.h"
 
 namespace libdl::layers {
@@ -185,7 +186,7 @@ public:
     
     TensorWrapper& pad(TensorWrapper&);
     //rename to dilation
-    TensorWrapper& stride_in_backprop(TensorWrapper&);
+    TensorWrapper& dilation(TensorWrapper&);
 
 protected:
     //protected because later I might want to implement some fancy convolution layer to perform segmantation or whatever

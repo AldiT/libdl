@@ -47,6 +47,8 @@ int main(int argc, char* argv[]){
     std::cout << "Running tests...\n";
     int result = Catch::Session().run(argc, argv);
 
+    Matrixd m(2, 2);
+    std::cout << "M0 0 : " << m(0, 0) << std::endl;
     /*
     std::cout << "ROTATION IS HAPPENDING HERE.\n";
 

@@ -65,6 +65,9 @@ SCENARIO("Aldis tests", "[Aldi]"){
             tensor = conv_test_pad.pad(tensor);
 
             std::cout << "Out: \n" << tensor.get_slice(0, 0) << std::endl;
+            TensorWrapper tensor1(4, 4, 4, 1, true);
+            std::cout << "\nDilation befor: \n" << tensor1.get_slice(0, 0) << std::endl;
+            std::cout << "Dilation after:\n" << conv_test_pad.dilation(tensor1).get_slice(0, 0) << std::endl;
 
         }
 

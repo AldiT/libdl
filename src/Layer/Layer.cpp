@@ -4,10 +4,11 @@
 
 #include <iostream>
 #include <string>
-
+#include <chrono>
 #include "Layer.h"
 #include "Eigen/Dense"
-#include "spdlog/spdlog.h"
+#include "Eigen/Core"
+//#include "spdlog/spdlog.h"
 #include <cmath>
 #include <random>
 
@@ -483,11 +484,32 @@ TensorWrapper& libdl::layers::Convolution2D::pad(TensorWrapper& tensor_){
     }
 }
 
-TensorWrapper& libdl::layers::Convolution2D::stride_in_backprop(TensorWrapper& tensor){
+//Eigen::seq(row*o_cols, row*o_cols + o_cols-1, this->stride)
+
+TensorWrapper& libdl::layers::Convolution2D::dilation(TensorWrapper& tensor_){
     try{//rename the function to dilation
         //TODO: put spaces in between gradient matrix to account for stride in backprop.
+        if(this->stride == 1)
+            return tensor_;
 
-        return tensor;
+        int o_rows = tensor_.get_tensor_height() + (this->stride-1) * (tensor_.get_tensor_height() - 1);
+        int o_cols = tensor_.get_tensor_width() + (this->stride-1) * (tensor_.get_tensor_width() - 1);
+
+        TensorWrapper result(tensor_.get_batch_size(), o_rows, o_cols, tensor_.get_tensor_depth());
+        result.get_tensor() = Matrixd::Constant(result.get_batch_size(), 
+            o_rows*o_cols*result.get_tensor_depth(), 0);
+
+        for(int instance = 0; instance < tensor_.get_batch_size(); instance++){//for each instance
+            for(int row = 0; row < tensor_.get_tensor_height(); row += this->stride){
+                result.get_tensor()(instance, Eigen::seq(row*o_cols, row*o_cols + o_cols-1, this->stride))
+                    = tensor_.get_tensor().block(instance, row/this->stride, 1, tensor_.get_tensor_height());
+
+            }//end row's for
+        }//end instance's for
+
+        tensor_ = result;
+
+        return tensor_;
     }catch(std::exception &exp){
         std::cout << "Convolution2D::pad: Unexpected error happend: " << exp.what() << std::endl;
         std::exit(-1);
