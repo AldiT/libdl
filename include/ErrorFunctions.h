@@ -49,11 +49,9 @@ private:
     int num_classes;
     std::unique_ptr<Vectord> targets;
     std::unique_ptr<Matrixd> logits;
+    std::unique_ptr<Matrixd> avg;
 
     std::vector<double> errors;
-
-    double avg = 0;
-
     Vectord softmax();
 
 };

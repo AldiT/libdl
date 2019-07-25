@@ -13,7 +13,6 @@
 #include "TensorWrapper.h"
 #include "data_handler.h"
 #include "pybind11/pybind11.h"
-#include "omp.h"
 
 using namespace Eigen;
 
@@ -36,8 +35,6 @@ TensorWrapper get_stratified_batch(TensorWrapper& data, TensorWrapper& labels, T
         if(index == batch_size)
             break;
     }
-
-    omp_set_num_threads(5);
 
     return batch;
 }
@@ -67,9 +64,10 @@ int main(int argc, char* argv[]){
     dh.reset(nullptr);
 
     std::cout << "Test reverse stuff:Before:\n";
-    TensorWrapper test(1, 4, 4, 1);
-    test.get_tensor() = MatrixXd::Random(1, 16);
-    std::cout << test.get_slice(0, 0) << std::endl;
+    TensorWrapper test1(1, 4, 4, 1);
+    test1.get_tensor() = MatrixXd::Random(1, 16);
+    std::cout << test1.get_slice(0, 0) << std::endl;
+
 
     int batch_size = 1, batch_limit=20;
     double lr = 9e-2;//If increased above a threshhold the gradients will explode.
@@ -78,7 +76,7 @@ int main(int argc, char* argv[]){
     libdl::layers::Convolution2D conv1_1("conv1", 3, 16, 0, 2, 1, 28*28); //28x28x1
     //ibdl::layers::Convolution2D conv1_2(3, 32, 0, 1, 16);//not used
 
-    std::cout << "After:\n" << conv1_1.reverse_tensor(test).get_slice(0, 0) << std::endl;
+    std::cout << "After:\n" << conv1_1.reverse_tensor(test1).get_slice(0, 0) << std::endl;
 
     libdl::layers::ReLU relu1;//28x28x1
 
@@ -121,10 +119,6 @@ int main(int argc, char* argv[]){
     //normalize
     batch.get_tensor() /= 255;
 
-    libdl::TensorWrapper_Exp test(1, 4, 4, 1);
-    test.get_tensor() == Eigen::MatrixXd::Constant(1, 4*4, 1);
-
-    std::cout << "Dialated:\n" << conv1_1.dilation(test).get_slice(0, 0) << std::endl;
 
     TensorWrapper b_temp(1, 28, 28, 1);
 

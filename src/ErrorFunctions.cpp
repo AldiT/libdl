@@ -55,6 +55,8 @@ Vectord libdl::error::ErrorFunctions::get_gradient() {
 libdl::error::CrossEntropy::CrossEntropy(int num_classes) {
     this->num_classes = num_classes;
     this->errors = std::vector<double>();
+    this->avg = std::make_unique<Matrixd>(1, 1);
+    (*(this->avg))(0, 0) = 0;
 }
 
 double libdl::error::CrossEntropy::get_error(Vectord targets, Matrixd logits) {
@@ -80,16 +82,17 @@ double libdl::error::CrossEntropy::get_error(Vectord targets, Matrixd logits) {
         
         Matrixd m = *(this->logits);
         //(*(this->logits))(i, targets(i)).dot(Matrixd::Constant(1, 1, 1)) 
+        /* 
         double res = 0;
         for (int i = 0 ; i < this->logits->rows(); i++){
             res += std::log(m(i, targets(i)));
             std::cout << "Log of this: " << (*(this->logits))(i, targets(i)) << std::endl;
-        }
+        }*/
 
 
         //sum over the classes
 
-        return -res;
+        return 0;//-res;
     }catch(std::invalid_argument &err){
         std::cerr << "Invalid argument: " << err.what() << std::endl;
         std::exit(-1);
@@ -176,10 +179,11 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
         *(this->targets) = targets;
 
         Vectord predictions = this->softmax();
-
+        
+        *(this->logits) = this->logits->unaryExpr([](double e){return std::log(e);});
 
         for (int i = 0 ; i < this->logits->rows(); i++){
-            avg += -std::log((*(this->logits))(i, targets(i)));
+            (*(this->avg))(0, 0) = (*(this->avg))(0, 0) + (*(this->logits))(i, targets(i));
         }
 
 
@@ -215,8 +219,8 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
 
         if(iteration % 20 == 0 && iteration != 0) {
             //std::cout << "\nIteration: " << iteration << std::endl;
-            std::cout << "[Error: " << avg / (targets.rows()*20) << "; Epoch: " << iteration/20 << "]\n";
-            avg = 0;
+            std::cout << "[Error: " << (*(this->avg))(0, 0) / (targets.rows()*20) << "; Epoch: " << iteration/20 << "]\n";
+            (*(this->avg))(0, 0) = 0;
             //std::cout << "Gradients:\n" << gradients << std::endl;
             //std::cout << "Logits: \n" << *(this->logits) << std::endl;
         }
