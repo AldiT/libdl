@@ -245,9 +245,10 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::forward(libdl::TensorWrap
         this->output = std::make_unique<libdl::TensorWrapper_Exp>(this->input->get_batch_size(), o_rows,
                                                                   o_cols, this->filters->get_batch_size());
 
+    *(this->input) = this->pad(*(this->input));
 
     auto start_correlation = std::chrono::system_clock::now();
-    *(this->output) = this->input->correlation(*(this->filters), this->padding, this->stride);
+    *(this->output) = this->input->correlation(*(this->filters), this->stride);
     auto end_correlation = std::chrono::system_clock::now();
 
     std::chrono::duration<double> correlation_duration = end_correlation-start_correlation;
@@ -515,6 +516,47 @@ TensorWrapper& libdl::layers::Convolution2D::dilation(TensorWrapper& tensor_){
     }
 }
 
+//TODO
+TensorWrapper& libdl::layers::Convolution2D::convolution_operation(){
+
+    try{
+
+        //TODO: (but with low priority) manage the case where the input(or filters or whatever) are nullptr
+
+        //Generate indices
+
+
+
+
+        //multiply for each instance
+
+
+
+    }catch(std::exception &err){
+        std::cout << "Convolution2D::convolution_operation: Unexpected error happend: " << err.what() << std::endl;
+        std::exit(-1);
+    }
+
+}
+
+TensorWrapper libdl::layers::Convolution2D::reverse_tensor(TensorWrapper& tensor_){
+    try{
+        TensorWrapper result(tensor_.get_batch_size(), tensor_.get_tensor_height(), 
+            tensor_.get_tensor_width(), tensor_.get_tensor_depth());
+
+        int cols = tensor_.get_tensor().cols();
+        int rows = tensor_.get_tensor().rows();
+
+        result.set_tensor(tensor_.get_tensor()(Eigen::seq(rows-1, 0, -1), Eigen::seq(cols-1, 0, -1)),
+            tensor_.get_tensor_height(), tensor_.get_tensor_width(), tensor_.get_tensor_depth());
+        
+        return result;
+
+    }catch(std::exception &err){
+        std::cout << "Convolution2D::reverse_tensor: Unexpected error happend: " << err.what() << std::endl;
+        std::exit(-1);
+    }
+}
 
 
 

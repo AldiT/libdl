@@ -187,6 +187,8 @@ public:
     TensorWrapper& pad(TensorWrapper&);
     //rename to dilation
     TensorWrapper& dilation(TensorWrapper&);
+    TensorWrapper& convolution_operation();
+    TensorWrapper reverse_tensor(TensorWrapper&);
 
 protected:
     //protected because later I might want to implement some fancy convolution layer to perform segmantation or whatever

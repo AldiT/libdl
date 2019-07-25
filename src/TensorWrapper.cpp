@@ -308,12 +308,12 @@ const TensorWrapper_Exp libdl::TensorWrapper_Exp::operator*(double weight) const
     return res;
 }
 
-TensorWrapper_Exp& libdl::TensorWrapper_Exp::correlation(libdl::TensorWrapper_Exp& filters, int padding, int stride) {
+TensorWrapper_Exp& libdl::TensorWrapper_Exp::correlation(libdl::TensorWrapper_Exp& filters, int stride) {
     try {
 
 
-        int o_rows = ((this->get_tensor_height() + (2 * padding) - filters.get_tensor_height())/stride) + 1;
-        int o_cols = (this->get_tensor_width() + (2 * padding) - filters.get_tensor_width())/stride + 1;
+        int o_rows = ((this->get_tensor_height() - filters.get_tensor_height())/stride) + 1;
+        int o_cols = (this->get_tensor_width() - filters.get_tensor_width())/stride + 1;
 
 
         libdl::TensorWrapper_Exp *output = new libdl::TensorWrapper_Exp(
@@ -321,9 +321,6 @@ TensorWrapper_Exp& libdl::TensorWrapper_Exp::correlation(libdl::TensorWrapper_Ex
 
         output->set_tensor(Eigen::MatrixXd::Constant(this->get_batch_size(), o_rows*o_cols*filters.get_batch_size(), 0),
                 o_rows, o_cols, filters.get_batch_size());
-
-        libdl::TensorWrapper_Exp padded_tensor(this->batch_size, this->tensor_height+2*padding,
-                this->tensor_width+2*padding, this->tensor_depth);
 
 
         Eigen::MatrixXd temp(o_rows, o_cols);
@@ -346,9 +343,8 @@ TensorWrapper_Exp& libdl::TensorWrapper_Exp::correlation(libdl::TensorWrapper_Ex
 
                     //std::cout << "instance_slice shape: " << instance_slice.rows() << "x" << instance_slice.cols() << std::endl;
 
-                    padded_tensor.update_slice(instance, slice, libdl::TensorWrapper_Exp::pad(instance_slice, padding));
-                    auto respond = libdl::TensorWrapper_Exp::correlation2D(padded_tensor.get_slice(instance, slice),
-                            filter_slice, 0, stride);
+                    auto respond = libdl::TensorWrapper_Exp::correlation2D(this->get_slice(instance, slice),
+                            filter_slice, stride);
                     temp = temp + respond;
 
                 }
@@ -379,13 +375,13 @@ TensorWrapper_Exp& libdl::TensorWrapper_Exp::full_convolution(libdl::TensorWrapp
     //HINT: If you padd the input you can use the samek convolutions as the one written above.
 
 
-    return this->correlation(filters, filters.get_tensor_height()-1, 1);
+    return this->correlation(filters, 1);
 }
 
-Eigen::MatrixXd libdl::TensorWrapper_Exp::correlation2D(Eigen::MatrixXd m1, Eigen::MatrixXd kernels, int padding, int stride) {
+Eigen::MatrixXd libdl::TensorWrapper_Exp::correlation2D(Eigen::MatrixXd m1, Eigen::MatrixXd kernels, int stride) {
 
-    int o_rows = ((m1.rows() + (2 * padding) - kernels.rows())/stride) + 1;
-    int o_cols = (m1.cols() + (2 * padding) - kernels.cols())/stride + 1;
+    int o_rows = ((m1.rows() - kernels.rows())/stride) + 1;
+    int o_cols = (m1.cols() - kernels.cols())/stride + 1;
 
 
 

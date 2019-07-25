@@ -84,7 +84,7 @@ public:
     const TensorWrapper_Exp operator+(TensorWrapper_Exp&) const;
     const TensorWrapper_Exp operator*(double) const;
 
-    TensorWrapper_Exp& correlation(TensorWrapper_Exp& , int , int stride = 1);
+    TensorWrapper_Exp& correlation(TensorWrapper_Exp&, int stride);
     TensorWrapper_Exp& full_convolution(TensorWrapper_Exp&);
 
 
@@ -116,7 +116,7 @@ public:
 
     double get_size(){return this_size;}
 
-    static Eigen::MatrixXd correlation2D(Eigen::MatrixXd m1, Eigen::MatrixXd m2, int, int stride=1);
+    static Eigen::MatrixXd correlation2D(Eigen::MatrixXd m1, Eigen::MatrixXd m2, int stride=1);
     static Eigen::MatrixXd& pad(Eigen::MatrixXd&, int);
     static Eigen::MatrixXd rotate180(Eigen::MatrixXd filter);
 

@@ -38,7 +38,7 @@ SCENARIO("Testing the experimental TensorWrapper", "[TensorWrapper_Exp]"){
 
         WHEN("we perform correlation with random filters") {
             libdl::TensorWrapper_Exp filters(16, 3, 3, 1, true);
-            auto correlation = twe.correlation(filters, 1, 1);
+            auto correlation = twe.correlation(filters, 1);
 
 
             THEN("Check the shapes of the outputs") {//These are very dumb tests
@@ -57,7 +57,7 @@ SCENARIO("Testing the experimental TensorWrapper", "[TensorWrapper_Exp]"){
             filters.set_tensor(Eigen::MatrixXd::Constant(16, 3 * 3, 1), 3, 3, 1);
 
             libdl::TensorWrapper_Exp output(3, 28, 28, 16, false); //same padding=1
-            output = input.correlation(filters, 1, 1);
+            output = input.correlation(filters, 1);
 
 
             THEN("now check the values of the correlation") {
