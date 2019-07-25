@@ -17,7 +17,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 include_directories("include")
 include_directories("extern")
-include_directories("extern/pybind11")
+include_directories("extern/pybind11/include")
 include_directories("extern/eigen3")
 
 

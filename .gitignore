@@ -11,3 +11,5 @@ testmain.dSYM/
 libdl.egg-info/
 example.cpython-36m-darwin.so
 cell_images/
+main code.txt
+.vscode/

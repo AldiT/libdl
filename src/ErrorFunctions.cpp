@@ -179,7 +179,7 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
 
 
         for (int i = 0 ; i < this->logits->rows(); i++){
-            avg += -std::log((*(this->logits))(i, targets(i)).dot(Matrixd::Constant(1, 1, 1)));
+            avg += -std::log((*(this->logits))(i, targets(i)));
         }
 
 

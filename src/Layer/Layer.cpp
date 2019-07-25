@@ -203,9 +203,6 @@ libdl::layers::Convolution2D::Convolution2D(std::string name_, int kernel_size_,
         int padding_, int stride_, int input_depth_, int input_neurons_):
        name(name_), kernel_size(kernel_size_), num_filters(num_filters_), stride(stride_), padding(padding_), input_depth(input_depth_){
 
-    //For now only stride 1 works
-    this->stride = 1;
-
     this->filters = std::make_unique<libdl::TensorWrapper_Exp>(this->num_filters,
          this->kernel_size, this->kernel_size, this->input_depth, true);//Initialize filters randomly
 
@@ -485,12 +482,14 @@ TensorWrapper& libdl::layers::Convolution2D::pad(TensorWrapper& tensor_){
 }
 
 //Eigen::seq(row*o_cols, row*o_cols + o_cols-1, this->stride)
-
+//Doesn't work
 TensorWrapper& libdl::layers::Convolution2D::dilation(TensorWrapper& tensor_){
     try{//rename the function to dilation
         //TODO: put spaces in between gradient matrix to account for stride in backprop.
-        if(this->stride == 1)
+        if(this->stride == 1){
+            std::cout << "Returned here!" << std::endl;
             return tensor_;
+        }
 
         int o_rows = tensor_.get_tensor_height() + (this->stride-1) * (tensor_.get_tensor_height() - 1);
         int o_cols = tensor_.get_tensor_width() + (this->stride-1) * (tensor_.get_tensor_width() - 1);
@@ -500,7 +499,7 @@ TensorWrapper& libdl::layers::Convolution2D::dilation(TensorWrapper& tensor_){
             o_rows*o_cols*result.get_tensor_depth(), 0);
 
         for(int instance = 0; instance < tensor_.get_batch_size(); instance++){//for each instance
-            for(int row = 0; row < tensor_.get_tensor_height(); row += this->stride){
+            for(int row = 0; row < result.get_tensor_height(); row += this->stride){
                 result.get_tensor()(instance, Eigen::seq(row*o_cols, row*o_cols + o_cols-1, this->stride))
                     = tensor_.get_tensor().block(instance, row/this->stride, 1, tensor_.get_tensor_height());
 
