@@ -63,27 +63,18 @@ int main(int argc, char* argv[]){
     libdl::TensorWrapper_Exp train_labels = dh->convert_training_labels_to_Eigen();
     dh.reset(nullptr);
 
-    std::cout << "Test reverse stuff:Before:\n";
-    TensorWrapper test1(1, 4, 4, 1);
-    test1.get_tensor() = MatrixXd::Random(1, 16);
-    std::cout << test1.get_slice(0, 0) << std::endl;
-
-
     int batch_size = 1, batch_limit=20;
     double lr = 9e-2;//If increased above a threshhold the gradients will explode.
 
 
-    libdl::layers::Convolution2D conv1_1("conv1", 3, 16, 0, 2, 1, 28*28); //28x28x1
+    libdl::layers::Convolution2D conv1_1("conv1", 3, 16, 1, 2, 1, 28*28); //28x28x1
     //ibdl::layers::Convolution2D conv1_2(3, 32, 0, 1, 16);//not used
-
-    std::cout << "After:\n" << conv1_1.reverse_tensor(test1).get_slice(0, 0) << std::endl;
-
     libdl::layers::ReLU relu1;//28x28x1
 
     libdl::layers::MaxPool pool1(2, 2);//14x14x16
 
 
-    libdl::layers::Convolution2D conv2_1("conv2", 3, 32, 0, 1, 16, 3*3*32);//14x14x32
+    libdl::layers::Convolution2D conv2_1("conv2", 3, 32, 1, 2, 16, 3*3*32);//14x14x32
     //libdl::layers::Convolution2D conv2_2(3, 64, 0, 1, 32);//not used
     libdl::layers::ReLU relu2;
     libdl::layers::MaxPool pool2(2, 2);//13x13x32
@@ -91,14 +82,14 @@ int main(int argc, char* argv[]){
     libdl::layers::Flatten flatten(batch_size, 11, 11, 32);//7x7*32
 
 
-    libdl::layers::DenseLayer2D dense1(3872, 700, "dense1", 288); //224x100
+    libdl::layers::DenseLayer2D dense1(512, 300, "dense1", 288); //224x100
     libdl::layers::ReLU relu3;
 
 
-    libdl::layers::DenseLayer2D dense2(700, 350, "dense2", 700);
+    libdl::layers::DenseLayer2D dense2(300, 100, "dense2", 700);
     libdl::layers::ReLU relu4;
 
-    libdl::layers::DenseLayer2D dense3(350, 10, "dense3", 350);
+    libdl::layers::DenseLayer2D dense3(100, 10, "dense3", 350);
 
 
     libdl::error::CrossEntropy cross_entropy_error(10);
@@ -119,6 +110,15 @@ int main(int argc, char* argv[]){
     //normalize
     batch.get_tensor() /= 255;
 
+    //TEST
+    TensorWrapper test_in(1, 4, 4, 3);
+
+    std::cout << "Before padding:\n" << test_in.get_slice(0, 0) << std::endl;
+    test_in = conv1_1.pad(test_in);
+    std::cout << "After padding:\n" << test_in.get_slice(0, 0) << std::endl;
+
+    //TEST
+
 
     TensorWrapper b_temp(1, 28, 28, 1);
 
@@ -135,13 +135,17 @@ int main(int argc, char* argv[]){
         b_temp.set_tensor(batch.get_tensor().block(b, 0, 1, 28*28), 28, 28, 1);
 
         out_conv = conv1_1.forward(b_temp);
+        std::cout << "conv1" << std::endl;
 
         //out_conv = conv1_2.forward(batch);
         out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
                             out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+        std::cout << "relu1" << std::endl;
         out_conv = pool1.forward(out_conv);
+        std::cout << "pool1" << std::endl;
 
         out_conv = conv2_1.forward(out_conv);
+        std::cout << "conv2" << std::endl;
         //out_conv = conv2_2.forward(out_conv);
         out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
                             out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
@@ -151,17 +155,21 @@ int main(int argc, char* argv[]){
 
 
         out_dense = dense1.forward(out_dense);
+        std::cout << "dense1" << std::endl;
         out_dense = relu3.forward(out_dense);
 
         out_dense = dense2.forward(out_dense);
+        std::cout << "dense2" << std::endl;
         out_dense = relu4.forward(out_dense);
 
         out_dense = dense3.forward(out_dense);
+        std::cout << "dense3" << std::endl;
 
         predictions.row(index) = out_dense;
         index++;
 
     }
+    std::cout << "Done" << std::endl;
     Vectord initial_prediction = cross_entropy_error.predictions(predictions, batch_labels.get_tensor().block(0, 0, 10, 1));
 
 
@@ -207,7 +215,7 @@ int main(int argc, char* argv[]){
             out_dense = dense3.forward(out_dense);
 
             //Backward pass
-
+            std::cout << "Backward" << std::endl;
             grads = cross_entropy_error.get_gradient(out_dense, batch_labels.get_tensor().block(b, 0, batch_size, 1), iteration);
 
 
@@ -224,6 +232,7 @@ int main(int argc, char* argv[]){
                     conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
 
             //conv_grads = conv2_2.backward(conv_grads, lr);
+            std::cout << "Before conv backward" << std::endl;
             conv_grads = conv2_1.backward(conv_grads, lr);
 
             conv_grads = pool1.backward(conv_grads, lr);

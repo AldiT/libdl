@@ -235,8 +235,7 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::forward(libdl::TensorWrap
     if(this->input == nullptr || inputs_.get_batch_size() != this->input->get_batch_size())
         this->input = std::make_unique<libdl::TensorWrapper_Exp>(inputs_); //operator=
     *(this->input) = inputs_;
-
-    //*(this->input) = this->pad(*(this->input));
+    std::cout << "Declared" << std::endl;
 
     int o_rows = (this->input->get_tensor_height() + 2 * this->padding - this->kernel_size)/this->stride + 1;
     int o_cols = (this->input->get_tensor_width() + 2 * this->padding - this->kernel_size)/this->stride + 1;
@@ -244,32 +243,20 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::forward(libdl::TensorWrap
     if(this->output == nullptr)
         this->output = std::make_unique<libdl::TensorWrapper_Exp>(this->input->get_batch_size(), o_rows,
                                                                   o_cols, this->filters->get_batch_size());
+    std::cout << "Declared2" << std::endl;
+    //Padding added
+    if(this->padding != 0)
+        *(this->input) = this->pad(*(this->input));
 
-    *(this->input) = this->pad(*(this->input));
+    std::cout << "Padded" << std::endl;
 
     auto start_correlation = std::chrono::system_clock::now();
     *(this->output) = this->input->correlation(*(this->filters), this->stride);
     auto end_correlation = std::chrono::system_clock::now();
+    std::cout << "correlated" << std::endl;
 
     std::chrono::duration<double> correlation_duration = end_correlation-start_correlation;
 
-   // std::cout << "Forward pass of layer " << this->name << " took: " << correlation_duration.count() << std::endl;
-
-    //std::cout << "Output:\n" << this->output->get_slice(0, 0) << std::endl;
-    //std::cout << "Output:\n" << this->output->get_slice(0, 1) << std::endl;
-    //std::cout << "Output:\n" << this->output->get_slice(0, 2) << std::endl;
-
-    //std::cout << "Input layer " << this->name << " filters, instance 1 : \n" << this->input->get_slice(0, 0) << std::endl;
-    //std::cout << "Input layer " << this->name << " filters, instance 2 : \n" << this->input->get_slice(1, 0) << std::endl;
-
-    //std::cout << "OUTPUT shape conv: " << this->output->shape() << std::endl;
-
-    //TODO: Add biases to the output of the layer
-    //std::cout << "\nTHATS FORWARD PASS\n";
-    //std::cout << "Filters avg layer " << this->name << ": " << this->filters->get_tensor().mean() << std::endl;
-
-    //std::cout << "Max weight: " << this->filters->get_tensor().maxCoeff() << std::endl;
-    //std::cout << "Min weight: " << this->filters->get_tensor().minCoeff() << std::endl;
 
     return *(this->output);
 }
@@ -280,57 +267,34 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::backward(libdl::TensorWra
             this->filters->get_tensor_height(), this->filters->get_tensor_width(),
             this->filters->get_tensor_depth());
 
-    //TODO: Update the biases aswell, calculate the gradients for biases as well
-    //Biases sometimes are not used in the CNNs so check and decide based on the performance
-
-    //if(this->padding != 0)
-        //gradients_ = this->clean_gradient(gradients_);
-
-    //std::cout << "Input shape: " << this->input->shape() << std::endl;
-    //std::cout << "taking filter grads\n";
+    if(this->stride > 1)
+        gradients_ = this->dilation(gradients_);
+    std::cout << "Before filter_conv\n";
 
     auto filter_conv_start = std::chrono::system_clock::now();
     filter_gradients = this->filter_conv(gradients_, filter_gradients);
     auto filter_conv_end = std::chrono::system_clock::now();
 
     std::chrono::duration<double> filter_conv_duration = filter_conv_end-filter_conv_start;
-    //std::cout << "Filter conv of layer " << this->name << " took: " << filter_conv_duration.count() << std::endl;
+    std::cout << "Before pad\n";
+    int temp = this->padding;
+    this->padding = this->kernel_size-1;
+    gradients_ = this->pad(gradients_);
+    this->padding = temp;
 
-    //std::cout << "filter: " << filter_gradients.shape() << " f: " << f.shape() << std::endl;
-    //std::cout << "taking grads\n";
-
-
-
-
+    
+    std::cout << "Before input_conv\n";
     auto input_conv_start = std::chrono::system_clock::now();
     gradients_ = this->input_conv(gradients_);
     auto input_conv_end = std::chrono::system_clock::now();
 
     std::chrono::duration<double> input_conv_duration = input_conv_end-input_conv_start;
-    //std::cout << "Input conv of layer " << this->name << " took: " << input_conv_duration.count() << std::endl;
 
-
-    //std::cout << "updating filters\n";
-    //std::cout << "Para: \n" << filter_gradients.get_tensor() << std::endl;
     filter_gradients.get_tensor() = filter_gradients.get_tensor() * lr;
-    //std::cout << "Pas :\n" << filter_gradients.get_tensor() << std::endl;
-
-    //std::cout << "Layer " << this->name << "\n";
-    //std::cout << "Filter gradient max: " << filter_gradients.get_tensor().maxCoeff() << std::endl;
-    //std::cout << "Filter gradient min: " << filter_gradients.get_tensor().minCoeff() << std::endl;
-    //std::cout << "Filter gradient mean: " << filter_gradients.get_tensor().mean() << std::endl;
-
 
     this->filters->get_tensor() -= filter_gradients.get_tensor();
-
-
-
-    //std::cout << "Gradients avg layer " << this->name << " : " << gradients_.get_tensor().mean() << std::endl;
-    //std::cout << "A filter slice: \n" << this->filters->get_slice(0, 0) << std::endl;
-    //std::cout << "gradient slice: \n" << filter_gradients.get_slice(0, 0) << std::endl;
-
-    //std::cout << "Max gradient: " << gradients_.get_tensor().maxCoeff() << std::endl;
-    //std::cout << "Min gradient: " << gradients_.get_tensor().minCoeff() << std::endl;
+    std::cout << "Before cleaning out the gradient\n";
+    gradients_ = this->clean_gradient(gradients_);
 
     return gradients_;
 }
@@ -377,12 +341,7 @@ TensorWrapper libdl::layers::Convolution2D::input_conv(TensorWrapper &gradients_
             this->filters->get_tensor_width(), this->filters->get_tensor_depth());
 
     //rotate filters.
-    for(int filter = 0; filter < this->filters->get_batch_size(); filter++){
-        for(int filter_slice = 0; filter_slice < this->filters->get_tensor_depth(); filter_slice++){
-            rotated_filters.update_slice(filter, filter_slice,
-                    libdl::TensorWrapper_Exp::rotate180(this->filters->get_slice(filter, filter_slice)));
-        }
-    }
+    rotated_filters = this->reverse_tensor(*(this->filters));
 
     //reshape the gradient - experimental TODO: This probably should go in a seperate function.
     for(int filter = 0; filter < rotated_filters.get_batch_size(); filter++){
@@ -391,52 +350,39 @@ TensorWrapper libdl::layers::Convolution2D::input_conv(TensorWrapper &gradients_
         }
     }
 
-    //std::cout << "Are filters places right: " << (temp.get_slice(0, 0) == rotated_filters.get_slice(0, 0)) << std::endl;
-
-    //std::cout << "Gradient shape before op: " << gradients_.shape() << std::endl;
-    //std::cout << "Layer: " << this->name << std::endl;
-    //std::cout << "Checking the gradient: \n" << gradients_.get_slice(0, 0) << std::endl;
-    //std::cout << "Rotated filter slice:\n" << rotated_filters.get_slice(0, 0);
-
     gradients_ = gradients_.correlation(temp, rotated_filters.get_tensor_height()-1);
-
-    //std::cout << "Output:\n" << gradients_.get_slice(0, 0) << std::endl;
-
-    //gradients_ = this->clean_gradient(gradients_);
-
-    /*
-    if(gradients_.get_tensor().rows() != this->input->get_tensor().rows() ||
-       gradients_.get_tensor().cols() != this->input->get_tensor().cols()){
-        std::cout << "gradients shape" << gradients_.shape() << " input shape: " << this->input->shape() << std::endl;
-    }*/
-
 
     return gradients_;
 }
 
-
+//TODO
 TensorWrapper& libdl::layers::Convolution2D::clean_gradient(TensorWrapper& gradients_) {
-    int x = this->input->get_tensor_height()-gradients_.get_tensor_height()-1,
-        y = this->input->get_tensor_width()-gradients_.get_tensor_width()-1;
+    int x = this->padding;
+    int y = this->padding;
 
     TensorWrapper copy_gradients = gradients_;
+    int rows = this->input->get_tensor_height() - 2 * this->padding;
+    int cols = this->input->get_tensor_width() - 2 * this->padding;
+    
 
-    Matrixd temp(this->input->get_tensor_height(), this->input->get_tensor_width());
+    Matrixd temp(rows, cols);
 
-    gradients_.set_tensor(Matrixd::Constant(this->input->get_batch_size(),
-            this->input->get_tensor_height()*this->input->get_tensor_width()*this->input->get_tensor_depth(), 0),
-            this->input->get_tensor_height(), this->input->get_tensor_width(),
+    gradients_.set_tensor(Matrixd::Constant(gradients_.get_batch_size(),
+            rows*cols*gradients_.get_tensor_depth(), 0), rows, cols,
             this->input->get_tensor_depth());
-
+        
+    std::cout << "All declared\n";
 
     for (int instance = 0; instance < gradients_.get_batch_size(); instance++){
         for(int slice = 0; slice < gradients_.get_tensor_depth(); slice++){
 
             temp = copy_gradients.get_slice(instance,slice).block(x, y,
-                    this->input->get_tensor_height(), this->input->get_tensor_width());
+                    rows, cols);
             gradients_.update_slice(instance, slice, temp);
         }
     }
+    std::cout << "After block\n";
+
 
 
     return gradients_;
@@ -459,9 +405,24 @@ TensorWrapper& libdl::layers::Convolution2D::pad(TensorWrapper& tensor_){
             tensor_row = 0;
 
             for(int row = 0; row < temp.get_tensor().cols(); row += temp.get_tensor_width()){
-                
+
                 if(row / temp.get_tensor_width() < this->padding)//first rows
                     continue;
+                else if(row + 2 * this->padding * temp.get_tensor_width() >= temp.get_tensor().cols()){
+                    break;
+                }
+                else if((row + temp.get_tensor_width()) % (temp.get_tensor_height()*temp.get_tensor_width()) == 0){//first rows
+                    row += 2 * this->padding * temp.get_tensor_width();
+                }
+
+                /* 
+                std::cout << "Stats: \n";
+                std::cout << "tensor_ cols: " << tensor_.get_tensor().cols() << std::endl;
+                std::cout << "temp cols: " << temp.get_tensor().cols() << std::endl;
+                std::cout << "Row: " << row << std::endl;
+                std::cout << "tensor_row: " << tensor_row << std::endl;
+                std::cout << "End of stats.\n";
+                */
 
                 if(row == temp.get_tensor().cols() - this->padding * temp.get_tensor_width())//last rows
                     break;

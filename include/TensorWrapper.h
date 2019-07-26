@@ -117,6 +117,8 @@ public:
     double get_size(){return this_size;}
 
     static Eigen::MatrixXd correlation2D(Eigen::MatrixXd m1, Eigen::MatrixXd m2, int stride=1);
+
+    [[deprecated]]
     static Eigen::MatrixXd& pad(Eigen::MatrixXd&, int);
     static Eigen::MatrixXd rotate180(Eigen::MatrixXd filter);
 

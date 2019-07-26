@@ -189,6 +189,7 @@ public:
     TensorWrapper& dilation(TensorWrapper&);
     TensorWrapper& convolution_operation();
     TensorWrapper reverse_tensor(TensorWrapper&);
+    TensorWrapper& clean_gradient(TensorWrapper&);
 
 protected:
     //protected because later I might want to implement some fancy convolution layer to perform segmantation or whatever
@@ -200,7 +201,7 @@ protected:
     TensorWrapper input_conv (TensorWrapper& gradients_);
     
 
-    TensorWrapper& clean_gradient(TensorWrapper&);
+    
     
 private:
     std::shared_ptr<TensorWrapper> output;

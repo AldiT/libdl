@@ -14,6 +14,7 @@ SCENARIO("Testing the experimental TensorWrapper", "[TensorWrapper_Exp]"){
 
     GIVEN("A TensorWrapper_Exp object") {
         libdl::TensorWrapper_Exp twe(3, 28, 28, 1, false);
+        libdl::layers::Convolution2D conv("For padding", 3, 3, 1, 1);
 
 
         WHEN("we slice 2D matrix") {
@@ -38,6 +39,7 @@ SCENARIO("Testing the experimental TensorWrapper", "[TensorWrapper_Exp]"){
 
         WHEN("we perform correlation with random filters") {
             libdl::TensorWrapper_Exp filters(16, 3, 3, 1, true);
+            twe = conv.pad(twe);
             auto correlation = twe.correlation(filters, 1);
 
 
@@ -50,13 +52,17 @@ SCENARIO("Testing the experimental TensorWrapper", "[TensorWrapper_Exp]"){
         }
 
         WHEN("the tensor is constant") {
+            
+
             libdl::TensorWrapper_Exp input(3, 28, 28, 1, false);
             input.set_tensor(Eigen::MatrixXd::Constant(3, 28 * 28, 1), 28, 28, 1);
+            
 
             libdl::TensorWrapper_Exp filters(16, 3, 3, 1, true);
             filters.set_tensor(Eigen::MatrixXd::Constant(16, 3 * 3, 1), 3, 3, 1);
 
             libdl::TensorWrapper_Exp output(3, 28, 28, 16, false); //same padding=1
+            input = conv.pad(input);
             output = input.correlation(filters, 1);
 
 
