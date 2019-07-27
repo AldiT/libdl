@@ -113,9 +113,9 @@ int main(int argc, char* argv[]){
     //TEST
     TensorWrapper test_in(1, 4, 4, 3);
 
-    std::cout << "Before padding:\n" << test_in.get_slice(0, 0) << std::endl;
-    test_in = conv1_1.pad(test_in);
-    std::cout << "After padding:\n" << test_in.get_slice(0, 0) << std::endl;
+    std::cout << "Before padding:\n" << test_in.get_slice(0, 2) << std::endl;
+    test_in = conv1_1.dilation(test_in);
+    std::cout << "After padding:\n" << test_in.get_slice(0, 2) << std::endl;
 
     //TEST
 

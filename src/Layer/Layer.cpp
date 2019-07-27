@@ -392,6 +392,8 @@ TensorWrapper& libdl::layers::Convolution2D::clean_gradient(TensorWrapper& gradi
 //template <typename Tensor>
 TensorWrapper& libdl::layers::Convolution2D::pad(TensorWrapper& tensor_){
     try{
+        std::cout << "Padding: " << this->padding << std::endl;
+
         int o_rows  = (tensor_.get_tensor_height() + 2 * this->padding);
         int o_cols = (tensor_.get_tensor_width() + 2* this->padding);
 
@@ -405,15 +407,17 @@ TensorWrapper& libdl::layers::Convolution2D::pad(TensorWrapper& tensor_){
             tensor_row = 0;
 
             for(int row = 0; row < temp.get_tensor().cols(); row += temp.get_tensor_width()){
-
-                if(row / temp.get_tensor_width() < this->padding)//first rows
+                
+                if(row / temp.get_tensor_width() < this->padding){
+                    row += (this->padding-1) * temp.get_tensor_width();
                     continue;
-                else if(row + 2 * this->padding * temp.get_tensor_width() >= temp.get_tensor().cols()){
-                    break;
+                    //first rows
+                }else if( (row + this->padding * temp.get_tensor_width()) % (temp.get_tensor_height()*temp.get_tensor_width()) == 0){
+                    row += (2*this->padding - 1) * temp.get_tensor_width();
+                    continue;
+                    //the rest, ending and beginning of next rows
                 }
-                else if((row + temp.get_tensor_width()) % (temp.get_tensor_height()*temp.get_tensor_width()) == 0){//first rows
-                    row += 2 * this->padding * temp.get_tensor_width();
-                }
+
 
                 /* 
                 std::cout << "Stats: \n";
@@ -423,9 +427,6 @@ TensorWrapper& libdl::layers::Convolution2D::pad(TensorWrapper& tensor_){
                 std::cout << "tensor_row: " << tensor_row << std::endl;
                 std::cout << "End of stats.\n";
                 */
-
-                if(row == temp.get_tensor().cols() - this->padding * temp.get_tensor_width())//last rows
-                    break;
 
                 temp.get_tensor().block(instance, row + this->padding, 1, tensor_.get_tensor_width()) 
                             = tensor_.get_tensor().block(instance, tensor_row, 1, tensor_.get_tensor_width());
@@ -443,8 +444,7 @@ TensorWrapper& libdl::layers::Convolution2D::pad(TensorWrapper& tensor_){
     }
 }
 
-//Eigen::seq(row*o_cols, row*o_cols + o_cols-1, this->stride)
-//Doesn't work
+
 TensorWrapper& libdl::layers::Convolution2D::dilation(TensorWrapper& tensor_){
     try{//rename the function to dilation
         //TODO: put spaces in between gradient matrix to account for stride in backprop.
@@ -453,6 +453,8 @@ TensorWrapper& libdl::layers::Convolution2D::dilation(TensorWrapper& tensor_){
             return tensor_;
         }
 
+
+
         int o_rows = tensor_.get_tensor_height() + (this->stride-1) * (tensor_.get_tensor_height() - 1);
         int o_cols = tensor_.get_tensor_width() + (this->stride-1) * (tensor_.get_tensor_width() - 1);
 
@@ -460,11 +462,19 @@ TensorWrapper& libdl::layers::Convolution2D::dilation(TensorWrapper& tensor_){
         result.get_tensor() = Matrixd::Constant(result.get_batch_size(), 
             o_rows*o_cols*result.get_tensor_depth(), 0);
 
+        int tensor_row = 0;
         for(int instance = 0; instance < tensor_.get_batch_size(); instance++){//for each instance
-            for(int row = 0; row < result.get_tensor_height(); row += this->stride){
-                result.get_tensor()(instance, Eigen::seq(row*o_cols, row*o_cols + o_cols-1, this->stride))
-                    = tensor_.get_tensor().block(instance, row/this->stride, 1, tensor_.get_tensor_height());
+            for(int row = 0; row < result.get_tensor().cols(); row += this->stride*o_cols){
 
+                
+
+                result.get_tensor()(instance, Eigen::seq(row, row + o_cols-1, this->stride))
+                    = tensor_.get_tensor().block(instance, tensor_row, 1, tensor_.get_tensor_height());
+                
+                tensor_row += tensor_.get_tensor_width();
+                
+                if((row + o_cols) % (o_rows*o_cols) == 0 && row != 0)
+                    row -= (this->stride-1)*o_cols;
             }//end row's for
         }//end instance's for
 
@@ -478,7 +488,7 @@ TensorWrapper& libdl::layers::Convolution2D::dilation(TensorWrapper& tensor_){
 }
 
 //TODO
-TensorWrapper& libdl::layers::Convolution2D::convolution_operation(){
+TensorWrapper& libdl::layers::Convolution2D::convolution_operation() const{
 
     try{
 
@@ -500,7 +510,7 @@ TensorWrapper& libdl::layers::Convolution2D::convolution_operation(){
 
 }
 
-TensorWrapper libdl::layers::Convolution2D::reverse_tensor(TensorWrapper& tensor_){
+TensorWrapper libdl::layers::Convolution2D::reverse_tensor(TensorWrapper& tensor_) const{
     try{
         TensorWrapper result(tensor_.get_batch_size(), tensor_.get_tensor_height(), 
             tensor_.get_tensor_width(), tensor_.get_tensor_depth());

@@ -187,9 +187,11 @@ public:
     TensorWrapper& pad(TensorWrapper&);
     //rename to dilation
     TensorWrapper& dilation(TensorWrapper&);
-    TensorWrapper& convolution_operation();
-    TensorWrapper reverse_tensor(TensorWrapper&);
+    TensorWrapper& convolution_operation() const;
+    TensorWrapper reverse_tensor(TensorWrapper&) const;
     TensorWrapper& clean_gradient(TensorWrapper&);
+
+    bool detect_illegal_combination() const;
 
 protected:
     //protected because later I might want to implement some fancy convolution layer to perform segmantation or whatever
