@@ -64,17 +64,17 @@ int main(int argc, char* argv[]){
     dh.reset(nullptr);
 
     int batch_size = 1, batch_limit=20;
-    double lr = 9e-4;//If increased above a threshhold the gradients will explode.
+    double lr = 6e-3;//If increased above a threshhold the gradients will explode.
 
 
     libdl::layers::Convolution2D conv1_1("conv1_1", 3, 16, 1, 1, 1, 28*28); //28x28x1
-    libdl::layers::Convolution2D conv1_2("conv1_2", 3, 32, 1, 1, 16, 28*28);//not used
+    libdl::layers::Convolution2D conv1_2("conv1_2", 3, 32, 0, 1, 16, 28*28);//not used
     libdl::layers::ReLU relu1;//28x28x1
 
     libdl::layers::MaxPool pool1(2, 2);//14x14x16
 
 
-    libdl::layers::Convolution2D conv2_1("conv2_1", 3, 32, 0, 1, 32, 3*3*32);//14x14x32
+    libdl::layers::Convolution2D conv2_1("conv2_1", 3, 32, 0, 1, 16, 3*3*32);//14x14x32
     libdl::layers::Convolution2D conv2_2("conv2_2", 3, 64, 0, 1, 32, 3*3*32);//not used
     libdl::layers::ReLU relu2;
     libdl::layers::MaxPool pool2(2, 2);//13x13x32
@@ -82,14 +82,14 @@ int main(int argc, char* argv[]){
     libdl::layers::Flatten flatten(batch_size, 11, 11, 32);//7x7*32
 
 
-    libdl::layers::DenseLayer2D dense1(1600, 800, "dense1", 288); //224x100
+    libdl::layers::DenseLayer2D dense1(1152, 400, "dense1", 288); //224x100
     libdl::layers::ReLU relu3;
 
 
-    libdl::layers::DenseLayer2D dense2(800, 400, "dense2", 700);
+    libdl::layers::DenseLayer2D dense2(400, 200, "dense2", 700);
     libdl::layers::ReLU relu4;
 
-    libdl::layers::DenseLayer2D dense3(400, 10, "dense3", 350);
+    libdl::layers::DenseLayer2D dense3(200, 10, "dense3", 350);
 
 
     libdl::error::CrossEntropy cross_entropy_error(10);
@@ -110,14 +110,6 @@ int main(int argc, char* argv[]){
     //normalize
     batch.get_tensor() /= 255;
 
-    //TEST
-    TensorWrapper test_in(1, 4, 4, 3);
-
-    std::cout << "Before padding:\n" << test_in.get_slice(0, 2) << std::endl;
-    test_in = conv1_1.dilation(test_in);
-    std::cout << "After padding:\n" << test_in.get_slice(0, 2) << std::endl;
-
-    //TEST
 
 
     TensorWrapper b_temp(1, 28, 28, 1);
@@ -135,7 +127,7 @@ int main(int argc, char* argv[]){
         b_temp.set_tensor(batch.get_tensor().block(b, 0, 1, 28*28), 28, 28, 1);
 
         out_conv = conv1_1.forward(b_temp);
-        out_conv = conv1_2.forward(out_conv);
+        //out_conv = conv1_2.forward(out_conv);
         
         out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
                             out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
@@ -143,7 +135,7 @@ int main(int argc, char* argv[]){
         out_conv = pool1.forward(out_conv);
 
         out_conv = conv2_1.forward(out_conv);
-        out_conv = conv2_2.forward(out_conv);
+        //out_conv = conv2_2.forward(out_conv);
         out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
                             out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
 
@@ -169,7 +161,7 @@ int main(int argc, char* argv[]){
 
 
 
-    
+    lr = 3e-3;
 
     std::cout << "\nTRAINING PHASE.\n";
     std::cout << "===================================================================\n";
@@ -186,14 +178,14 @@ int main(int argc, char* argv[]){
             b_temp.set_tensor(batch.get_tensor().block(b, 0, 1, 28*28), 28, 28, 1);
 
             out_conv = conv1_1.forward(b_temp);
-            out_conv = conv1_2.forward(out_conv);
+            
             
             out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
                     out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
             out_conv = pool1.forward(out_conv);
 
             out_conv = conv2_1.forward(out_conv);
-            out_conv = conv2_2.forward(out_conv);
+            
             out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
                                 out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
             out_conv = pool2.forward(out_conv);
@@ -228,14 +220,15 @@ int main(int argc, char* argv[]){
             conv_grads.set_tensor(relu2.backward(conv_grads.get_tensor(), lr),
                     conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
 
-            conv_grads = conv2_2.backward(conv_grads, lr);
+            
             //std::cout << "Before conv backward" << std::endl;
             conv_grads = conv2_1.backward(conv_grads, lr);
 
             conv_grads = pool1.backward(conv_grads, lr);
+
             conv_grads.set_tensor(relu1.backward(conv_grads.get_tensor(), lr),
                     conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
-            conv_grads = conv1_2.backward(conv_grads, lr);
+            
             conv_grads = conv1_1.backward(conv_grads, lr);
 
         }
@@ -255,15 +248,13 @@ int main(int argc, char* argv[]){
         b_temp.set_tensor(batch.get_tensor().block(b, 0, 1, 28*28), 28, 28, 1);
 
         out_conv = conv1_1.forward(b_temp);
-        out_conv = conv1_2.forward(out_conv);
+        //out_conv = conv1_2.forward(out_conv);
 
-        //out_conv = conv1_2.forward(batch);
         out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
                             out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
         out_conv = pool1.forward(out_conv);
 
         out_conv = conv2_1.forward(out_conv);
-        out_conv = conv2_2.forward(out_conv);
         //out_conv = conv2_2.forward(out_conv);
         out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
                             out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());

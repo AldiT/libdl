@@ -400,6 +400,7 @@ Eigen::MatrixXd libdl::TensorWrapper_Exp::correlation2D(Eigen::MatrixXd m1, Eige
     return output;
 }
 
+[[deprecated]]
 Eigen::MatrixXd& libdl::TensorWrapper_Exp::pad(Eigen::MatrixXd& to_pad_, int padding) {
     if(padding == 0){
         return to_pad_;

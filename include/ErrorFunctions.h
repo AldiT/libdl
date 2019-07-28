@@ -43,7 +43,7 @@ public:
 
     Vectord predictions(Matrixd logits, Vectord targets);
 
-    Matrixd gradient(Matrixd logits, Vectord targets);
+    Matrixd gradient(Matrixd logits, Vectord targets, int epoch, std::string &msg, double &error);
     double predictions_accuracy(Matrixd logits, Vectord targets);
 
 protected:
@@ -55,7 +55,8 @@ private:
     std::unique_ptr<Matrixd> avg;
 
     std::vector<double> errors;
-    Vectord softmax();
+    int batch_size;
+    Matrixd softmax();
 
 };
 
