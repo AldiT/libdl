@@ -29,7 +29,7 @@ typedef libdl::model::Milestone milestone;
 struct libdl::model::Milestone{
     std::string name;
     std::string summary;
-    std::string value;
+    double value;
 };
 
 class libdl::model::History{

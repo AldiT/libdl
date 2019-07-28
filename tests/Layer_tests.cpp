@@ -64,7 +64,7 @@ int main(int argc, char* argv[]){
     dh.reset(nullptr);
 
     int batch_size = 1, batch_limit=20;
-    double lr = 9e-2;//If increased above a threshhold the gradients will explode.
+    double lr = 9e-4;//If increased above a threshhold the gradients will explode.
 
 
     libdl::layers::Convolution2D conv1_1("conv1_1", 3, 16, 1, 1, 1, 28*28); //28x28x1
@@ -210,7 +210,6 @@ int main(int argc, char* argv[]){
             out_dense = dense3.forward(out_dense);
 
             //Backward pass
-            std::cout << "Backward" << std::endl;
             grads = cross_entropy_error.get_gradient(out_dense, batch_labels.get_tensor().block(b, 0, batch_size, 1), iteration);
 
 
@@ -269,6 +268,7 @@ int main(int argc, char* argv[]){
         out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
                             out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
 
+        out_conv = pool2.forward(out_conv);
 
         out_dense = flatten.forward(out_conv);
 
@@ -286,8 +286,6 @@ int main(int argc, char* argv[]){
 
     }
     Vectord p = cross_entropy_error.predictions(predictions, batch_labels.get_tensor().block(0, 0, 10, 1));
-
-
 
 
     return 0;
