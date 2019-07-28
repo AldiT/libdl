@@ -43,6 +43,9 @@ public:
 
     Vectord predictions(Matrixd logits, Vectord targets);
 
+    Matrixd gradient(Matrixd logits, Vectord targets);
+    double predictions_accuracy(Matrixd logits, Vector targets);
+
 protected:
 
 private:

@@ -229,94 +229,131 @@ libdl::layers::Convolution2D::Convolution2D(std::string name_, int kernel_size_,
 
 }
 
-
 libdl::TensorWrapper_Exp libdl::layers::Convolution2D::forward(libdl::TensorWrapper_Exp& inputs_){//this should be multiple 2D images
+    try{
+        
 
-    if(this->input == nullptr || inputs_.get_batch_size() != this->input->get_batch_size())
-        this->input = std::make_unique<libdl::TensorWrapper_Exp>(inputs_); //operator=
-    *(this->input) = inputs_;
-    std::cout << "Declared" << std::endl;
+        if(this->input == nullptr || inputs_.get_batch_size() != this->input->get_batch_size())
+            this->input = std::make_unique<libdl::TensorWrapper_Exp>(inputs_); //operator=
+        *(this->input) = inputs_;
+        //std::cout << "Declared" << std::endl;
+        
+        
+        
+        int o_rows = (this->input->get_tensor_height() + 2 * this->padding - this->kernel_size)/this->stride + 1;
+        int o_cols = (this->input->get_tensor_width() + 2 * this->padding - this->kernel_size)/this->stride + 1;
 
-    int o_rows = (this->input->get_tensor_height() + 2 * this->padding - this->kernel_size)/this->stride + 1;
-    int o_cols = (this->input->get_tensor_width() + 2 * this->padding - this->kernel_size)/this->stride + 1;
+        if(this->output == nullptr)
+            this->output = std::make_unique<libdl::TensorWrapper_Exp>(this->input->get_batch_size(), o_rows,
+                                                                    o_cols, this->filters->get_batch_size());
+        //std::cout << "Declared2" << std::endl;
+        //Padding added
+        //std::cout << "Layer: " << this->name << std::endl;
+        //std::cout << "Input shape normally: " << this->input->shape() << std::endl;
+        if(this->padding != 0)
+            *(this->input) = this->pad(*(this->input));
 
-    if(this->output == nullptr)
-        this->output = std::make_unique<libdl::TensorWrapper_Exp>(this->input->get_batch_size(), o_rows,
-                                                                  o_cols, this->filters->get_batch_size());
-    std::cout << "Declared2" << std::endl;
-    //Padding added
-    if(this->padding != 0)
-        *(this->input) = this->pad(*(this->input));
+        if(this->detect_illegal_combination())
+            throw std::invalid_argument("Combination of input size, stride and kernel is illegal!");
 
-    std::cout << "Padded" << std::endl;
+        //std::cout << "Shape after padding: " << this->input->shape() << std::endl;
+        //std::cout << "End of layer : " << this->name << "\n"; 
 
-    auto start_correlation = std::chrono::system_clock::now();
-    *(this->output) = this->input->correlation(*(this->filters), this->stride);
-    auto end_correlation = std::chrono::system_clock::now();
-    std::cout << "correlated" << std::endl;
+        //std::cout << "Padded" << std::endl;
 
-    std::chrono::duration<double> correlation_duration = end_correlation-start_correlation;
+        auto start_correlation = std::chrono::system_clock::now();
+        *(this->output) = this->input->correlation(*(this->filters), this->stride);
+        auto end_correlation = std::chrono::system_clock::now();
+        //std::cout << "correlated" << std::endl;
 
+        //std::cout << "After correlation" << std::endl;
+        std::chrono::duration<double> correlation_duration = end_correlation-start_correlation;
 
-    return *(this->output);
+        //std::cout << "Input shape at forward: " << this->name << " " << this->input->shape() << std::endl;
+
+        return *(this->output);
+    }catch(std::invalid_argument &exp){
+        std::cerr << "libdl::layers::Convolution2D::forward: " << exp.what() << std::endl;
+        std::exit(-1);
+    }catch(std::exception &exp){
+        std::cerr << "libdl::layers::Convolution2D::forward: " << exp.what() << std::endl;
+        std::exit(-1);
+    }
 }
 
 libdl::TensorWrapper_Exp libdl::layers::Convolution2D::backward(libdl::TensorWrapper_Exp& gradients_, double lr){//Multiple 2D gradients
+
+    //std::cout << "Input shape at backward: " << this->input->shape() << std::endl;
 
     libdl::TensorWrapper_Exp filter_gradients(this->filters->get_batch_size(), // batch refers to kernel
             this->filters->get_tensor_height(), this->filters->get_tensor_width(),
             this->filters->get_tensor_depth());
 
+    //std::cout << "\nLayer: " << this->name << std::endl;
+    //std::cout << "Gradient shape before dialation: " << gradients_.shape() << std::endl;
     if(this->stride > 1)
         gradients_ = this->dilation(gradients_);
-    std::cout << "Before filter_conv\n";
+    //std::cout << "After dialation: " << gradients_.shape() << std::endl;
+    //std::cout << "End of layer: " << this->name << std::endl;
+
+    //std::cout << "Before filter_conv\n";
 
     auto filter_conv_start = std::chrono::system_clock::now();
     filter_gradients = this->filter_conv(gradients_, filter_gradients);
     auto filter_conv_end = std::chrono::system_clock::now();
 
     std::chrono::duration<double> filter_conv_duration = filter_conv_end-filter_conv_start;
-    std::cout << "Before pad\n";
+    //std::cout << "Before pad\n";
     int temp = this->padding;
     this->padding = this->kernel_size-1;
     gradients_ = this->pad(gradients_);
+    //std::cout << "Shape after: " << gradients_.shape() << std::endl;
     this->padding = temp;
 
     
-    std::cout << "Before input_conv\n";
+    //std::cout << "Before input_conv\n";
     auto input_conv_start = std::chrono::system_clock::now();
     gradients_ = this->input_conv(gradients_);
     auto input_conv_end = std::chrono::system_clock::now();
+    //std::cout << "Shape after input_conv: " << gradients_.shape() << std::endl;
 
     std::chrono::duration<double> input_conv_duration = input_conv_end-input_conv_start;
 
     filter_gradients.get_tensor() = filter_gradients.get_tensor() * lr;
 
     this->filters->get_tensor() -= filter_gradients.get_tensor();
-    std::cout << "Before cleaning out the gradient\n";
+
+    //std::cout << "Before cleaning out the gradient\n";
     gradients_ = this->clean_gradient(gradients_);
 
     return gradients_;
 }
 
-
-
-
 TensorWrapper libdl::layers::Convolution2D::filter_conv(TensorWrapper &gradients_, TensorWrapper& filter_gradients) {
 
-
+    //std::cout << "Beginning\n";
     Matrixd temp = Matrixd::Constant(filter_gradients.get_tensor_height(), filter_gradients.get_tensor_width(), 0);
-
+    //std::cout << "Beginning for loop\n";
     for(int gradient_slice = 0; gradient_slice < gradients_.get_tensor_depth(); gradient_slice++){
 
         for(int input_slice = 0; input_slice < this->input->get_tensor_depth(); input_slice++){
             temp = Eigen::MatrixXd::Constant(temp.rows(), temp.cols(), 0);
 
             for(int instance = 0; instance < gradients_.get_batch_size(); instance++){
+                //Test
+                /* 
+                std::cout << "temp shape: " << temp.rows() << "x" << temp.cols() << std::endl;
+                std::cout << "Input shape: " << this->input->shape() << std::endl;
+                std::cout << "Gradients shape: " << gradients_.shape() << std::endl;
+                std::cout << "Output shape: " << (this->input->get_tensor_height() - gradients_.get_tensor_height() + 1) << std::endl;
+                std::cout << "Layer name: " << this->name << std::endl;
+                */
+                //Test
+
 
                 temp += TensorWrapper::correlation2D(
                         this->input->get_slice(instance, input_slice),
-                        gradients_.get_slice(instance, gradient_slice), this->padding);
+                        gradients_.get_slice(instance, gradient_slice), 1);
 
             }
 
@@ -324,7 +361,7 @@ TensorWrapper libdl::layers::Convolution2D::filter_conv(TensorWrapper &gradients
         }
 
     }
-
+    //std::cout << "End for loop\n";
     //filter_gradients.get_tensor() /= gradients_.get_batch_size();
 
     return filter_gradients;
@@ -350,13 +387,18 @@ TensorWrapper libdl::layers::Convolution2D::input_conv(TensorWrapper &gradients_
         }
     }
 
-    gradients_ = gradients_.correlation(temp, rotated_filters.get_tensor_height()-1);
+    gradients_ = gradients_.correlation(temp, 1);
 
     return gradients_;
 }
 
 //TODO
 TensorWrapper& libdl::layers::Convolution2D::clean_gradient(TensorWrapper& gradients_) {
+    if(this->padding == 0)
+        return gradients_;
+    
+    //std::cout << "Shape of gradient inside clean_gradient: " << gradients_.shape() << std::endl;
+
     int x = this->padding;
     int y = this->padding;
 
@@ -371,17 +413,27 @@ TensorWrapper& libdl::layers::Convolution2D::clean_gradient(TensorWrapper& gradi
             rows*cols*gradients_.get_tensor_depth(), 0), rows, cols,
             this->input->get_tensor_depth());
         
-    std::cout << "All declared\n";
+    //std::cout << "All declared\n";
 
     for (int instance = 0; instance < gradients_.get_batch_size(); instance++){
         for(int slice = 0; slice < gradients_.get_tensor_depth(); slice++){
+            
+            //TEST
+            /* 
+            std::cout << "Stats:\n";
+            std::cout << "Shape of temp: " << temp.rows() << "x" << temp.cols() << std::endl;
+            std::cout << "Shape of gradients: " << copy_gradients.shape() << std::endl;
+            std::cout << "Where it is going to cut: " << x + rows << " x " << y + cols << std::endl;
+            std::cout << "End of stats\n";
+            */
+            //TEST
 
             temp = copy_gradients.get_slice(instance,slice).block(x, y,
                     rows, cols);
             gradients_.update_slice(instance, slice, temp);
         }
     }
-    std::cout << "After block\n";
+    //std::cout << "After block\n";
 
 
 
@@ -392,7 +444,7 @@ TensorWrapper& libdl::layers::Convolution2D::clean_gradient(TensorWrapper& gradi
 //template <typename Tensor>
 TensorWrapper& libdl::layers::Convolution2D::pad(TensorWrapper& tensor_){
     try{
-        std::cout << "Padding: " << this->padding << std::endl;
+        //std::cout << "Padding: " << this->padding << std::endl;
 
         int o_rows  = (tensor_.get_tensor_height() + 2 * this->padding);
         int o_cols = (tensor_.get_tensor_width() + 2* this->padding);
@@ -464,6 +516,8 @@ TensorWrapper& libdl::layers::Convolution2D::dilation(TensorWrapper& tensor_){
 
         int tensor_row = 0;
         for(int instance = 0; instance < tensor_.get_batch_size(); instance++){//for each instance
+            tensor_row = 0;
+
             for(int row = 0; row < result.get_tensor().cols(); row += this->stride*o_cols){
 
                 
@@ -487,28 +541,6 @@ TensorWrapper& libdl::layers::Convolution2D::dilation(TensorWrapper& tensor_){
     }
 }
 
-//TODO
-TensorWrapper& libdl::layers::Convolution2D::convolution_operation() const{
-
-    try{
-
-        //TODO: (but with low priority) manage the case where the input(or filters or whatever) are nullptr
-
-        //Generate indices
-
-
-
-
-        //multiply for each instance
-
-
-
-    }catch(std::exception &err){
-        std::cout << "Convolution2D::convolution_operation: Unexpected error happend: " << err.what() << std::endl;
-        std::exit(-1);
-    }
-
-}
 
 TensorWrapper libdl::layers::Convolution2D::reverse_tensor(TensorWrapper& tensor_) const{
     try{
@@ -529,6 +561,13 @@ TensorWrapper libdl::layers::Convolution2D::reverse_tensor(TensorWrapper& tensor
     }
 }
 
+bool libdl::layers::Convolution2D::detect_illegal_combination() const{
+    if((this->input->get_tensor_height() - this->filters->get_tensor_height()) % this->stride == 0 &&
+       (this->input->get_tensor_width() - this->filters->get_tensor_width()) % this->stride == 0)
+       return false; //flase means the combination is ok.
+    
+    return true;//true means it is illegal
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
