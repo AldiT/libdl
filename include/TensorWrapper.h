@@ -136,12 +136,8 @@ private:
     int tensor_width;
     int tensor_depth;
     bool are_filters;
-<<<<<<< HEAD
-    bool is_2D;
-=======
 
     double this_size;
->>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
 };
 
 

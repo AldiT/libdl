@@ -21,14 +21,6 @@ typedef libdl::TensorWrapper_Exp TensorWrapper_Exp;
 /////                            <Layer>                                   /////
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
-<<<<<<< HEAD
-template <typename Tensor>
-Layer<Tensor>::Layer() {
-
-}
-=======
-
->>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
 
 ////////////////////////////////////////////////////////////////////////////////
 /////                                                                      /////
@@ -51,14 +43,6 @@ DenseLayer2D::DenseLayer2D(int input_features, int num_neurons, std::string name
     try {
 
         this->num_neurons = num_neurons;
-<<<<<<< HEAD
-        this->weights = std::make_unique<TensorWrapper_Exp>(input_features, this->num_neurons);
-        this->biases = std::make_unique<Eigen::VectorXd>(this->num_neurons);
-        this->name = name;
-
-        this->weights->set_tensor(Eigen::MatrixXd::Random(input_features, this->num_neurons));
-        *(this->biases) = Eigen::VectorXd::Constant(this->num_neurons, 1);
-=======
 
         this->weights = std::make_unique<Eigen::MatrixXd>(input_features, this->num_neurons);
         this->biases = std::make_unique<Eigen::VectorXd>(this->num_neurons);
@@ -76,7 +60,6 @@ DenseLayer2D::DenseLayer2D(int input_features, int num_neurons, std::string name
         });
 
         *(this->biases) = Eigen::VectorXd::Constant(this->num_neurons, 0.01);
->>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
 
     }catch(std::bad_alloc err){
         std::cerr << "Not enough space in memory for the weight declaration!" << std::endl;
@@ -86,27 +69,11 @@ DenseLayer2D::DenseLayer2D(int input_features, int num_neurons, std::string name
 
 }
 
-<<<<<<< HEAD
-TensorWrapper_Exp DenseLayer2D::forward(TensorWrapper_Exp input) {
-=======
 Eigen::MatrixXd DenseLayer2D::forward(Eigen::MatrixXd& input) {
->>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
 
     try{
         this->input = std::make_unique<TensorWrapper_Exp>(input);
 
-<<<<<<< HEAD
-        if(this->weights->get_tensor().rows() != input.get_tensor().cols()) {
-            std::string msg;
-            msg = "Not compatible shapes: " + std::to_string(this->weights->get_tensor().rows()) + " != " +
-                    std::to_string(input.get_tensor_width()) + " !";
-            throw msg;
-        }
-
-        input.set_tensor(input.get_tensor() * this->weights->get_tensor());
-
-        input.get_tensor().rowwise() += this->biases->transpose();
-=======
         if(this->input == nullptr || input.rows() != this->input->rows())
             this->input = std::make_unique<Eigen::MatrixXd>(input);
 
@@ -128,7 +95,6 @@ Eigen::MatrixXd DenseLayer2D::forward(Eigen::MatrixXd& input) {
 
         this->output->rowwise() += this->biases->transpose();
 
->>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
 
         /* 
         std::cout << "\nTHATS FORWARD PASS\n";
@@ -150,11 +116,7 @@ Eigen::MatrixXd DenseLayer2D::forward(Eigen::MatrixXd& input) {
     }
 }
 
-<<<<<<< HEAD
-TensorWrapper_Exp DenseLayer2D::backward(TensorWrapper_Exp gradient, double lr) {
-=======
 Eigen::MatrixXd DenseLayer2D::backward(Eigen::MatrixXd& gradient, double lr) {
->>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
 
     //update weights
     this->weights->get_tensor() -= lr * (this->input->get_tensor().transpose() * gradient.get_tensor()); // replace 4 by N
@@ -201,19 +163,11 @@ std::string DenseLayer2D::info(){
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
-<<<<<<< HEAD
-TensorWrapper_Exp Sigmoid::forward(TensorWrapper_Exp input){
-
-    this->input = std::make_unique<TensorWrapper_Exp>(input);
-
-    input.get_tensor().unaryExpr([this](double e){ return this->sigmoid(e);});
-=======
 Eigen::MatrixXd Sigmoid::forward(Eigen::MatrixXd& input){
 
     if(this->input == nullptr)
         this->input = std::make_unique<Eigen::MatrixXd>(input);
 
->>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
 
     *(this->input) = input;
 
@@ -227,22 +181,13 @@ Eigen::MatrixXd Sigmoid::forward(Eigen::MatrixXd& input){
     return  *(this->output);
 }
 
-<<<<<<< HEAD
-TensorWrapper_Exp Sigmoid::backward(TensorWrapper_Exp gradient, double lr){
-=======
 Eigen::MatrixXd Sigmoid::backward(Eigen::MatrixXd& gradient, double lr){
->>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
 
     //std::cout << "\nShape of temp:\n" << temp.rows() << "x" << temp.cols() << std::endl;
     //std::cout << "\nShape of gradient: \n" << gradient.rows() << "x" << gradient.cols() << std::endl;
 
-<<<<<<< HEAD
-    this->input->get_tensor().unaryExpr([this](double e)
-                           {return this->sigmoid(e) * (1 - this->sigmoid(e));}).array() * gradient.get_tensor().array();
-=======
     *(this->input) = this->input->unaryExpr([this](double e)
                            {return this->sigmoid(e) * (1 - this->sigmoid(e));}).array() * gradient.array();
->>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
 
     return *(this->input);
 }

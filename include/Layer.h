@@ -41,15 +41,6 @@ class libdl::layers::Layer {
     public:
         Layer() {};
         Layer(int){};
-<<<<<<< HEAD
-        virtual ~Layer(){};
-
-        //forward pass function
-        virtual Tensor forward(Tensor input) = 0;
-
-        //backward pass function
-        virtual Tensor backward(Tensor gradient, double lr) = 0;
-=======
         ~Layer() {};
 
         //forward pass function
@@ -57,7 +48,6 @@ class libdl::layers::Layer {
 
         //backward pass function
         virtual Tensor backward(Tensor& gradient, double lr) = 0;
->>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
 
 
 
@@ -90,43 +80,26 @@ class libdl::layers::Layer {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-<<<<<<< HEAD
-class libdl::layers::DenseLayer2D: public libdl::layers::Layer<TensorWrapper_Exp>{
-=======
 class libdl::layers::DenseLayer2D: public libdl::layers::Layer<Eigen::MatrixXd>{
->>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
 public:
 
     DenseLayer2D(int, int, std::string, int);
 
-<<<<<<< HEAD
-    TensorWrapper_Exp forward(TensorWrapper_Exp );
-    TensorWrapper_Exp backward(TensorWrapper_Exp , double );
-=======
     Matrixd forward(Matrixd&);
     Matrixd backward(Matrixd& , double );
->>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
 
 
     int rows(){
-        return this->weights->get_batch_size();
+        return this->weights->rows();
     }
 
     std::string info();
 
-<<<<<<< HEAD
-    Eigen::MatrixXd get_weights(){
-        return this->weights->get_tensor();
-    }
-
-    Eigen::VectorXd get_biases(){
-=======
     Matrixd get_weights(){
         return *(this->weights);
     }
 
     Matrixd get_biases(){
->>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
         return *(this->biases);
     }
 
@@ -160,19 +133,11 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 // IDEA: Maybe create a new namespace : activations
-<<<<<<< HEAD
-class libdl::layers::Sigmoid : public libdl::layers::Layer<TensorWrapper_Exp>{
-public:
-
-    TensorWrapper_Exp forward(TensorWrapper_Exp input);
-    TensorWrapper_Exp backward(TensorWrapper_Exp gradients, double lr);
-=======
 class libdl::layers::Sigmoid : public libdl::layers::Layer<Matrixd>{
 public:
 
     Matrixd forward(Matrixd& input);
     Matrixd backward(Matrixd& gradients, double lr);
->>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
 
 
 protected:
@@ -199,11 +164,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 //template <typename Tensor>
-<<<<<<< HEAD
-class libdl::layers::Convolution2D : public libdl::layers::Layer<libdl::TensorWrapper_Exp>{
-=======
 class libdl::layers::Convolution2D : public libdl::layers::Layer<TensorWrapper>{
->>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
 public:
     //constructor
     Convolution2D(std::string, int kernel_size_=3, int num_filters_=16, int padding_=0, int stride_=1,
