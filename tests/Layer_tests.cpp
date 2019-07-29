@@ -110,7 +110,18 @@ int main(int argc, char* argv[]){
     //normalize
     batch.get_tensor() /= 255;
 
+    //TEST
+    //PAdding
+    Matrixd mat(4, 4);
+    mat << 1, 2, 3, 4,
+           1, 2, 3, 4,
+           1, 2, 3, 4,
+           1, 2, 3, 4;
 
+    std::cout << "Matrix cut: \n" << mat(Eigen::all, {0, 0, 1, 2}) << std::endl;
+    
+
+    //TEST
 
     TensorWrapper b_temp(1, 28, 28, 1);
 
@@ -161,14 +172,14 @@ int main(int argc, char* argv[]){
 
 
 
-    lr = 3e-3;
+    lr = 5e-2;
 
     std::cout << "\nTRAINING PHASE.\n";
     std::cout << "===================================================================\n";
     
-    for(int epoch = 0; epoch < 40; epoch++) {
+    for(int epoch = 0; epoch < 80; epoch++) {
 
-        if(epoch % 10 == 0 && epoch != 0){
+        if(epoch % 20 == 0 && epoch != 0){
             lr = 2.3/std::sqrt(epoch) *lr;
             std::cout << "New lr: "<< lr << std::endl;
         }

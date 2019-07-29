@@ -171,13 +171,14 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
             this->logits = std::make_unique<Matrixd>(logits);
 
         *(this->logits) = logits;
+        /* 
         std::cout << "\n\n";
         std::cout << "Stats about logits\n";
         std::cout << "Max logit: " << this->logits->maxCoeff() << std::endl;
         std::cout << "Min logit: " << this->logits->minCoeff() << std::endl;
         std::cout << "Avg logit: " << this->logits->mean() << std::endl;
         std::cout << "End of stats about logits\n";
-
+        */
         //std::cout << "Logits before any change: " << logits << std::endl;
 
         if (this->targets == nullptr)
@@ -188,30 +189,34 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
         
         Matrixd gradients(this->logits->rows(), this->logits->cols());
         gradients = this->softmax();
+        Matrixd predictions = gradients;
+        /* 
         std::cout << "\n";
         std::cout << "Stats about gradient after softmax\n";
         std::cout << "Max logit: " << gradients.maxCoeff() << std::endl;
         std::cout << "Min logit: " << gradients.minCoeff() << std::endl;
         std::cout << "Avg logit: " << gradients.mean() << std::endl;
         std::cout << "End of stats about logits\n";
-        
+        */
         Vectord error_vector = gradients(Eigen::all, targets);
         error_vector = error_vector.unaryExpr([](double e){return -std::log(e);});
         //gradients = gradients.unaryExpr([](double e){return -std::log(e);});
         
         (*(this->avg))(0, 0) += error_vector.sum();
-
+        
         for(int row = 0; row < gradients.rows(); row++){
-            gradients(row, targets(row)).unaryExpr([](double e){ return e - 1;});
+           gradients.block(row, targets(row), 1, 1) = gradients.block(row, targets(row), 1, 1).unaryExpr([](double e){return e-1;});
         }
 
+    
+        /* 
         std::cout << "\n";
         std::cout << "Stats about gradient before return\n";
         std::cout << "Max logit: " << gradients.maxCoeff() << std::endl;
         std::cout << "Min logit: " << gradients.minCoeff() << std::endl;
         std::cout << "Avg logit: " << gradients.mean() << std::endl;
         std::cout << "End of stats about logits\n";
-
+*/
         /*
         for(int row = 0; row < gradients.rows(); row++){
             gradients.row(row) /= sums(row);
@@ -240,7 +245,7 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
             std::cout << "[Error: "  << (*(this->avg))(0, 0) / (targets.rows()*20) << "; Epoch: " << iteration/20 << "]\n";
             (*(this->avg))(0, 0) = 0;
             std::cout << "Gradients:\n" << gradients << std::endl;
-            std::cout << "Logits: \n" << *(this->logits) << std::endl;
+            std::cout << "Logits: \n" << predictions << std::endl;
         }
 
         return gradients;
@@ -321,7 +326,7 @@ Matrixd CrossEntropy::softmax() {
 
     Matrixd copy_logits = *(this->logits);
 
-    copy_logits.colwise() -= copy_logits.rowwise().maxCoeff();
+    //copy_logits.colwise() -= copy_logits.rowwise().maxCoeff();
 
     copy_logits = copy_logits.unaryExpr([](double e){return std::exp(e);});
 

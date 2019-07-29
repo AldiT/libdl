@@ -121,13 +121,13 @@ Eigen::MatrixXd DenseLayer2D::backward(Eigen::MatrixXd& gradient, double lr) {
     *(this->biases) -= lr * gradient.colwise().sum().transpose();
 
     gradient = gradient * this->weights->transpose();
-
+/* 
     std::cout << "\nTHATS BACKWARD PASS\n";
     std::cout << "Gradients avg layer " << this->name << " : " << gradient.mean() << std::endl;
     std::cout << "Max gradient: " << gradient.maxCoeff() << std::endl;
     std::cout << "Min gradient: " << gradient.minCoeff() << std::endl;
     std::cout << "Avg gradient: " << gradient.mean() << std::endl;
-    /* 
+    
     std::cout << "Weight stats" << this->name << "\n";
     std::cout << "Max weight: " << this->weights->maxCoeff() << std::endl;
     std::cout << "Min weight: " << this->weights->minCoeff() << std::endl;
@@ -297,13 +297,13 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::forward(libdl::TensorWrap
 libdl::TensorWrapper_Exp libdl::layers::Convolution2D::backward(libdl::TensorWrapper_Exp& gradients_, double lr){//Multiple 2D gradients
 
     //std::cout << "Input shape at backward: " << this->input->shape() << std::endl;
-
+    /* 
     std::cout << "Stats about gradient: " << this->name << std::endl;
     std::cout << "Max gradient: " << gradients_.get_tensor().maxCoeff() << std::endl;
     std::cout << "Min gradient: " << gradients_.get_tensor().minCoeff() << std::endl;
     std::cout << "Avg gradient: " << gradients_.get_tensor().mean() << std::endl;
     std::cout << "End of gradient stats\n";
-
+    */
     libdl::TensorWrapper_Exp filter_gradients(this->filters->get_batch_size(), // batch refers to kernel
             this->filters->get_tensor_height(), this->filters->get_tensor_width(),
             this->filters->get_tensor_depth());
@@ -429,6 +429,9 @@ TensorWrapper& libdl::layers::Convolution2D::clean_gradient(TensorWrapper& gradi
 
     int x = this->padding;
     int y = this->padding;
+    
+    //std::cout << "\nClean gradient: " << this->name << "\n";
+
 
     TensorWrapper copy_gradients = gradients_;
     int rows = this->input->get_tensor_height() - 2 * this->padding;
@@ -478,6 +481,7 @@ TensorWrapper& libdl::layers::Convolution2D::pad(TensorWrapper& tensor_){
         int o_cols = (tensor_.get_tensor_width() + 2* this->padding);
 
         TensorWrapper temp(tensor_.get_batch_size(), o_rows, o_cols, tensor_.get_tensor_depth());
+        //std::cout << "\nPadding " << this->name << "\n";
 
         temp.set_tensor(Matrixd::Constant(tensor_.get_batch_size(), 
         o_rows * o_cols * tensor_.get_tensor_depth(), 0), o_rows, o_cols, tensor_.get_tensor_depth());
@@ -533,7 +537,7 @@ TensorWrapper& libdl::layers::Convolution2D::dilation(TensorWrapper& tensor_){
             return tensor_;
         }
 
-
+        //std::cout << "\nDilation " << this->name << "\n";
 
         int o_rows = tensor_.get_tensor_height() + (this->stride-1) * (tensor_.get_tensor_height() - 1);
         int o_cols = tensor_.get_tensor_width() + (this->stride-1) * (tensor_.get_tensor_width() - 1);
