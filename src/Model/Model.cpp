@@ -67,43 +67,90 @@ libdl::model::Model<TensorType>::Model() {
 }
 
 //Model
-template <typename TensorType>
-void libdl::model::Model<TensorType>::add(libdl::layers::Layer<TensorType>* layer_) {
-    this->model.push_back(std::make_unique<libdl::TensorWrapper_Exp>(layer_));
+void libdl::model::Model::add(libdl::layers::Layer<Matrixd> *layer_, std::string activation_) {
+    try{
+        this->dense_layers.push_back(layer_);
+
+        if(activation_ == "none"){
+            this->activations.push_back("none");
+        }else if(activation_ == "relu"){
+            this->activations.push_back("relu");
+            this->activation_layers.push_back(new libdl::layers::ReLU());
+        }else if(activation_ == "sigmoid"){
+            this->activations.push_back("sigmoid");
+            this->activation_layers.push_back(new libdl::layers::Sigmoid());
+        }else{
+            throw std::invalid_argument("No known activation with this name: " + activation_ + "!");
+        }
+    }catch(std::invalid_argument &exp){
+        std::cerr << "Model::train: " << exp.what() << std::endl;
+        std::exit(-1);
+    }catch(std::exception &exp){
+        std::cerr << "Model::train: " << exp.what() << std::endl;
+        std::exit(-1);
+    }
 }
 
-template <typename TensorType>
-libdl::model::History libdl::model::Model<TensorType>::train(TensorWrapper_Exp& train_data, int epochs, double lr,
-        double lr_decay, int batch_size)
-{
-    /*
-    this->training_epochs = epochs;
-    this->learning_rate = lr;
-    this->learning_rate_decay = lr_decay;
-    this->batch_size = batch_size;
-    *(this->optimizer) = optimizer;
+void libdl::model::Model::add(libdl::layers::Layer<TensorWrapper> *layer_, std::string activation_) {
+    try{
+        this->complex_layers.push_back(layer_);
 
-    for(int epoch = 0; epoch < this->training_epochs; epoch++){
-        for(int batch = 0; batch < train_data.size()%this->batch_size; batch++){
-            //TODO : This is the main loop that should do the forward and backward pass for the given training data
+        if(activation_ == "none"){
+            this->activations.push_back("none");
+        }else if(activation_ == "relu"){
+            this->activations.push_back("relu");
+            this->activation_layers.push_back(new libdl::layers::ReLU());
+        }else if(activation_ == "sigmoid"){
+            this->activations.push_back("sigmoid");
+            this->activation_layers.push_back(new libdl::layers::Sigmoid());
+        }else{
+            throw std::invalid_argument("No known activation with this name: " + activation_ + "!");
+        }
+    }catch(std::invalid_argument &exp){
+        std::cerr << "Model::train: " << exp.what() << std::endl;
+        std::exit(-1);
+    }catch(std::exception &exp){
+        std::cerr << "Model::train: " << exp.what() << std::endl;
+        std::exit(-1);
+    }
+}
 
-            //FORWARD PASS--> TODO: It would be a better idea to put this in a seperate private function
-            for(std::iterator it = this->model->begin(); it != this->model->end(); it++){
+libdl::model::History libdl::model::Model::train(TensorWrapper_Exp& train_data_, int epochs_,
+        double lr_, double lr_decay_, int batch_size_, std::string optimizer_) {
+    
+    try{
+        *(this->train_data) = train_data_;
+        this->epochs = epochs_;
+        this->batch_size = batch_size_;
+        this->learning_rate = lr_;
+        this->lr_decay = lr_decay_;
+        this->train_mode = true;
 
-            }
+        if(this->complex_layers.empty() && this->dense_layers.empty())
+            throw std::invalid_argument("There is no model to train!");
 
-            //BACKWARD PASS-->TODO: Also put this in a seperate function and just call here two functions
-            for(;false;){
+        if(this->dense_layers.empty())
+            throw std::invalid_argument("Model has no dense layers, fully convolution network not supported!");
 
+        std::list<LayerM*>::iterator dense_layer_it = this->dense_layers.begin();
+        std::list<LayerT*>::iterator complex_layers_it = this->complex_layers.begin();
+
+        int layer = 0;
+
+        for(int epoch = 1; epoch <= this->epochs; epoch++){
+            for(int layer = 0; layer < this->activations.size(); layer++){
+                
             }
         }
-    }*/
 
-    //TODO: Needs to return what it needs to return sports
+
+    }catch(std::exception &exp){
+        std::cerr << "Model::train: " << exp.what() << std::endl;
+        std::exit(-1);
+    }
 }
 
-template <typename TensorType>
-libdl::model::History libdl::model::Model<TensorType>::test() {
+libdl::model::History libdl::model::Model::test() {
 
 }
 

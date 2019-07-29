@@ -85,8 +85,8 @@ public:
     const TensorWrapper_Exp operator+(TensorWrapper_Exp&) const;
     const TensorWrapper_Exp operator*(double) const;
 
-    TensorWrapper_Exp& correlation(TensorWrapper_Exp& , int , int, TensorWrapper_Exp&) const;
-    TensorWrapper_Exp& full_convolution(TensorWrapper_Exp&, TensorWrapper_Exp&) const;
+    TensorWrapper_Exp& correlation(TensorWrapper_Exp&, int stride);
+    TensorWrapper_Exp& full_convolution(TensorWrapper_Exp&);
 
 
 
@@ -98,25 +98,36 @@ public:
     Eigen::MatrixXd get_slice(int instance_, int depth_) const;
     void            update_slice(int instance_, int depth_, Eigen::MatrixXd new_slice_);
 
+
     //getters_setters
     int get_batch_size() const;
     int get_tensor_height() const;
     int get_tensor_width() const;
     int get_tensor_depth() const;
     bool is_filter() const;
+    std::string shape();
 
     Eigen::MatrixXd& get_tensor() const;
-    void set_tensor(Eigen::MatrixXd new_tensor);
+    void set_tensor(Eigen::MatrixXd new_tensor, int height, int width, int depth);
 
     /*
     friend std::ostream& operator<< (std::ostream& os, TensorWrapper_Exp wrapper_){
         os << "Tensor: \n" << wrapper_.get_tensor() << std::endl;
     }*/
 
+    double get_size(){return this_size;}
+
+    static Eigen::MatrixXd correlation2D(Eigen::MatrixXd m1, Eigen::MatrixXd m2, int stride=1);
+
+    [[deprecated]]
+    static Eigen::MatrixXd& pad(Eigen::MatrixXd&, int);
+    static Eigen::MatrixXd rotate180(Eigen::MatrixXd filter);
+
 protected:
 
-    static Eigen::MatrixXd correlation2D(Eigen::MatrixXd& m1, Eigen::MatrixXd& m2, int, int stride=1);
-    static Eigen::MatrixXd pad(Eigen::MatrixXd&, int);
+
+
+
 
 private:
     std::unique_ptr<Eigen::MatrixXd> tensor;
@@ -125,7 +136,12 @@ private:
     int tensor_width;
     int tensor_depth;
     bool are_filters;
+<<<<<<< HEAD
     bool is_2D;
+=======
+
+    double this_size;
+>>>>>>> bb4a4c91a2e0d278c2129e2b75a7e74574f0fa81
 };
 
 
