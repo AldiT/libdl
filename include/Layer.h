@@ -80,7 +80,7 @@ class libdl::layers::Layer {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-class libdl::layers::DenseLayer2D: protected libdl::layers::Layer<Eigen::MatrixXd>{
+class libdl::layers::DenseLayer2D: public libdl::layers::Layer<Eigen::MatrixXd>{
 public:
 
     DenseLayer2D(int, int, std::string, int);
@@ -133,7 +133,7 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 // IDEA: Maybe create a new namespace : activations
-class libdl::layers::Sigmoid : libdl::layers::Layer<Matrixd>{
+class libdl::layers::Sigmoid : public libdl::layers::Layer<Matrixd>{
 public:
 
     Matrixd forward(Matrixd& input);
@@ -164,7 +164,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 //template <typename Tensor>
-class libdl::layers::Convolution2D : libdl::layers::Layer<TensorWrapper>{
+class libdl::layers::Convolution2D : public libdl::layers::Layer<TensorWrapper>{
 public:
     //constructor
     Convolution2D(std::string, int kernel_size_=3, int num_filters_=16, int padding_=0, int stride_=1,
@@ -264,7 +264,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 
-class libdl::layers::Softmax : libdl::layers::Layer<Matrixd>{
+class libdl::layers::Softmax : public libdl::layers::Layer<Matrixd>{
 public:
 
     Matrixd forward(Matrixd&);
@@ -291,7 +291,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 
-class libdl::layers::ReLU
+class libdl::layers::ReLU : public libdl::layers::Layer<Matrixd>
 {
 public:
 

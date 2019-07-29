@@ -12,9 +12,12 @@
 
 #include <memory>
 #include <list>
+#include <vector>
+
+typedef Eigen::MatrixXd  Matrixd;
+typedef libdl::TensorWrapper_Exp TensorWrapper;
 
 namespace libdl::model{
-    template <typename TensorType>
     class Model;
     class History;
     struct Milestone;
@@ -22,6 +25,8 @@ namespace libdl::model{
 }
 
 typedef libdl::model::Milestone milestone;
+typedef libdl::layers::Layer<Matrixd> LayerM;
+typedef libdl::layers::Layer<TensorWrapper> LayerT;
 
 
 
@@ -57,16 +62,16 @@ private:
 //// This class should build a model based on layers provided by the Layer header file
 //// Functionality should include things like training, testing, summary etc.
 ///
-template <typename TensorType>
 class libdl::model::Model {
 public:
     Model() {};
 
 
-    void add(libdl::layers::Layer<TensorType> layer);
+    void add(LayerM *layer, std::string activation_="none");
+    void add(LayerT *layer, std::string activation_="none");
 
-
-    libdl::model::History train(libdl::TensorWrapper_Exp&, int epochs, double lr, double lr_decay, int batch_size);
+    libdl::model::History train(libdl::TensorWrapper_Exp& train_data, int epochs, double lr,
+         double lr_decay, int batch_size, std::string optimizer_);
 
     libdl::model::History test();
 
@@ -76,13 +81,18 @@ protected:
 
 private:
     bool train_mode; //train or test mode
-    int training_epochs;
+    int epochs;
     double learning_rate;
-    double learning_rate_decay;
+    double lr_decay;
     int batch_size;
     //std::unique_ptr<libdl::model::Optimizer> optimizer; //Incomplete type
-    std::list<libdl::layers::Layer<TensorType>> model;
+
+    std::list<LayerM*> dense_layers;
+    std::list<LayerT*> complex_layers;
+    std::list<LayerM*> activation_layers;
+    std::vector<std::string> activations;
     std::unique_ptr<libdl::model::History> history;
+    std::unique_ptr<TensorWrapper> train_data;
 };
 
 
