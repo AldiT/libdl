@@ -14,3 +14,6 @@ cell_images/
 main code.txt
 .vscode/
 files/
+example.egg-info/
+dist/
+example.cpython-37m-darwin.so

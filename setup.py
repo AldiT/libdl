@@ -18,7 +18,7 @@ class CMakeExtension(Extension):
 class CMakeBuild(build_ext):
     def run(self):
         try:
-            out = subprocess.check_output(['/usr/local/Cellar/cmake/3.14.3/bin/cmake', '--version'])
+            out = subprocess.check_output(['cmake', '--version'])
         except OSError:
             raise RuntimeError("CMake must be installed to build the following extensions: " +
                                ", ".join(e.name for e in self.extensions))
@@ -53,17 +53,17 @@ class CMakeBuild(build_ext):
                                                               self.distribution.get_version())
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-        subprocess.check_call(['/usr/local/Cellar/cmake/3.14.3/bin/cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
-        subprocess.check_call(['/usr/local/Cellar/cmake/3.14.3/bin/cmake', '--build', '.'] + build_args, cwd=self.build_temp)
+        subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
+        subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
 setup(
-    name='libdl',
+    name='example',
     version='0.0.1',
     author='Aldi Topalli',
-    author_email='topalli@in.tum.de',
+    author_email='aldi_topalli@yahoo.com',
     description='A test project using pybind11 and CMake',
     long_description='',
-    ext_modules=[CMakeExtension('libdl')],
+    ext_modules=[CMakeExtension('example')],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
 )

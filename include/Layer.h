@@ -193,6 +193,11 @@ public:
 
     bool detect_illegal_combination() const;
 
+    //This method is for testing the gradient's correctness
+    TensorWrapper get_filter_gradients(){
+        return *(this->filter_grad);
+    }
+
 protected:
     //protected because later I might want to implement some fancy convolution layer to perform segmantation or whatever
     //methods
@@ -218,6 +223,8 @@ private:
     int padding;
     int filter_rank;
 
+    std::unique_ptr<TensorWrapper> filter_grad;
+    std::unique_ptr<TensorWrapper> input_grad;
 
 };
 

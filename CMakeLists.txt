@@ -7,7 +7,7 @@ project(libdl VERSION 0.1
 set(TEST_TARGET libdl)
 
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 
 
@@ -33,27 +33,32 @@ function(SET_PATHS_TO_LIBRARIES)
 endfunction()
 
 
-
 find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
 
+message(${PYTHON_INCLUDE_DIRS})
 
 #find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 #include_directories(${EIGEN3_INCLUDE_DIRS})
 
 
-#add_subdirectory(${PROJECT_SOURCE_DIR}/extern/pybind11)
+add_subdirectory(${PROJECT_SOURCE_DIR}/extern/pybind11)
 
-#if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-#    target_compile_options(pybind11 INTERFACE -fsized-deallocation)
-#endif()
 
-#pybind11_add_module(example "${PROJECT_SOURCE_DIR}/tests/pybind_tests.cpp")
-#target_link_libraries(example PUBLIC pybind11::module)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    target_compile_options(pybind11 INTERFACE -fsized-deallocation)
+endif()
+
+
 
 add_executable(${TEST_TARGET} src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h tests/Layer_tests.cpp src/TensorWrapper.cpp include/TensorWrapper.h src/ErrorFunctions.cpp include/ErrorFunctions.h include/data.h include/data_handler.h src/data.cpp src/data_handler.cpp tests/tests.cpp)
 target_compile_features(${TEST_TARGET} PUBLIC cxx_std_17)
-
 target_link_libraries(${TEST_TARGET} ${PYTHON_LIBRARIES})
+
+add_library(lib src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h tests/Layer_tests.cpp src/TensorWrapper.cpp include/TensorWrapper.h src/ErrorFunctions.cpp include/ErrorFunctions.h include/data.h include/data_handler.h src/data.cpp src/data_handler.cpp tests/tests.cpp)
+
+pybind11_add_module(example "${PROJECT_SOURCE_DIR}/tests/pybind_tests.cpp")
+target_link_libraries(example PRIVATE lib)
+
 #target_link_libraries(${TEST_TARGET} Eigen3::Eigen)
 

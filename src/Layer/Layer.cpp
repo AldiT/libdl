@@ -346,7 +346,8 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::backward(libdl::TensorWra
     gradients_ = this->clean_gradient(gradients_);
 
 
-
+    *(this->filter_grad) = filter_gradients;
+    *(this->input_grad) = gradients_;
     /* 
     std::cout << "Weight stats" << this->name << "\n";
     std::cout << "Max weight: " << this->filters->get_tensor().maxCoeff() << std::endl;
