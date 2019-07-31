@@ -76,8 +76,11 @@ class libdl::TensorWrapper_Exp{
 public:
 
     //Constructors
+    //binded
     TensorWrapper_Exp(int batch_size_=16, int tensor_height_=28, int tensor_width_=28, int tensor_depth_=3, bool are_filters_=false); //default values for mnist
+    //binded
     TensorWrapper_Exp(const TensorWrapper_Exp&);
+    
     TensorWrapper_Exp& operator= (const TensorWrapper_Exp&);
 
     Eigen::MatrixXd operator() (int i) const; //return i-th instance
@@ -116,8 +119,10 @@ public:
 
     double get_size(){return this_size;}
 
+    
     static Eigen::MatrixXd correlation2D(Eigen::MatrixXd m1, Eigen::MatrixXd m2, int stride=1);
 
+    //Not needed to be bound
     [[deprecated]]
     static Eigen::MatrixXd& pad(Eigen::MatrixXd&, int);
     static Eigen::MatrixXd rotate180(Eigen::MatrixXd filter);

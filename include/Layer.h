@@ -13,7 +13,6 @@
 #include "TensorWrapper.h"
 
 namespace libdl::layers {
-    template <typename Tensor>
     class Layer;
     class DenseLayer2D;
     class Perceptron;
@@ -36,7 +35,6 @@ typedef Eigen::MatrixXd Matrixd;
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename Tensor>
 class libdl::layers::Layer {
     public:
         Layer() {};
@@ -44,10 +42,10 @@ class libdl::layers::Layer {
         ~Layer() {};
 
         //forward pass function
-        virtual Tensor forward(Tensor& input) = 0;
+        virtual TensorWrapper forward(TensorWrapper& input) = 0;
 
         //backward pass function
-        virtual Tensor backward(Tensor& gradient, double lr) = 0;
+        virtual TensorWrapper backward(TensorWrapper& gradient, double lr) = 0;
 
 
 
@@ -56,10 +54,10 @@ class libdl::layers::Layer {
 
     protected:
         int num_neurons;
-        std::unique_ptr<Tensor> weights;
+        std::unique_ptr<TensorWrapper> weights;
         std::unique_ptr<Eigen::VectorXd> biases;
-        std::unique_ptr<Tensor> input;
-        std::unique_ptr<Tensor> output;
+        std::unique_ptr<TensorWrapper> input;
+        std::unique_ptr<TensorWrapper> output;
         std::string name;
 
 };
@@ -80,23 +78,23 @@ class libdl::layers::Layer {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-class libdl::layers::DenseLayer2D: public libdl::layers::Layer<Eigen::MatrixXd>{
+class libdl::layers::DenseLayer2D: public libdl::layers::Layer{
 public:
 
     DenseLayer2D(int, int, std::string, int);
 
-    Matrixd forward(Matrixd&);
-    Matrixd backward(Matrixd& , double );
+    TensorWrapper forward(TensorWrapper&);
+    TensorWrapper backward(TensorWrapper& , double );
 
 
     int rows(){
-        return this->weights->rows();
+        return this->weights->get_tensor().rows();
     }
 
     std::string info();
 
     Matrixd get_weights(){
-        return *(this->weights);
+        return this->weights->get_tensor();
     }
 
     Matrixd get_biases(){
@@ -133,11 +131,11 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 // IDEA: Maybe create a new namespace : activations
-class libdl::layers::Sigmoid : public libdl::layers::Layer<Matrixd>{
+class libdl::layers::Sigmoid : public libdl::layers::Layer{
 public:
 
-    Matrixd forward(Matrixd& input);
-    Matrixd backward(Matrixd& gradients, double lr);
+    TensorWrapper forward(TensorWrapper& input);
+    TensorWrapper backward(TensorWrapper& gradients, double lr);
 
 
 protected:
@@ -164,7 +162,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 //template <typename Tensor>
-class libdl::layers::Convolution2D : public libdl::layers::Layer<TensorWrapper>{
+class libdl::layers::Convolution2D : public libdl::layers::Layer{
 public:
     //constructor
     Convolution2D(std::string, int kernel_size_=3, int num_filters_=16, int padding_=0, int stride_=1,
@@ -197,15 +195,15 @@ public:
     TensorWrapper get_filter_gradients(){
         return *(this->filter_grad);
     }
-
+    TensorWrapper filter_conv(TensorWrapper& gradients_, TensorWrapper&);
+    TensorWrapper input_conv (TensorWrapper& gradients_);
+    
 protected:
     //protected because later I might want to implement some fancy convolution layer to perform segmantation or whatever
     //methods
 
     //Correlation should be the same as convolution in the case of NN so that is what I implement here
     // for simplicity
-    TensorWrapper filter_conv(TensorWrapper& gradients_, TensorWrapper&);
-    TensorWrapper input_conv (TensorWrapper& gradients_);
     
 
     
@@ -246,8 +244,8 @@ class libdl::layers::Flatten
 public:
     Flatten(int batch_size, int height, int width, int depth);
 
-    Matrixd forward(TensorWrapper& input);
-    TensorWrapper backward(Matrixd& gradients);
+    TensorWrapper forward(TensorWrapper& input);
+    TensorWrapper backward(TensorWrapper& gradients);
 
 protected:
 
@@ -271,11 +269,11 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 
-class libdl::layers::Softmax : public libdl::layers::Layer<Matrixd>{
+class libdl::layers::Softmax : public libdl::layers::Layer{
 public:
 
-    Matrixd forward(Matrixd&);
-    Matrixd backward(Matrixd&, double);
+    TensorWrapper forward(TensorWrapper&);
+    TensorWrapper backward(TensorWrapper&, double);
 
 protected:
 
@@ -298,32 +296,33 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 
-class libdl::layers::ReLU : public libdl::layers::Layer<Matrixd>
+class libdl::layers::ReLU : public libdl::layers::Layer
 {
 public:
 
-    Matrixd forward(Matrixd& input){
+    TensorWrapper forward(TensorWrapper& input){
 
         if(this->input == nullptr)
-            this->input = std::make_unique<Matrixd>(input);
+            this->input = std::make_unique<TensorWrapper>(input);
 
         *(this->input) = input;
 
-        auto output = input.unaryExpr([](double e){return ((e > 0)? e : 0.001*e);});
+        TensorWrapper output(input);
+        output.get_tensor() = input.get_tensor().unaryExpr([](double e){return ((e > 0)? e : 0.001*e);});
 
         //std::cout << "Output relu:\n" << input.row(0) << std::endl;
 
         return output;
     }
-    Matrixd backward(Matrixd& gradients, double lr){
+    TensorWrapper backward(TensorWrapper& gradients, double lr){
 
-        gradients = gradients.array() * this->input->unaryExpr([](double e){return (e > 0 ? 1 : 0.001);}).array();
+        gradients.get_tensor() = gradients.get_tensor().array() * this->input->get_tensor().unaryExpr([](double e){return (e > 0 ? 1 : 0.001);}).array();
 
         return gradients;
     }
 
 private:
-    std::unique_ptr<Matrixd> input;
+    std::unique_ptr<TensorWrapper> input;
 
 };
 
@@ -340,7 +339,7 @@ private:
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
-class libdl::layers::MaxPool: public libdl::layers::Layer<TensorWrapper>
+class libdl::layers::MaxPool: public libdl::layers::Layer
 {
 public:
     MaxPool(int kernel, int stride);

@@ -25,8 +25,7 @@ namespace libdl::model{
 }
 
 typedef libdl::model::Milestone milestone;
-typedef libdl::layers::Layer<Matrixd> LayerM;
-typedef libdl::layers::Layer<TensorWrapper> LayerT;
+typedef libdl::layers::Layer Layer;
 
 
 
@@ -67,8 +66,7 @@ public:
     Model() {};
 
 
-    void add(LayerM *layer, std::string activation_="none");
-    void add(LayerT *layer, std::string activation_="none");
+    void add(Layer *layer, std::string activation_="none");
 
     libdl::model::History train(libdl::TensorWrapper_Exp& train_data, int epochs, double lr,
          double lr_decay, int batch_size, std::string optimizer_);
@@ -87,9 +85,9 @@ private:
     int batch_size;
     //std::unique_ptr<libdl::model::Optimizer> optimizer; //Incomplete type
 
-    std::list<LayerM*> dense_layers;
-    std::list<LayerT*> complex_layers;
-    std::list<LayerM*> activation_layers;
+    std::list<Layer*> dense_layers;
+    std::list<Layer*> complex_layers;
+    std::list<Layer*> activation_layers;
     std::vector<std::string> activations;
     std::unique_ptr<libdl::model::History> history;
     std::unique_ptr<TensorWrapper> train_data;

@@ -101,7 +101,7 @@ int main(int argc, char* argv[]){
     Eigen::MatrixXd out_dense(batch_size, 4608);
 
     libdl::TensorWrapper_Exp conv_grads(batch_size, 3, 3, 16, false);
-    Eigen::MatrixXd grads(batch_limit, 10);
+    TensorWrapper grads(batch_limit, 10, 1, 1);
 
     int iteration = 0;
 
@@ -140,30 +140,28 @@ int main(int argc, char* argv[]){
         out_conv = conv1_1.forward(b_temp);
         //out_conv = conv1_2.forward(out_conv);
         
-        out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
-                            out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+        out_conv = relu1.forward(out_conv);
         
         out_conv = pool1.forward(out_conv);
 
         out_conv = conv2_1.forward(out_conv);
         //out_conv = conv2_2.forward(out_conv);
-        out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
-                            out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+        out_conv = relu2.forward(out_conv);
 
         out_conv = pool2.forward(out_conv);
 
-        out_dense = flatten.forward(out_conv);
+        out_conv = flatten.forward(out_conv);
 
 
-        out_dense = dense1.forward(out_dense);
-        out_dense = relu3.forward(out_dense);
+        out_conv = dense1.forward(out_conv);
+        out_conv = relu3.forward(out_conv);
 
-        out_dense = dense2.forward(out_dense);
-        out_dense = relu4.forward(out_dense);
+        out_conv = dense2.forward(out_conv);
+        out_conv = relu4.forward(out_conv);
 
-        out_dense = dense3.forward(out_dense);
+        out_conv = dense3.forward(out_conv);
 
-        predictions.row(index) = out_dense;
+        predictions.row(index) = out_conv.get_tensor();
         index++;
 
     }
@@ -191,29 +189,27 @@ int main(int argc, char* argv[]){
             out_conv = conv1_1.forward(b_temp);
             
             
-            out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
-                    out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+            out_conv = relu1.forward(out_conv);
             out_conv = pool1.forward(out_conv);
 
             out_conv = conv2_1.forward(out_conv);
             
-            out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
-                                out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+            out_conv = relu2.forward(out_conv);
             out_conv = pool2.forward(out_conv);
 
-            out_dense = flatten.forward(out_conv);
+            out_conv = flatten.forward(out_conv);
 
 
-            out_dense = dense1.forward(out_dense);
-            out_dense = relu3.forward(out_dense);
+            out_conv = dense1.forward(out_conv);
+            out_conv = relu3.forward(out_conv);
 
-            out_dense = dense2.forward(out_dense);
-            out_dense = relu4.forward(out_dense);
+            out_conv = dense2.forward(out_conv);
+            out_conv = relu4.forward(out_conv);
 
-            out_dense = dense3.forward(out_dense);
+            out_conv = dense3.forward(out_conv);
 
             //Backward pass
-            grads = cross_entropy_error.get_gradient(out_dense, batch_labels.get_tensor().block(b, 0, batch_size, 1), iteration);
+            grads.get_tensor() = cross_entropy_error.get_gradient(out_conv.get_tensor(), batch_labels.get_tensor().block(b, 0, batch_size, 1), iteration);
 
 
             grads = dense3.backward(grads, lr);
@@ -228,8 +224,7 @@ int main(int argc, char* argv[]){
 
             conv_grads = pool2.backward(conv_grads, lr);
 
-            conv_grads.set_tensor(relu2.backward(conv_grads.get_tensor(), lr),
-                    conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
+            conv_grads = relu2.backward(conv_grads, lr);
 
             
             //std::cout << "Before conv backward" << std::endl;
@@ -237,8 +232,7 @@ int main(int argc, char* argv[]){
 
             conv_grads = pool1.backward(conv_grads, lr);
 
-            conv_grads.set_tensor(relu1.backward(conv_grads.get_tensor(), lr),
-                    conv_grads.get_tensor_height(), conv_grads.get_tensor_width(), conv_grads.get_tensor_depth());
+            conv_grads = relu1.backward(conv_grads, lr);
             
             conv_grads = conv1_1.backward(conv_grads, lr);
 
@@ -261,29 +255,27 @@ int main(int argc, char* argv[]){
         out_conv = conv1_1.forward(b_temp);
         //out_conv = conv1_2.forward(out_conv);
 
-        out_conv.set_tensor(relu1.forward(out_conv.get_tensor()),
-                            out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+        out_conv = relu1.forward(out_conv);
         out_conv = pool1.forward(out_conv);
 
         out_conv = conv2_1.forward(out_conv);
         //out_conv = conv2_2.forward(out_conv);
-        out_conv.set_tensor(relu2.forward(out_conv.get_tensor()),
-                            out_conv.get_tensor_height(), out_conv.get_tensor_width(), out_conv.get_tensor_depth());
+        out_conv = relu2.forward(out_conv);
 
         out_conv = pool2.forward(out_conv);
 
-        out_dense = flatten.forward(out_conv);
+        out_conv = flatten.forward(out_conv);
 
 
-        out_dense = dense1.forward(out_dense);
-        out_dense = relu3.forward(out_dense);
+        out_conv = dense1.forward(out_conv);
+        out_conv = relu3.forward(out_conv);
 
-        out_dense = dense2.forward(out_dense);
-        out_dense = relu4.forward(out_dense);
+        out_conv = dense2.forward(out_conv);
+        out_conv = relu4.forward(out_conv);
 
-        out_dense = dense3.forward(out_dense);
+        out_conv = dense3.forward(out_conv);
 
-        predictions.row(index) = out_dense;
+        predictions.row(index) = out_conv.get_tensor();
         index++;
 
     }

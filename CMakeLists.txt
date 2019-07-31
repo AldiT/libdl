@@ -4,10 +4,14 @@ project(libdl VERSION 0.1
         LANGUAGES CXX)
 
 
-set(TEST_TARGET libdl)
+set(TEST_TARGET run_tests)
 
 
 set(CMAKE_CXX_STANDARD 17)
+
+#Remove this two lines before doing anything else
+set(PYTHON_LIBRARY "/usr/local/Cellar/python/3.7.3/Frameworks/Python.framework/Versions/3.7/lib/libpython3.7m.dylib")
+set(PYTHON_INCLUDE_DIR "/usr/local/Cellar/python/3.7.3/Frameworks/Python.framework/Versions/3.7/include/python3.7m")
 
 
 
@@ -57,8 +61,8 @@ target_link_libraries(${TEST_TARGET} ${PYTHON_LIBRARIES})
 
 add_library(lib src/Layer/Layer.cpp include/Layer.h src/Model/Model.cpp include/Model.h tests/Layer_tests.cpp src/TensorWrapper.cpp include/TensorWrapper.h src/ErrorFunctions.cpp include/ErrorFunctions.h include/data.h include/data_handler.h src/data.cpp src/data_handler.cpp tests/tests.cpp)
 
-pybind11_add_module(example "${PROJECT_SOURCE_DIR}/tests/pybind_tests.cpp")
-target_link_libraries(example PRIVATE lib)
+pybind11_add_module(libdl "${PROJECT_SOURCE_DIR}/tests/pybind_tests.cpp")
+target_link_libraries(libdl PRIVATE lib)
 
 #target_link_libraries(${TEST_TARGET} Eigen3::Eigen)
 
