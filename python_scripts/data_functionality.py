@@ -8,7 +8,13 @@ import helper
 import matplotlib.pyplot as plt
 import os
 
-
+transform = transforms.Compose([
+    transforms.Grayscale(num_output_channels=1), 
+    transforms.Resize(255), 
+    transforms.CenterCrop(224),
+    transforms.ToTensor()
+])
+train_dataset = datasets.ImageFolder()
 
 #This data loader will be built specifically for the Malaria dataset project
 

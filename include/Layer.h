@@ -11,9 +11,11 @@
 #include "Eigen/Dense"
 #include "Eigen/Core"
 #include "TensorWrapper.h"
+#include <pybind11/pybind11.h>
 
 namespace libdl::layers {
     class Layer;
+    class PyLayer;
     class DenseLayer2D;
     class Perceptron;
     class Sigmoid;
@@ -39,7 +41,7 @@ class libdl::layers::Layer {
     public:
         Layer() {};
         Layer(int){};
-        ~Layer() {};
+        virtual ~Layer() {};
 
         //forward pass function
         virtual TensorWrapper forward(TensorWrapper& input) = 0;
@@ -69,6 +71,45 @@ class libdl::layers::Layer {
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            <PyLayer>                                 /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+class libdl::layers::PyLayer : public libdl::layers::Layer{
+public:
+    using libdl::layers::Layer::Layer;
+
+    //forward pass function
+        TensorWrapper forward(TensorWrapper& input) override {
+            PYBIND11_OVERLOAD_PURE(
+                TensorWrapper, /* Return type */
+                Layer,      /* Parent class */
+                forward,          /* Name of function in C++ (must match Python name) */
+                input     /* Argument(s) */
+            );
+        };
+
+        //backward pass function
+        TensorWrapper backward(TensorWrapper& gradient, double lr) override {
+            PYBIND11_OVERLOAD_PURE(
+                TensorWrapper, /* Return type */
+                Layer,      /* Parent class */
+                backward,          /* Name of function in C++ (must match Python name) */
+                gradient,
+                lr     /* Argument(s) */
+            );
+        };
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            </PyLayer>                                /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -239,13 +280,13 @@ private:
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
-class libdl::layers::Flatten
+class libdl::layers::Flatten : public libdl::layers::Layer
 {
 public:
     Flatten(int batch_size, int height, int width, int depth);
 
     TensorWrapper forward(TensorWrapper& input);
-    TensorWrapper backward(TensorWrapper& gradients);
+    TensorWrapper backward(TensorWrapper& gradients, double lr);
 
 protected:
 

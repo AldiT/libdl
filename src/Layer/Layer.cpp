@@ -89,6 +89,7 @@ TensorWrapper DenseLayer2D::forward(TensorWrapper& input) {
                   std::to_string(input.get_tensor().cols()) + " !";
             throw msg;
         }
+        
 
         this->output->get_tensor() = input.get_tensor() * this->weights->get_tensor();
 
@@ -636,7 +637,7 @@ TensorWrapper libdl::layers::Flatten::forward(libdl::TensorWrapper_Exp& input) {
 }
 
 
-libdl::TensorWrapper_Exp libdl::layers::Flatten::backward(TensorWrapper &gradients) {
+libdl::TensorWrapper_Exp libdl::layers::Flatten::backward(TensorWrapper &gradients, double lr) {
     this->gradient->set_tensor(gradients.get_tensor(),
             this->input->get_tensor_height(), this->input->get_tensor_width(), this->input->get_tensor_depth());
 

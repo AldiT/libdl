@@ -9,7 +9,7 @@
 #include <memory>
 #include <list>
 #include "Layer.h"
-
+#include <functional>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -62,11 +62,35 @@ void libdl::model::History::clearHistory() {
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
+libdl::model::Model::Model(whole_number epochs_, scalar lr_decay_, 
+    whole_number batch_size_, whole_number num_batches_, std::string optimizer_, 
+    std::string loss_function, whole_number num_classes_){
+    
+    this->epochs = epochs_;
+    this->lr_decay = lr_decay_;
+    this->batch_size = batch_size_;
+    this->num_batches = num_batches_;
+    this->num_classes = num_classes_;
+    
+    if(optimizer_ == "relu")
+        this->optimizer = std::make_unique<libdl::model::Optimizer>();
+    else
+        this->optimizer = nullptr;
+
+    if(loss_function == "cross_entropy")
+        this->error = std::make_unique<libdl::error::CrossEntropy>(this->num_classes);    
+
+}
 
 
-void libdl::model::Model::add(libdl::layers::Layer *layer_, std::string activation_) {
+
+void libdl::model::Model::add(Layer *layer_) {
     try{
-        
+        this->layers.push_back(layer_);
+
+    }catch(std::bad_alloc &exp){
+        std::cerr << "Model::train: " << exp.what() << std::endl;
+        std::exit(-1);
     }catch(std::invalid_argument &exp){
         std::cerr << "Model::train: " << exp.what() << std::endl;
         std::exit(-1);
@@ -76,28 +100,57 @@ void libdl::model::Model::add(libdl::layers::Layer *layer_, std::string activati
     }
 }
 
-libdl::model::History libdl::model::Model::train(TensorWrapper_Exp& train_data_, int epochs_,
-        double lr_, double lr_decay_, int batch_size_, std::string optimizer_) {
+TensorWrapper libdl::model::Model::forward(TensorWrapper& data_) {
     
     try{
-        *(this->train_data) = train_data_;
-        this->epochs = epochs_;
-        this->batch_size = batch_size_;
-        this->learning_rate = lr_;
-        this->lr_decay = lr_decay_;
-        this->train_mode = true;
+        TensorWrapper out(1, 1, 1, 1);
+        TensorWrapper grads(1, 1, 1, 1);
+
+        for(std::list<Layer*>::iterator it = this->layers.begin();
+            it != this->layers.end(); ++it){
+            
+            if(it == this->layers.begin())
+                out = (*it)->forward(data_);
+            else
+                out = (*it)->forward(out);
+        }
 
         
-
-
+        return out;
     }catch(std::exception &exp){
         std::cerr << "Model::train: " << exp.what() << std::endl;
         std::exit(-1);
     }
 }
 
-libdl::model::History libdl::model::Model::test() {
+TensorWrapper libdl::model::Model::backward(TensorWrapper& logits, TensorWrapper targets) {
+    try{
+        
+        TensorWrapper grads(logits.get_batch_size(), logits.get_tensor_height(), 
+            logits.get_tensor_width(), logits.get_tensor_depth());
+        
+        grads.get_tensor() = this->error->get_gradient(logits.get_tensor(), targets.get_tensor(), 20);
 
+        std::cout << "Incoming gradient:\n " << grads.get_tensor() << std::endl;
+
+        TensorWrapper out(1, 1, 1, 1);
+
+        for(std::list<Layer*>::reverse_iterator it = this->layers.rbegin();
+            it != this->layers.rend(); ++it){
+            
+            if(it == this->layers.rbegin())
+                out = (*it)->backward(grads, this->learning_rate);
+            else
+                out = (*it)->backward(out, this->learning_rate);
+
+        }
+
+        
+        return out;
+    }catch(std::exception &exp){
+        std::cerr << "Model::train: " << exp.what() << std::endl;
+        std::exit(-1);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

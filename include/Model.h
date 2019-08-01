@@ -9,13 +9,11 @@
 #include <string>
 #include "Layer.h"
 #include "TensorWrapper.h"
+#include "ErrorFunctions.h"
 
 #include <memory>
 #include <list>
 #include <vector>
-
-typedef Eigen::MatrixXd  Matrixd;
-typedef libdl::TensorWrapper_Exp TensorWrapper;
 
 namespace libdl::model{
     class Model;
@@ -24,16 +22,19 @@ namespace libdl::model{
     class Optimizer; //TODO: Implement this in a seperate class
 }
 
-typedef libdl::model::Milestone milestone;
-typedef libdl::layers::Layer Layer;
-
+typedef libdl::model::Milestone     milestone;
+typedef libdl::layers::Layer        Layer;
+typedef libdl::TensorWrapper_Exp    TensorWrapper;
+typedef Eigen::MatrixXd             Matrixd;
+typedef double                      scalar;
+typedef int                         whole_number;
 
 
 
 struct libdl::model::Milestone{
     std::string name;
     std::string summary;
-    double value;
+    scalar value;
 };
 
 class libdl::model::History{
@@ -55,6 +56,15 @@ private:
     std::list<milestone> history;
 };
 
+class libdl::model::Optimizer{
+public:
+
+protected:
+
+private:
+
+};
+
 
 
 ///
@@ -63,15 +73,16 @@ private:
 ///
 class libdl::model::Model {
 public:
-    Model() {};
+    Model(whole_number epochs_, scalar lr_decay_, 
+    whole_number batch_size_, whole_number num_batches_, std::string optimizer_, 
+    std::string loss_function, whole_number num_classes_);
 
+    
+    void add(Layer *layer);
 
-    void add(Layer *layer, std::string activation_="none");
+    TensorWrapper forward(TensorWrapper&);
 
-    libdl::model::History train(libdl::TensorWrapper_Exp& train_data, int epochs, double lr,
-         double lr_decay, int batch_size, std::string optimizer_);
-
-    libdl::model::History test();
+    TensorWrapper backward(TensorWrapper& logits, TensorWrapper targets);
 
 
 protected:
@@ -79,18 +90,17 @@ protected:
 
 private:
     bool train_mode; //train or test mode
-    int epochs;
-    double learning_rate;
-    double lr_decay;
-    int batch_size;
-    //std::unique_ptr<libdl::model::Optimizer> optimizer; //Incomplete type
+    whole_number epochs;
+    scalar learning_rate;
+    scalar lr_decay;
+    whole_number batch_size;
+    whole_number num_batches;
+    whole_number num_classes;
 
-    std::list<Layer*> dense_layers;
-    std::list<Layer*> complex_layers;
-    std::list<Layer*> activation_layers;
-    std::vector<std::string> activations;
-    std::unique_ptr<libdl::model::History> history;
-    std::unique_ptr<TensorWrapper> train_data;
+    //std::unique_ptr<libdl::model::Optimizer> optimizer; //Incomplete type
+    std::list<libdl::layers::Layer*> layers;
+    std::unique_ptr<libdl::model::Optimizer> optimizer;
+    std::unique_ptr<libdl::error::CrossEntropy> error;
 };
 
 

@@ -7,6 +7,7 @@
 #include <pybind11/eigen.h>
 #include "Layer.h"
 #include "ErrorFunctions.h"
+#include "Model.h"
 
 
 using namespace Eigen;
@@ -54,6 +55,7 @@ PYBIND11_MODULE(libdl, m){
     py::class_<libdl::TensorWrapper_Exp>(m, "TensorWrapper")
         .def(py::init<int, int, int, int, bool>())
         .def(py::init<const libdl::TensorWrapper_Exp&>())
+        .def("__repr__", [](const libdl::TensorWrapper_Exp &t){return "<libdl.TensorWrapper object>";})
         .def("correlation", &libdl::TensorWrapper_Exp::correlation)
         .def("get_slice", &libdl::TensorWrapper_Exp::get_slice)
         .def("update_slice", &libdl::TensorWrapper_Exp::update_slice)
@@ -67,12 +69,18 @@ PYBIND11_MODULE(libdl, m){
         .def("get_slice", &libdl::TensorWrapper_Exp::get_slice)
         .def("update_slice", &libdl::TensorWrapper_Exp::update_slice)
         .def("is_filter", &libdl::TensorWrapper_Exp::is_filter)
-        .def("correlation2D", &libdl::TensorWrapper_Exp::correlation2D);
+        .def_static("correlation2D", &libdl::TensorWrapper_Exp::correlation2D);
 
+    //Layer binding
+    py::class_<libdl::layers::Layer, libdl::layers::PyLayer> layer(m, "Layer");
+    layer.def(py::init<>());
+    layer.def("forward", &libdl::layers::Layer::forward);
+    layer.def("backward", &libdl::layers::Layer::backward);
+    
 
     //Dense binding
     
-    py::class_<libdl::layers::DenseLayer2D>(m, "DenseLayer")
+    py::class_<libdl::layers::DenseLayer2D>(m, "DenseLayer", layer)
         .def(py::init<int, int, std::string, int>())
         .def("forward", &libdl::layers::DenseLayer2D::forward)
         .def("backward", &libdl::layers::DenseLayer2D::backward)
@@ -82,14 +90,14 @@ PYBIND11_MODULE(libdl, m){
         .def("get_name", &libdl::layers::DenseLayer2D::get_name);
 
     //Sigmoid binding
-    py::class_<libdl::layers::Sigmoid>(m, "Sigmoid")
+    py::class_<libdl::layers::Sigmoid>(m, "Sigmoid", layer)
         .def(py::init<>())
         .def("forward", &libdl::layers::Sigmoid::forward)
         .def("backward", &libdl::layers::Sigmoid::backward);
 
 
     //Convolution binding
-    py::class_<libdl::layers::Convolution2D>(m, "Convolution")
+    py::class_<libdl::layers::Convolution2D>(m, "Convolution", layer)
         .def(py::init<std::string, int, int, int, int, int, int>())
         .def("forward", &libdl::layers::Convolution2D::forward)
         .def("backward", &libdl::layers::Convolution2D::backward)
@@ -105,25 +113,33 @@ PYBIND11_MODULE(libdl, m){
         .def("input_conv", &libdl::layers::Convolution2D::input_conv);
 
     //Flatten binding
-    py::class_<libdl::layers::Flatten>(m, "Flatten")
+    py::class_<libdl::layers::Flatten>(m, "Flatten", layer)
         .def(py::init<int, int, int, int>())
         .def("forward", &libdl::layers::Flatten::forward)
         .def("backward", &libdl::layers::Flatten::backward);
 
     //ReLU binding
-    py::class_<libdl::layers::ReLU>(m, "ReLU")
+    py::class_<libdl::layers::ReLU>(m, "ReLU", layer)
         .def(py::init<>())
         .def("forward", &libdl::layers::ReLU::forward)
         .def("backward", &libdl::layers::ReLU::backward);
 
     //MaxPool binding
-    py::class_<libdl::layers::MaxPool>(m, "MaxPool")
-        .def(py::init<int, int)
+    py::class_<libdl::layers::MaxPool>(m, "MaxPool", layer)
+        .def(py::init<int, int>())
         .def("forward", &libdl::layers::MaxPool::forward)
         .def("backward", &libdl::layers::MaxPool::backward);
 
     //Cross Entropy Binding
+    py::class_<libdl::error::CrossEntropy>(m, "CrossEntropy")
+        .def(py::init<int>())
+        .def("get_gradient", &libdl::error::CrossEntropy::get_gradient)
+        .def("predictions", &libdl::error::CrossEntropy::predictions);
     
-
-    m.def("test_conv", &test_conv, "");
+    //Model bindings
+    py::class_<libdl::model::Model>(m, "Model", layer)
+        .def(py::init<int, double, int, int, std::string, std::string, int>())
+        .def("add", &libdl::model::Model::add)
+        .def("forward", &libdl::model::Model::forward)
+        .def("backward", &libdl::model::Model::backward);
 }
