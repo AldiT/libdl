@@ -138,7 +138,7 @@ PYBIND11_MODULE(libdl, m){
     
     //Model bindings
     py::class_<libdl::model::Model>(m, "Model", layer)
-        .def(py::init<int, double, int, int, std::string, std::string, int>())
+        .def(py::init<int, double, double, int, int, std::string, std::string, int>())
         .def("add", &libdl::model::Model::add)
         .def("forward", &libdl::model::Model::forward)
         .def("backward", &libdl::model::Model::backward);

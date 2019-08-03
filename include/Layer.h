@@ -236,8 +236,8 @@ public:
     TensorWrapper get_filter_gradients(){
         return *(this->filter_grad);
     }
-    TensorWrapper filter_conv(TensorWrapper& gradients_, TensorWrapper&);
-    TensorWrapper input_conv (TensorWrapper& gradients_);
+    TensorWrapper filter_conv(TensorWrapper gradients_, TensorWrapper&);
+    TensorWrapper input_conv (TensorWrapper gradients_);
     
 protected:
     //protected because later I might want to implement some fancy convolution layer to perform segmantation or whatever
@@ -347,6 +347,8 @@ public:
             this->input = std::make_unique<TensorWrapper>(input);
 
         *(this->input) = input;
+
+        //std::cout << "Relu\n";
 
         TensorWrapper output(input);
         output.get_tensor() = input.get_tensor().unaryExpr([](double e){return ((e > 0)? e : 0.001*e);});

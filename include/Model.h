@@ -73,7 +73,7 @@ private:
 ///
 class libdl::model::Model {
 public:
-    Model(whole_number epochs_, scalar lr_decay_, 
+    Model(whole_number epochs_, scalar lr,scalar lr_decay_, 
     whole_number batch_size_, whole_number num_batches_, std::string optimizer_, 
     std::string loss_function, whole_number num_classes_);
 
@@ -83,6 +83,8 @@ public:
     TensorWrapper forward(TensorWrapper&);
 
     TensorWrapper backward(TensorWrapper& logits, TensorWrapper targets);
+
+    void set_lr(scalar new_lr);
 
 
 protected:

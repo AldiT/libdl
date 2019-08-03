@@ -384,10 +384,12 @@ Eigen::MatrixXd libdl::TensorWrapper_Exp::correlation2D(Eigen::MatrixXd m1, Eige
     int o_cols = (m1.cols() - kernels.cols())/stride + 1;
 
 
-
+    //std::cout << "Starting corr 2d!" << std::endl;
     //libdl::TensorWrapper_Exp::pad(m1, padding);//Working as it should
-
+    //std::cout << "rows: " << o_rows << " cols: " << o_cols << std::endl;
     Eigen::MatrixXd output(o_rows, o_cols);
+
+    //std::cout << "After declaration" << std::endl;
 
     for(int i = 0; i < o_rows; i++){
         for(int j = 0; j < o_cols; j++){
@@ -395,6 +397,8 @@ Eigen::MatrixXd libdl::TensorWrapper_Exp::correlation2D(Eigen::MatrixXd m1, Eige
                     kernels.array()).sum();
         }
     }
+
+    //std::cout << "End corr2D" << std::endl;
 
 
     return output;

@@ -61,29 +61,45 @@ int main(int argc, char* argv[]){
     libdl::TensorWrapper_Exp train_labels = dh->convert_training_labels_to_Eigen();
     dh.reset(nullptr);
 
-    libdl::model::Model model(5, 1, 16, 5, "", "cross_entropy", 10);
+    
+    
 
-    model.add(new libdl::layers::DenseLayer2D(784, 400, "dense1", 10));
+    libdl::model::Model model(5, 0.00001 , 1, 16, 5, "", "cross_entropy", 10);
+
+    model.add(new libdl::layers::Convolution2D("conv1", 5, 16, 0, 1, 1, 16));
     model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::DenseLayer2D(400, 200, "dense2", 10));
+    model.add(new libdl::layers::Convolution2D("conv2", 5, 32, 0, 1, 16, 16));
     model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::DenseLayer2D(200, 10, "dense3", 10));
+    model.add(new libdl::layers::DenseLayer2D(12800, 8000, "dense3", 10));
+    model.add(new libdl::layers::ReLU());
+    model.add(new libdl::layers::DenseLayer2D(8000, 10, "dense4", 10));
 
-    TensorWrapper batch(4, 28, 28, 1);
-    TensorWrapper labels(4, 1, 1, 1);
+    TensorWrapper batch(1, 28, 28, 1);
+    TensorWrapper labels(1, 1, 1, 1);
 
-    batch.get_tensor() = train_data.get_tensor().block(0, 0, 4, 784);
-    labels.get_tensor() = train_labels.get_tensor().block(0, 0, 4, 1);
+    //batch.get_tensor() = train_data.get_tensor().block(0, 0, 4, 784);
+    //labels.get_tensor() = train_labels.get_tensor().block(0, 0, 4, 1);
 
     TensorWrapper out(1, 1, 1, 1), grads(1, 1, 1, 1);
+    
+    int epochs = 5;
+    int batch_size = 1;
 
-    for(int i = 0; i < 10; i++){
-        out = model.forward(batch);
+    for(int epoch = 0; epoch < epochs; epoch++){
+        model.set_lr(1 / (1+ 1 * epoch) );
+        
+        for (int b = 0; b < train_data.get_tensor().rows() && b < 100; b++){
+            batch.get_tensor() = train_data.get_tensor().block(b, 0, 1, 784);
+            labels.get_tensor() = train_labels.get_tensor().block(b, 0, 1, 1);
 
-        grads = model.backward(out, labels);
+
+            out = model.forward(batch);
+
+            grads = model.backward(out, labels);
+
+        }
     }
 
-    std::cout << "Out of model:" << out.get_tensor().rows() << "x" << out.get_tensor().cols() << std::endl; 
 
     
     return 0;
