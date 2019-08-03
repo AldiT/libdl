@@ -501,6 +501,7 @@ Eigen::MatrixXd& libdl::TensorWrapper_Exp::get_tensor() const{
 }
 
 void libdl::TensorWrapper_Exp::set_tensor(Eigen::MatrixXd new_tensor, int height, int width, int depth) {
+    this->batch_size = new_tensor.rows();
     this->tensor_height = height;
     this->tensor_width = width;
     this->tensor_depth = depth;

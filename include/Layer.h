@@ -358,9 +358,14 @@ public:
         return output;
     }
     TensorWrapper backward(TensorWrapper& gradients, double lr){
+        //std::cout << "Relu begin\n";
 
         gradients.get_tensor() = gradients.get_tensor().array() * this->input->get_tensor().unaryExpr([](double e){return (e > 0 ? 1 : 0.001);}).array();
-
+        
+        /* std::cout << "res shape: " << res.rows() << "x" << res.cols() << std::endl;
+        std::cout << "Grads shape: " << gradients.get_tensor().rows() << "x" << gradients.get_tensor().cols() << std::endl;
+        std::cout << "Input tensor shape: " << this->input->get_tensor().rows() << "x" << this->input->get_tensor().cols() << std::endl;
+        std::cout << "Relu end\n";*/
         return gradients;
     }
 

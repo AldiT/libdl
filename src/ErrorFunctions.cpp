@@ -245,14 +245,15 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
 
             return e / this->logits->rows();
         });//Normalization
-*/
+*/      int rows = gradients.rows();
         if(iteration % 20 == 0 && iteration != 0) {
             //std::cout << "\nIteration: " << iteration << std::endl;
-            std::cout << "[Error: "  << (*(this->avg))(0, 0) / (targets.rows()*20) << "; Epoch: " << iteration/20 << "]\n";
+            std::cout << "[Error: "  << (*(this->avg))(0, 0) / rows << "; Epoch: " << iteration/20 << "]\n";
             (*(this->avg))(0, 0) = 0;
             //std::cout << "Gradients:\n" << gradients << std::endl;
             //std::cout << "Logits: \n" << predictions << std::endl;
         }
+        
 
         return gradients;
 

@@ -64,18 +64,19 @@ int main(int argc, char* argv[]){
     
     
 
-    libdl::model::Model model(5, 0.00001 , 1, 16, 5, "", "cross_entropy", 10);
+    libdl::model::Model model(5, 1e-5 , 1, 16, 5, "", "cross_entropy", 10);
 
     model.add(new libdl::layers::Convolution2D("conv1", 5, 16, 0, 1, 1, 16));
+    model.add(new libdl::layers::MaxPool(2, 2));
     model.add(new libdl::layers::ReLU());
     model.add(new libdl::layers::Convolution2D("conv2", 5, 32, 0, 1, 16, 16));
+    model.add(new libdl::layers::MaxPool(2, 2));
     model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::DenseLayer2D(12800, 8000, "dense3", 10));
+    model.add(new libdl::layers::DenseLayer2D(512, 200, "dense3", 10));
     model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::DenseLayer2D(8000, 10, "dense4", 10));
+    model.add(new libdl::layers::DenseLayer2D(200, 10, "dense4", 10));
 
-    TensorWrapper batch(1, 28, 28, 1);
-    TensorWrapper labels(1, 1, 1, 1);
+    
 
     //batch.get_tensor() = train_data.get_tensor().block(0, 0, 4, 784);
     //labels.get_tensor() = train_labels.get_tensor().block(0, 0, 4, 1);
@@ -83,21 +84,26 @@ int main(int argc, char* argv[]){
     TensorWrapper out(1, 1, 1, 1), grads(1, 1, 1, 1);
     
     int epochs = 5;
-    int batch_size = 1;
+    int batch_size = 16;
+
+    TensorWrapper batch(batch_size, 28, 28, 1);
+    TensorWrapper labels(batch_size, 1, 1, 1);
 
     for(int epoch = 0; epoch < epochs; epoch++){
-        model.set_lr(1 / (1+ 1 * epoch) );
+        std::cout << "Epoch " << epoch << std::endl;
         
         for (int b = 0; b < train_data.get_tensor().rows() && b < 100; b++){
-            batch.get_tensor() = train_data.get_tensor().block(b, 0, 1, 784);
-            labels.get_tensor() = train_labels.get_tensor().block(b, 0, 1, 1);
+            batch.get_tensor() = train_data.get_tensor().block(b, 0, batch_size, 784);
+            labels.get_tensor() = train_labels.get_tensor().block(b, 0, batch_size, 1);
 
 
             out = model.forward(batch);
-
+            //std::cout << "Out shape: " << out.shape() << std::endl;
             grads = model.backward(out, labels);
 
         }
+
+        model.set_lr(1 / (1+ 1 * epoch) );
     }
 
 

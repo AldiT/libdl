@@ -121,7 +121,7 @@ TensorWrapper DenseLayer2D::backward(TensorWrapper& gradient, double lr) {
 
     //update weights
     //std::cout << "Some elements before:\n " << this->weights->get_tensor().block(0,0, 1, 10) << std::endl;
-
+    
     this->weights->get_tensor() -= lr * this->input->get_tensor().transpose() * gradient.get_tensor();
     *(this->biases) -= lr * gradient.get_tensor().colwise().sum().transpose();
 
@@ -312,34 +312,28 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::backward(libdl::TensorWra
         gradients_.get_tensor().cols() != this->output->get_tensor().cols()){
         std::cout << "GRADIENT SHAPE IS NOT THE SAME AS OUTPUT" << std::endl;
     }
-
+    //std::cout << "Gradient tensor shape: "<< gradients_.get_tensor().rows() << "x" << gradients_.get_tensor().cols() << std::endl;
     gradients_.set_tensor(gradients_.get_tensor(), this->output->get_tensor_height(), this->output->get_tensor_width(),
         this->output->get_tensor_depth());
+    //std::cout << "Gradient shape after: " << gradients_.shape() << std::endl;
+    //std::cout << "Tensor shape after: " << gradients_.get_tensor().rows() << "x" << gradients_.get_tensor().cols() << std::endl;
 
     if(this->stride > 1)
         gradients_ = this->dilation(gradients_);
 
     
-
     //std::cout << "Gradient shape: " << gradients_.shape() << " Input shape: " << this->input->shape() << " Output shape: " << this->output->shape() << std::endl;
 
-    auto filter_conv_start = std::chrono::system_clock::now();
     filter_gradients = this->filter_conv(gradients_, filter_gradients);
-    auto filter_conv_end = std::chrono::system_clock::now();
 
-    std::chrono::duration<double> filter_conv_duration = filter_conv_end-filter_conv_start;
     int temp = this->padding;
     this->padding = this->kernel_size-1;
     gradients_ = this->pad(gradients_);
     this->padding = temp;
 
-    
-    auto input_conv_start = std::chrono::system_clock::now();
     gradients_ = this->input_conv(gradients_);
-    auto input_conv_end = std::chrono::system_clock::now();
 
 
-    std::chrono::duration<double> input_conv_duration = input_conv_end-input_conv_start;
 
     filter_gradients.get_tensor() = filter_gradients.get_tensor() * lr;
 
@@ -347,13 +341,16 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::backward(libdl::TensorWra
 
     gradients_ = this->clean_gradient(gradients_);
 
+    /* 
     if(this->filter_grad == nullptr)
         this->filter_grad = std::make_unique<TensorWrapper>(filter_gradients);
     if(this->input_grad == nullptr)
         this->input_grad = std::make_unique<TensorWrapper>(gradients_);
 
     *(this->filter_grad) = filter_gradients;
-    *(this->input_grad) = gradients_;
+    *(this->input_grad) = gradients_;*/
+
+    //std::cout << "Gradient shape before output: " << gradients_.shape() << std::endl;
 
     return gradients_;
 }
@@ -363,6 +360,7 @@ TensorWrapper libdl::layers::Convolution2D::filter_conv(TensorWrapper gradients_
     //std::cout << "Beginning\n";
     Matrixd temp = Matrixd::Constant(filter_gradients.get_tensor_height(), filter_gradients.get_tensor_width(), 0);
     //std::cout << "Beginning for loop\n";
+    int rows = 1;
     for(int gradient_slice = 0; gradient_slice < gradients_.get_tensor_depth(); gradient_slice++){
 
         for(int input_slice = 0; input_slice < this->input->get_tensor_depth(); input_slice++){
@@ -386,6 +384,9 @@ TensorWrapper libdl::layers::Convolution2D::filter_conv(TensorWrapper gradients_
 
                 //std::cout << "After correlation2D" << std::endl;
             }
+            //rows = gradients_.get_batch_size();
+
+            //temp = temp.unaryExpr([rows](double e){return e/rows;});
 
             filter_gradients.update_slice(gradient_slice, input_slice, temp);
         }

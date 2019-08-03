@@ -71,6 +71,7 @@ libdl::model::Model::Model(whole_number epochs_, scalar lr, scalar lr_decay_,
     this->batch_size = batch_size_;
     this->num_batches = num_batches_;
     this->num_classes = num_classes_;
+    this->learning_rate = lr;
     
     if(optimizer_ == "adam")//not working for now
         this->optimizer = std::make_unique<libdl::model::Optimizer>();
@@ -125,29 +126,21 @@ TensorWrapper libdl::model::Model::forward(TensorWrapper& data_) {
 
 TensorWrapper libdl::model::Model::backward(TensorWrapper& logits, TensorWrapper targets) {
     try{
-        this->learning_rate = 0.000001;
-        TensorWrapper grads(logits.get_batch_size(), logits.get_tensor_height(), 
+        TensorWrapper grads(1, logits.get_tensor_height(), 
             logits.get_tensor_width(), logits.get_tensor_depth());
             
         grads.get_tensor() = this->error->get_gradient(logits.get_tensor(), targets.get_tensor(), 20);
-
-        //std::cout << "Incoming gradient:\n " << grads.get_tensor() << std::endl;
 
         TensorWrapper out(1, 1, 1, 1);
 
         for(std::list<Layer*>::reverse_iterator it = this->layers.rbegin();
             it != this->layers.rend(); ++it){
-            //std::cout << "Some weights before: " << (*it)->get_weights().block(0, 0, 1, 10) << std::endl;
             
             if(it == this->layers.rbegin())
                 out = (*it)->backward(grads, this->learning_rate);
             else
                 out = (*it)->backward(out, this->learning_rate);
-
-            //std::cout << "Same weights after: " << (*it)->get_weights().block(0, 0, 1, 10) << std::endl;
-
         }
-
         
         return out;
     }catch(std::exception &exp){
