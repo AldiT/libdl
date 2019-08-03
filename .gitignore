@@ -17,3 +17,6 @@ files/
 example.egg-info/
 dist/
 example.cpython-37m-darwin.so
+release/
+python_scripts/__pycache__/
+libdl.cpython-37m-darwin.so
