@@ -357,9 +357,8 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::backward(libdl::TensorWra
 
 TensorWrapper libdl::layers::Convolution2D::filter_conv(TensorWrapper gradients_, TensorWrapper& filter_gradients) {
 
-    //std::cout << "Beginning\n";
     Matrixd temp = Matrixd::Constant(filter_gradients.get_tensor_height(), filter_gradients.get_tensor_width(), 0);
-    //std::cout << "Beginning for loop\n";
+
     int rows = 1;
     for(int gradient_slice = 0; gradient_slice < gradients_.get_tensor_depth(); gradient_slice++){
 
@@ -367,33 +366,17 @@ TensorWrapper libdl::layers::Convolution2D::filter_conv(TensorWrapper gradients_
             temp = Eigen::MatrixXd::Constant(temp.rows(), temp.cols(), 0);
 
             for(int instance = 0; instance < gradients_.get_batch_size(); instance++){
-                //Test
-                /* 
-                std::cout << "temp shape: " << temp.rows() << "x" << temp.cols() << std::endl;
-                std::cout << "Input shape: " << this->input->shape() << std::endl;
-                std::cout << "Gradients shape: " << gradients_.shape() << std::endl;
-                std::cout << "Output shape: " << (this->input->get_tensor_height() - gradients_.get_tensor_height() + 1) << std::endl;
-                std::cout << "Layer name: " << this->name << std::endl;*/
-                
-                //Test
 
 
                 temp += TensorWrapper::correlation2D(
                         this->input->get_slice(instance, input_slice),
                         gradients_.get_slice(instance, gradient_slice), 1);
-
-                //std::cout << "After correlation2D" << std::endl;
             }
-            //rows = gradients_.get_batch_size();
-
-            //temp = temp.unaryExpr([rows](double e){return e/rows;});
 
             filter_gradients.update_slice(gradient_slice, input_slice, temp);
         }
 
     }
-    //std::cout << "End for loop\n";
-    //filter_gradients.get_tensor() /= gradients_.get_batch_size();
 
     return filter_gradients;
 }
@@ -751,7 +734,6 @@ TensorWrapper libdl::layers::MaxPool::backward(TensorWrapper& gradient, double) 
            this->input->get_tensor_width(), this->input->get_tensor_depth());
 
 
-        auto mp_backprop_start = std::chrono::system_clock::now();
         /* 
         std::cout << "STATS\n";
         std::cout << "Input shape: " << this->input->shape() << std::endl;
@@ -760,35 +742,50 @@ TensorWrapper libdl::layers::MaxPool::backward(TensorWrapper& gradient, double) 
         std::cout << "Gradient shape: " << gradient.shape() << std::endl;
         std::cout << "End of stats\n";
         */
-        
-        for (int instance = 0; instance < gradient.get_batch_size(); instance++) {
-            int element_count = 0, index = 0;
+       gradient.set_tensor(gradient.get_tensor(), this->output->get_tensor_height(), this->output->get_tensor_width(),
+       this->output->get_tensor_depth());
 
-            for (int feature = 0; feature < this->past_propagation->get_tensor().cols(); feature++) {
-                index ++;
+       //std::cout << "Past propagation matrix\n";
 
-                if ((this->past_propagation->get_tensor())(instance, feature) == 1) {
-                    this->backward_gradient->get_tensor()(instance, feature) = gradient.get_tensor()(instance, element_count);
-                    element_count++;
+       //std::cout << this->past_propagation->get_tensor() << std::endl;
+       
+        /* std::cout << "Outside for\n";
+       std::cout << "Stats\n";
+        std::cout << "backward gradient shape: " << this->backward_gradient->shape() << std::endl;
+        std::cout << "output shape: " << this->output->shape() << std::endl;
+        std::cout << "gradient shape: "<< gradient.shape() << std::endl;
+        std::cout << "gradient tensor: " << gradient.get_tensor().rows() << "x" << gradient.get_tensor().cols() << std::endl;
+        std::cout << "input shape: " << this->input->shape() << std::endl;
+       std::cout << "End of stats\n";*/
+        Matrixd temp(this->backward_gradient->get_tensor_height(), this->backward_gradient->get_tensor_width());
+
+        for(int instance = 0; instance < this->backward_gradient->get_batch_size(); instance++){
+            for(int depth = 0; depth < this->backward_gradient->get_tensor_depth(); depth++){
+                temp = Matrixd::Constant(this->backward_gradient->get_tensor_height(), 
+                                            this->backward_gradient->get_tensor_width(), 0);
+
+
+                for (int row = 0; row < gradient.get_tensor_height(); row++) {
+                    for (int col = 0; col < gradient.get_tensor_width(); col++) {
+                        //std::cout << "Inside for\n";
+                        temp.block(row * this->stride, col * this->stride,
+                            this->window_size, this->window_size) = this->past_propagation->get_slice(instance, depth).block(row * this->stride, col * this->stride,
+                            this->window_size, this->window_size) * gradient.get_slice(instance, depth)(row, col);
+
+                        //std::cout << "Product: \n" << this->past_propagation->get_slice(instance, depth).block(row * this->stride, col * this->stride,
+                        //    this->window_size, this->window_size) * gradient.get_slice(instance, depth)(row, col) << std::endl;
+                        //std::cout << "After this\n";
+                    }
                 }
-
+                
+                this->backward_gradient->update_slice(instance, depth, temp);
             }
-
-            //std::cout << "Info: Past propagation dimensions: " << this->past_propagation->shape() << std::endl;
-
-            if (element_count != gradient.get_tensor().cols()) {
-                std::cout << "element_count: " << element_count << "gradient cols: "
-                    << gradient.get_tensor().cols() << std::endl;
-
-                std::cout << "\n\nelement_count does not match!\n\n";
-                throw std::exception();
-            }
-        }
+        } 
 
         
 
-        auto mp_backprop_end = std::chrono::system_clock::now();
-        std::chrono::duration<double> backprop_duration = mp_backprop_end-mp_backprop_start;
+        
+        //std::cout << "Before returning\n";
         //std::cout << "Max pool backprop took: " << backprop_duration.count() << std::endl;
 
         return *(this->backward_gradient);

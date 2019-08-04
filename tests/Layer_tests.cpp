@@ -61,20 +61,32 @@ int main(int argc, char* argv[]){
     libdl::TensorWrapper_Exp train_labels = dh->convert_training_labels_to_Eigen();
     dh.reset(nullptr);
 
-    
+    //Testing maxpool
+    TensorWrapper test(2, 4, 4, 3, true);
+    libdl::layers::MaxPool pool(2, 2);
+
+    std::cout << "Before pool: \n" << test.get_slice(1, 1) << std::endl;
+    test = pool.forward(test);
+    std::cout << "After pool:\n" << test.get_slice(1, 1) << std::endl;
+    test = pool.backward(test, 0.01);
+    std::cout << "After backward: \n" << test.get_slice(1, 1) << std::endl;
+
+    //Testing maxpool
     
 
-    libdl::model::Model model(5, 1e-5 , 1, 16, 5, "", "cross_entropy", 10);
+    libdl::model::Model model(5, 1e-4, 1, 16, 5, "", "cross_entropy", 10);
 
-    model.add(new libdl::layers::Convolution2D("conv1", 5, 16, 0, 1, 1, 16));
-    model.add(new libdl::layers::MaxPool(2, 2));
+    model.add(new libdl::layers::Convolution2D("conv1", 7, 16, 1, 1, 1, 16));
+    //model.add(new libdl::layers::MaxPool(2, 2));
     model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::Convolution2D("conv2", 5, 32, 0, 1, 16, 16));
-    model.add(new libdl::layers::MaxPool(2, 2));
+    model.add(new libdl::layers::Convolution2D("conv2", 7, 32, 1, 1, 16, 16));
+    //model.add(new libdl::layers::MaxPool(2, 2));
     model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::DenseLayer2D(512, 200, "dense3", 10));
+    model.add(new libdl::layers::DenseLayer2D(12800, 5000, "dense3", 10));
     model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::DenseLayer2D(200, 10, "dense4", 10));
+    model.add(new libdl::layers::DenseLayer2D(5000, 1000, "dense3", 10));
+    model.add(new libdl::layers::ReLU());
+    model.add(new libdl::layers::DenseLayer2D(1000, 10, "dense4", 10));
 
     
 
