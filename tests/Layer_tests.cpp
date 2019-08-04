@@ -65,11 +65,11 @@ int main(int argc, char* argv[]){
     TensorWrapper test(2, 4, 4, 3, true);
     libdl::layers::MaxPool pool(2, 2);
 
-    std::cout << "Before pool: \n" << test.get_slice(1, 1) << std::endl;
+    std::cout << "Before pool: \n" << test.get_slice(1, 2) << std::endl;
     test = pool.forward(test);
-    std::cout << "After pool:\n" << test.get_slice(1, 1) << std::endl;
+    std::cout << "After pool:\n" << test.get_slice(1, 2) << std::endl;
     test = pool.backward(test, 0.01);
-    std::cout << "After backward: \n" << test.get_slice(1, 1) << std::endl;
+    std::cout << "After backward: \n" << test.get_slice(1, 2) << std::endl;
 
     //Testing maxpool
     
@@ -82,11 +82,11 @@ int main(int argc, char* argv[]){
     model.add(new libdl::layers::Convolution2D("conv2", 7, 32, 1, 1, 16, 16));
     //model.add(new libdl::layers::MaxPool(2, 2));
     model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::DenseLayer2D(12800, 5000, "dense3", 10));
+    model.add(new libdl::layers::DenseLayer2D(12800, 8000, "dense3", 10));
     model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::DenseLayer2D(5000, 1000, "dense3", 10));
+    model.add(new libdl::layers::DenseLayer2D(8000, 4000, "dense3", 10));
     model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::DenseLayer2D(1000, 10, "dense4", 10));
+    model.add(new libdl::layers::DenseLayer2D(4000, 10, "dense4", 10));
 
     
 
@@ -95,7 +95,7 @@ int main(int argc, char* argv[]){
 
     TensorWrapper out(1, 1, 1, 1), grads(1, 1, 1, 1);
     
-    int epochs = 5;
+    int epochs = 3;
     int batch_size = 16;
 
     TensorWrapper batch(batch_size, 28, 28, 1);
@@ -118,6 +118,31 @@ int main(int argc, char* argv[]){
         model.set_lr(1 / (1+ 1 * epoch) );
     }
 
+
+    out = model.forward(batch);
+
+
+
+    out.get_tensor().colwise() -= out.get_tensor().rowwise().maxCoeff();
+
+    out.get_tensor() = out.get_tensor().unaryExpr([](double e){return std::exp(e);});
+
+    Vectord sums = out.get_tensor().rowwise().sum();
+
+    for(int i = 0; i < out.get_tensor().rows(); i++){
+        out.get_tensor().row(i) /= sums(i);
+    }
+
+
+    int cl;
+    double acc = 0;
+    for(int o = 0; o < out.get_tensor().rows(); o++){
+        std::cout << "Logit: " << out.get_tensor().row(o).maxCoeff(&cl) << " Class: " << cl << " Label: " << labels.get_tensor()(o) << std::endl;
+        if(cl == labels.get_tensor()(o))
+            acc += 1;
+    }
+
+    std::cout << "Test accuracy: " << acc/out.get_tensor().rows() << std::endl;
 
     
     return 0;

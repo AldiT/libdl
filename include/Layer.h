@@ -25,6 +25,7 @@ namespace libdl::layers {
     class Softmax;
     class ReLU;
     class MaxPool;
+    class Dropout;
 }
 
 
@@ -413,6 +414,39 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 /////                                                                      /////
 /////                            </MaxPool>                                /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            <Dropout>                                 /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+class libdl::layers::Dropout : public libdl::layers::Layer{
+public:
+    Dropout(double p);
+
+    TensorWrapper forward(TensorWrapper&);
+    TensorWrapper backward(TensorWrapper& gradient, double lr);
+
+    void generate_mask();
+    TensorWrapper get_mask();
+
+protected:
+
+private:
+    std::unique_ptr<TensorWrapper> input;
+    std::unique_ptr<TensorWrapper> output;
+    std::unique_ptr<TensorWrapper> mask;
+    double probability;
+
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            </Dropout>                                /////
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 

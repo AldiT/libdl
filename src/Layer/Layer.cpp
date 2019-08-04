@@ -42,6 +42,7 @@ DenseLayer2D::DenseLayer2D(int input_features, int num_neurons, std::string name
     try {
 
         this->num_neurons = num_neurons;
+        
 
         this->weights = std::make_unique<TensorWrapper>(input_features, this->num_neurons, 1, 1);
         this->biases = std::make_unique<Eigen::VectorXd>(this->num_neurons);
@@ -122,8 +123,12 @@ TensorWrapper DenseLayer2D::backward(TensorWrapper& gradient, double lr) {
     //update weights
     //std::cout << "Some elements before:\n " << this->weights->get_tensor().block(0,0, 1, 10) << std::endl;
     
+    double reg = 0.001;
+
     this->weights->get_tensor() -= lr * this->input->get_tensor().transpose() * gradient.get_tensor();
+    this->weights->get_tensor() = this->weights->get_tensor().unaryExpr([reg](double e){return e - (e * reg); });
     *(this->biases) -= lr * gradient.get_tensor().colwise().sum().transpose();
+    *(this->biases) = this->biases->unaryExpr([reg](double e){return e - (e*reg);});
 
     //std::cout << "Same elements after:\n " << this->weights->get_tensor().block(0, 0, 1, 10) << std::endl;
 
@@ -310,8 +315,17 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::backward(libdl::TensorWra
 
     if(gradients_.get_tensor().rows() != this->output->get_tensor().rows() || 
         gradients_.get_tensor().cols() != this->output->get_tensor().cols()){
+        std::cout << "Gradient tensor: " << gradients_.get_tensor().rows() << "x" << gradients_.get_tensor().cols() << std::endl;
+        std::cout << "Output tensor: " << this->output->get_tensor().rows() << "x" << this->output->get_tensor().cols() << std::endl;
         std::cout << "GRADIENT SHAPE IS NOT THE SAME AS OUTPUT" << std::endl;
     }
+    /* 
+    std::cout << "Stats about gradients\n";
+    std::cout << "Mean: " << gradients_.get_tensor().mean() << std::endl;
+    std::cout << "Max: " << gradients_.get_tensor().maxCoeff() << std::endl;
+    std::cout << "Min: " << gradients_.get_tensor().minCoeff() << std::endl;
+    std::cout << "End of stats\n";
+    */
     //std::cout << "Gradient tensor shape: "<< gradients_.get_tensor().rows() << "x" << gradients_.get_tensor().cols() << std::endl;
     gradients_.set_tensor(gradients_.get_tensor(), this->output->get_tensor_height(), this->output->get_tensor_width(),
         this->output->get_tensor_depth());
@@ -351,6 +365,13 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::backward(libdl::TensorWra
     *(this->input_grad) = gradients_;*/
 
     //std::cout << "Gradient shape before output: " << gradients_.shape() << std::endl;
+    
+    if(gradients_.get_tensor().rows() != this->input->get_tensor().rows() || 
+        gradients_.get_tensor().cols() != this->input->get_tensor().cols()){
+        std::cout << "GRADIENT SHAPE IS NOT THE SAME AS INPUT" << std::endl;
+        std::cout << "Shape of input: " << this->input->shape() << std::endl;
+        std::cout << "Shape of gradient: " << gradients_.shape() << std::endl;
+    }
 
     return gradients_;
 }
@@ -757,20 +778,23 @@ TensorWrapper libdl::layers::MaxPool::backward(TensorWrapper& gradient, double) 
         std::cout << "gradient tensor: " << gradient.get_tensor().rows() << "x" << gradient.get_tensor().cols() << std::endl;
         std::cout << "input shape: " << this->input->shape() << std::endl;
        std::cout << "End of stats\n";*/
+
+    
         Matrixd temp(this->backward_gradient->get_tensor_height(), this->backward_gradient->get_tensor_width());
+        Matrixd gradient_slice(gradient.get_tensor_height(), gradient.get_tensor_width());
 
         for(int instance = 0; instance < this->backward_gradient->get_batch_size(); instance++){
             for(int depth = 0; depth < this->backward_gradient->get_tensor_depth(); depth++){
                 temp = Matrixd::Constant(this->backward_gradient->get_tensor_height(), 
                                             this->backward_gradient->get_tensor_width(), 0);
 
-
+                gradient_slice = gradient.get_slice(instance, depth);
                 for (int row = 0; row < gradient.get_tensor_height(); row++) {
                     for (int col = 0; col < gradient.get_tensor_width(); col++) {
                         //std::cout << "Inside for\n";
                         temp.block(row * this->stride, col * this->stride,
                             this->window_size, this->window_size) = this->past_propagation->get_slice(instance, depth).block(row * this->stride, col * this->stride,
-                            this->window_size, this->window_size) * gradient.get_slice(instance, depth)(row, col);
+                            this->window_size, this->window_size) * gradient_slice(row, col);
 
                         //std::cout << "Product: \n" << this->past_propagation->get_slice(instance, depth).block(row * this->stride, col * this->stride,
                         //    this->window_size, this->window_size) * gradient.get_slice(instance, depth)(row, col) << std::endl;
@@ -782,8 +806,8 @@ TensorWrapper libdl::layers::MaxPool::backward(TensorWrapper& gradient, double) 
             }
         } 
 
-        
-
+        //std::cout << "Original gradient:\n" << gradient.get_slice(0, 0) << std::endl;
+        //std::cout << "Gradient after pool:\n " << this->backward_gradient->get_slice(0, 0) << std::endl;
         
         //std::cout << "Before returning\n";
         //std::cout << "Max pool backprop took: " << backprop_duration.count() << std::endl;
@@ -841,5 +865,60 @@ void libdl::layers::MaxPool::max_pooling() {
 ////////////////////////////////////////////////////////////////////////////////
 /////                                                                      /////
 /////                            </MaxPool>                                /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            <Dropout>                                 /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+
+libdl::layers::Dropout::Dropout(double p){
+    this->probability = p;
+}
+
+TensorWrapper libdl::layers::Dropout::forward(TensorWrapper& input){
+    if(this->input == nullptr)
+        this->input = std::make_unique<TensorWrapper>(input);
+    *(this->input) = input;
+
+
+    return *(this->output);
+}   
+
+TensorWrapper libdl::layers::Dropout::get_mask(){
+    return *(this->mask);
+}
+
+TensorWrapper libdl::layers::Dropout::backward(TensorWrapper& gradient, double lr){
+    return gradient;
+}
+
+void libdl::layers::Dropout::generate_mask(){
+    if(this->mask == nullptr)
+        this->mask = std::make_unique<TensorWrapper>(this->input->get_batch_size(), this->input->get_tensor_height(),
+                this->input->get_tensor_width(), this->input->get_tensor_depth());
+    this->mask->get_tensor() = Matrixd::Constant(this->mask->get_tensor().rows(), this->mask->get_tensor().cols(), 0);
+
+    this->mask->get_tensor() = this->mask->get_tensor().unaryExpr([this](double e){
+        std::random_device rd;
+        std::mt19937 gen(rd());
+
+        std::bernoulli_distribution dist(this->probability);
+
+        if(dist(gen) == true)
+            return 1;
+        else
+            return 0;
+    }).cast<double>();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            </Dropout>                                /////
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////

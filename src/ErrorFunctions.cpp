@@ -235,17 +235,18 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
         }*/
 
 
-        /* 
+        
         gradients = gradients.unaryExpr([this](double e){
             if(e > 1){
-                e = .5;
+                e = 1;
             }else if(e < -1){
-                e = -.5;
+                e = -1;
             }
 
-            return e / this->logits->rows();
+            return e;
         });//Normalization
-*/      int rows = gradients.rows();
+        
+        int rows = gradients.rows();
         if(iteration % 20 == 0 && iteration != 0) {
             //std::cout << "\nIteration: " << iteration << std::endl;
             std::cout << "[Error: "  << (*(this->avg))(0, 0) / rows << "; Epoch: " << iteration/20 << "]\n";
@@ -333,7 +334,7 @@ Matrixd CrossEntropy::softmax() {
 
     Matrixd copy_logits = *(this->logits);
 
-    //copy_logits.colwise() -= copy_logits.rowwise().maxCoeff();
+    copy_logits.colwise() -= copy_logits.rowwise().maxCoeff();
 
     copy_logits = copy_logits.unaryExpr([](double e){return std::exp(e);});
 
