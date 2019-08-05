@@ -5,6 +5,7 @@
 #include <iostream>
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
+#include <pybind11/stl.h>
 #include "Layer.h"
 #include "ErrorFunctions.h"
 #include "Model.h"
@@ -72,7 +73,9 @@ PYBIND11_MODULE(libdl, m){
         .def_static("correlation2D", &libdl::TensorWrapper_Exp::correlation2D);
 
     //Layer binding
-    py::class_<libdl::layers::Layer, libdl::layers::PyLayer> layer(m, "Layer");
+    //py::class_<libdl::layers::Layer>(m, "Layer");
+
+    py::class_<libdl::layers::Layer> layer(m, "Layer");
     layer.def(py::init<>());
     layer.def("forward", &libdl::layers::Layer::forward);
     layer.def("backward", &libdl::layers::Layer::backward);
@@ -124,6 +127,12 @@ PYBIND11_MODULE(libdl, m){
         .def("forward", &libdl::layers::ReLU::forward)
         .def("backward", &libdl::layers::ReLU::backward);
 
+    //TanH binding
+    py::class_<libdl::layers::TanH>(m, "TanH", layer)
+        .def(py::init<>())
+        .def("forward", &libdl::layers::TanH::forward)
+        .def("backward", &libdl::layers::TanH::backward);
+
     //MaxPool binding
     py::class_<libdl::layers::MaxPool>(m, "MaxPool", layer)
         .def(py::init<int, int>())
@@ -136,6 +145,12 @@ PYBIND11_MODULE(libdl, m){
         .def("get_gradient", &libdl::error::CrossEntropy::get_gradient)
         .def("predictions", &libdl::error::CrossEntropy::predictions);
     
+    //BinaryCrossEntropy binding
+    py::class_<libdl::error::BinaryCrossEntropy>(m, "BinaryCrossEntropy")
+        .def(py::init<>())
+        .def("get_errors", &libdl::error::BinaryCrossEntropy::get_errors)
+        .def("get_gradient", &libdl::error::BinaryCrossEntropy::get_gradient);
+
     //Model bindings
     py::class_<libdl::model::Model>(m, "Model", layer)
         .def(py::init<int, double, double, int, int, std::string, std::string, int>())

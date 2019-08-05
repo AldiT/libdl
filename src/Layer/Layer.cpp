@@ -319,59 +319,38 @@ libdl::TensorWrapper_Exp libdl::layers::Convolution2D::backward(libdl::TensorWra
         std::cout << "Output tensor: " << this->output->get_tensor().rows() << "x" << this->output->get_tensor().cols() << std::endl;
         std::cout << "GRADIENT SHAPE IS NOT THE SAME AS OUTPUT" << std::endl;
     }
-    /* 
-    std::cout << "Stats about gradients\n";
-    std::cout << "Mean: " << gradients_.get_tensor().mean() << std::endl;
-    std::cout << "Max: " << gradients_.get_tensor().maxCoeff() << std::endl;
-    std::cout << "Min: " << gradients_.get_tensor().minCoeff() << std::endl;
-    std::cout << "End of stats\n";
-    */
-    //std::cout << "Gradient tensor shape: "<< gradients_.get_tensor().rows() << "x" << gradients_.get_tensor().cols() << std::endl;
+    
     gradients_.set_tensor(gradients_.get_tensor(), this->output->get_tensor_height(), this->output->get_tensor_width(),
         this->output->get_tensor_depth());
-    //std::cout << "Gradient shape after: " << gradients_.shape() << std::endl;
-    //std::cout << "Tensor shape after: " << gradients_.get_tensor().rows() << "x" << gradients_.get_tensor().cols() << std::endl;
+    /* 
+    std::cout << "Stats about gradients: " << std::endl;
+    std::cout << "Mean: " << gradients_.get_tensor().mean() << std::endl;
+    std::cout << "Max: " << gradients_.get_tensor().maxCoeff() << std::endl;
+    std::cout << "Min" << gradients_.get_tensor().minCoeff() << std::endl;
+
+    std::cout << "end of stats\n";*/
+
 
     if(this->stride > 1)
         gradients_ = this->dilation(gradients_);
 
-    
-    //std::cout << "Gradient shape: " << gradients_.shape() << " Input shape: " << this->input->shape() << " Output shape: " << this->output->shape() << std::endl;
+    //std::cout << "Should be dilated: " << gradients_.get_slice(0,0) << std::endl;
 
     filter_gradients = this->filter_conv(gradients_, filter_gradients);
-
-    int temp = this->padding;
-    this->padding = this->kernel_size-1;
-    gradients_ = this->pad(gradients_);
-    this->padding = temp;
-
     gradients_ = this->input_conv(gradients_);
-
-
 
     filter_gradients.get_tensor() = filter_gradients.get_tensor() * lr;
 
     this->filters->get_tensor() -= filter_gradients.get_tensor();
 
-    gradients_ = this->clean_gradient(gradients_);
-
-    /* 
-    if(this->filter_grad == nullptr)
-        this->filter_grad = std::make_unique<TensorWrapper>(filter_gradients);
-    if(this->input_grad == nullptr)
-        this->input_grad = std::make_unique<TensorWrapper>(gradients_);
-
-    *(this->filter_grad) = filter_gradients;
-    *(this->input_grad) = gradients_;*/
-
-    //std::cout << "Gradient shape before output: " << gradients_.shape() << std::endl;
-    
     if(gradients_.get_tensor().rows() != this->input->get_tensor().rows() || 
         gradients_.get_tensor().cols() != this->input->get_tensor().cols()){
         std::cout << "GRADIENT SHAPE IS NOT THE SAME AS INPUT" << std::endl;
-        std::cout << "Shape of input: " << this->input->shape() << std::endl;
-        std::cout << "Shape of gradient: " << gradients_.shape() << std::endl;
+        std::cout << "Shape of input tensor: " << this->input->get_tensor().rows() << "x" << this->input->get_tensor().cols() << std::endl;
+        std::cout << "Shape of gradient tensor: " << gradients_.get_tensor().rows() << "x" << gradients_.get_tensor().cols() << std::endl;
     }
+    
+    gradients_ = this->clean_gradient(gradients_);
 
     return gradients_;
 }
@@ -751,8 +730,8 @@ TensorWrapper libdl::layers::MaxPool::backward(TensorWrapper& gradient, double) 
 
         this->backward_gradient->set_tensor(Matrixd::Constant(this->input->get_batch_size(),
            this->input->get_tensor_height() * this->input->get_tensor_width() *
-           this->input->get_tensor_depth(), 0), this->input->get_tensor_height(),
-           this->input->get_tensor_width(), this->input->get_tensor_depth());
+           this->input->get_tensor_depth(), 0), 
+           this->input->get_tensor_height(), this->input->get_tensor_width(), this->input->get_tensor_depth());
 
 
         /* 

@@ -12,6 +12,7 @@
 namespace libdl::error{
     class ErrorFunctions;
     class CrossEntropy;
+    class BinaryCrossEntropy;
 }
 
 typedef Eigen::VectorXd Vectord;
@@ -59,5 +60,34 @@ private:
     Matrixd softmax();
 
 };
+
+
+class libdl::error::BinaryCrossEntropy{
+public:
+    BinaryCrossEntropy(){
+        
+    }
+
+    Vectord get_gradient(Vectord logits, Vectord targets , int);
+
+    Vectord predictions(Vectord logits, Vectord targets);
+
+    std::vector<double> get_errors(){
+        return this->errors;
+    }
+
+
+protected:
+
+private:
+    std::unique_ptr<Vectord> targets;
+    std::unique_ptr<Matrixd> logits;
+    std::unique_ptr<Matrixd> avg;
+
+    std::vector<double> errors;
+    int batch_size;
+    
+};
+
 
 #endif //LIBDL_ERRORFUNCTIONS_H

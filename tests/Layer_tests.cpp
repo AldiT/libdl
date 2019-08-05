@@ -74,19 +74,17 @@ int main(int argc, char* argv[]){
     //Testing maxpool
     
 
-    libdl::model::Model model(5, 1e-4, 1, 16, 5, "", "cross_entropy", 10);
+    libdl::model::Model model(5, 4e-5, 1, 16, 5, "", "cross_entropy", 10);
 
-    model.add(new libdl::layers::Convolution2D("conv1", 7, 16, 1, 1, 1, 16));
-    //model.add(new libdl::layers::MaxPool(2, 2));
+    model.add(new libdl::layers::Convolution2D("conv1", 5, 16, 0, 1, 1, 16));
     model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::Convolution2D("conv2", 7, 32, 1, 1, 16, 16));
-    //model.add(new libdl::layers::MaxPool(2, 2));
+    model.add(new libdl::layers::Convolution2D("conv2", 5, 32, 0, 1, 16, 16));
     model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::DenseLayer2D(12800, 8000, "dense3", 10));
+    model.add(new libdl::layers::MaxPool(2, 2));
+    model.add(new libdl::layers::DenseLayer2D(3200, 1000, "dense3", 10));
     model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::DenseLayer2D(8000, 4000, "dense3", 10));
-    model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::DenseLayer2D(4000, 10, "dense4", 10));
+    model.add(new libdl::layers::DenseLayer2D(1000, 10, "dense4", 10));
+    //model.add(new libdl::layers::TanH());
 
     
 
@@ -95,7 +93,7 @@ int main(int argc, char* argv[]){
 
     TensorWrapper out(1, 1, 1, 1), grads(1, 1, 1, 1);
     
-    int epochs = 3;
+    int epochs = 4;
     int batch_size = 16;
 
     TensorWrapper batch(batch_size, 28, 28, 1);

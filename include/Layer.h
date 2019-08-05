@@ -12,6 +12,7 @@
 #include "Eigen/Core"
 #include "TensorWrapper.h"
 #include <pybind11/pybind11.h>
+#include <math.h>
 
 namespace libdl::layers {
     class Layer;
@@ -26,6 +27,7 @@ namespace libdl::layers {
     class ReLU;
     class MaxPool;
     class Dropout;
+    class TanH;
 }
 
 
@@ -45,10 +47,10 @@ class libdl::layers::Layer {
         virtual ~Layer() {};
 
         //forward pass function
-        virtual TensorWrapper forward(TensorWrapper& input) = 0;
+        virtual TensorWrapper forward(TensorWrapper& input){return input;}
 
         //backward pass function
-        virtual TensorWrapper backward(TensorWrapper& gradient, double lr) = 0;
+        virtual TensorWrapper backward(TensorWrapper& gradient, double lr){return gradient;}
 
 
 
@@ -78,7 +80,7 @@ class libdl::layers::Layer {
 /////                            <PyLayer>                                 /////
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 class libdl::layers::PyLayer : public libdl::layers::Layer{
 public:
     using libdl::layers::Layer::Layer;
@@ -86,25 +88,25 @@ public:
     //forward pass function
         TensorWrapper forward(TensorWrapper& input) override {
             PYBIND11_OVERLOAD_PURE(
-                TensorWrapper, /* Return type */
-                Layer,      /* Parent class */
-                forward,          /* Name of function in C++ (must match Python name) */
-                input     /* Argument(s) */
+                TensorWrapper,
+                Layer,      
+                forward,      
+                input    
             );
         };
 
         //backward pass function
         TensorWrapper backward(TensorWrapper& gradient, double lr) override {
             PYBIND11_OVERLOAD_PURE(
-                TensorWrapper, /* Return type */
-                Layer,      /* Parent class */
-                backward,          /* Name of function in C++ (must match Python name) */
+                TensorWrapper, 
+                Layer,   
+                backward,    
                 gradient,
-                lr     /* Argument(s) */
+                lr 
             );
         };
 };
-
+ */
 
 ////////////////////////////////////////////////////////////////////////////////
 /////                                                                      /////
@@ -450,5 +452,44 @@ private:
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            <TanH>                                    /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+class libdl::layers::TanH : public libdl::layers::Layer{
+public:
+
+    TensorWrapper forward(TensorWrapper& input){
+        if(this->input == nullptr){
+            this->input = std::make_unique<TensorWrapper>(input);
+        }
+        *(this->input) = input;
+        TensorWrapper result(input.get_batch_size(), input.get_tensor_height(), input.get_tensor_width(), 
+        input.get_tensor_depth());
+
+        result.get_tensor() = this->input->get_tensor().unaryExpr([](double e){ return std::tanh(e);});
+        return result;
+    }
+
+    TensorWrapper backward(TensorWrapper& gradient, double lr){
+        gradient.get_tensor() = gradient.get_tensor().array() * this->input->get_tensor().unaryExpr([](double e){ return 1 - std::pow(std::tanh(e), 2);}).array();
+        return gradient;
+    }
+
+protected:
+
+private:
+    std::unique_ptr<TensorWrapper> input;
+    
+
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            </TanH>                                   /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
 
 #endif //LIBDL_LAYERS_LAYER_H

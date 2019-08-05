@@ -358,3 +358,57 @@ Matrixd CrossEntropy::softmax() {
 /////                            </CrossEntropy>                           /////
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            <BinaryCrossEntropy>                      /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+
+Vectord libdl::error::BinaryCrossEntropy::get_gradient(Vectord logits, Vectord targets , int epoch){
+
+    Vectord gradients(logits);
+
+    if(epoch == -1)
+        std::cout << "Received" << std::endl;
+
+    int acc = 0;
+    double error = 0.0;
+
+    for(int row = 0; row < logits.rows(); row++){
+        if(targets(row) == 1){
+            gradients(row) -= 1;
+            error -= std::log(logits(row));
+        }else{
+            error -= std::log(1-logits(row));
+        }
+
+        if(logits(row) >= 0.5 && targets(row) == 1)
+            acc++;
+        else if(logits(row) < 0.5 && targets(row) == 0)
+            acc++;
+
+        
+    }
+
+    this->errors.push_back(error);
+
+    
+    std::cout << "[Error: " << error/logits.rows() << " Epoch :" << epoch << "]\n";
+
+    return gradients;
+}
+
+Vectord libdl::error::BinaryCrossEntropy::predictions(Vectord logits, Vectord targets){
+    return logits;
+}
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            </BinaryCrossEntropy>                     /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////

@@ -132,7 +132,7 @@ TensorWrapper libdl::model::Model::backward(TensorWrapper& logits, TensorWrapper
         grads.get_tensor() = this->error->get_gradient(logits.get_tensor(), targets.get_tensor(), 20);
 
         TensorWrapper out(1, 1, 1, 1);
-
+        
         for(std::list<Layer*>::reverse_iterator it = this->layers.rbegin();
             it != this->layers.rend(); ++it){
             
@@ -140,6 +140,7 @@ TensorWrapper libdl::model::Model::backward(TensorWrapper& logits, TensorWrapper
                 out = (*it)->backward(grads, this->learning_rate);
             else
                 out = (*it)->backward(out, this->learning_rate);
+
         }
         
         return out;
