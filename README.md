@@ -1,6 +1,5 @@
 # libdl
 
-## How to test the MNIST problem
 
 ### I will try to be as clear as possible in case something is misunderstood or is not going right please let me know
 
