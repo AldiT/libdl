@@ -11,6 +11,7 @@
 * ```cd build```
 * ```cmake -DCMAKE_BUILD_TYPE=Release ..```
 * ```make```
+* To run the tests: ```./run_tests```
 * A dynamic library .so in my Unix system should be created , copy it to the root directory of the project (/libdl)
 
 
