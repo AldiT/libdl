@@ -15,6 +15,8 @@ using namespace libdl::error;
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
+//MSE Error used for XOR problem
+
 libdl::error::ErrorFunctions::ErrorFunctions(int num_classes, Vectord targets): num_classes(num_classes){
     this->targets = std::make_unique<Vectord>(targets);
 }
@@ -51,6 +53,7 @@ Vectord libdl::error::ErrorFunctions::get_gradient() {
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
+//CrossEntropy
 
 libdl::error::CrossEntropy::CrossEntropy(int num_classes) {
     this->num_classes = num_classes;
@@ -235,17 +238,18 @@ Matrixd libdl::error::CrossEntropy::get_gradient(Matrixd logits, Vectord targets
         }*/
 
 
-        /* 
+        
         gradients = gradients.unaryExpr([this](double e){
             if(e > 1){
-                e = .5;
+                e = 1;
             }else if(e < -1){
-                e = -.5;
+                e = -1;
             }
 
-            return e / this->logits->rows();
+            return e;
         });//Normalization
-*/      int rows = gradients.rows();
+        
+        int rows = gradients.rows();
         if(iteration % 20 == 0 && iteration != 0) {
             //std::cout << "\nIteration: " << iteration << std::endl;
             std::cout << "[Error: "  << (*(this->avg))(0, 0) / rows << "; Epoch: " << iteration/20 << "]\n";
@@ -328,12 +332,12 @@ Matrixd libdl::error::CrossEntropy::gradient(Matrixd logits, Vectord targets, in
 }
 
 //Basically I use this to apply softmax to the logits.
-//And it returns the max coefficients from each row (predictions).
+//And it returns the logits after softmax, without modifying the original ones.
 Matrixd CrossEntropy::softmax() {
 
     Matrixd copy_logits = *(this->logits);
 
-    //copy_logits.colwise() -= copy_logits.rowwise().maxCoeff();
+    copy_logits.colwise() -= copy_logits.rowwise().maxCoeff();
 
     copy_logits = copy_logits.unaryExpr([](double e){return std::exp(e);});
 
@@ -355,5 +359,59 @@ Matrixd CrossEntropy::softmax() {
 ////////////////////////////////////////////////////////////////////////////////
 /////                                                                      /////
 /////                            </CrossEntropy>                           /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            <BinaryCrossEntropy>                      /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+
+Vectord libdl::error::BinaryCrossEntropy::get_gradient(Vectord logits, Vectord targets , int epoch){
+
+    Vectord gradients(logits);
+
+    if(epoch == -1)
+        std::cout << "Received" << std::endl;
+
+    int acc = 0;
+    double error = 0.0;
+
+    for(int row = 0; row < logits.rows(); row++){
+        if(targets(row) == 1){
+            gradients(row) -= 1;
+            error -= std::log(logits(row));
+        }else{
+            error -= std::log(1-logits(row));
+        }
+
+        if(logits(row) >= 0.5 && targets(row) == 1)
+            acc++;
+        else if(logits(row) < 0.5 && targets(row) == 0)
+            acc++;
+
+        
+    }
+
+    this->errors.push_back(error);
+
+    
+    std::cout << "[Error: " << error/logits.rows() << " Epoch :" << epoch << "]\n";
+
+    return gradients;
+}
+
+Vectord libdl::error::BinaryCrossEntropy::predictions(Vectord logits, Vectord targets){
+    return logits;
+}
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            </BinaryCrossEntropy>                     /////
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////

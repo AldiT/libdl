@@ -61,20 +61,17 @@ int main(int argc, char* argv[]){
     libdl::TensorWrapper_Exp train_labels = dh->convert_training_labels_to_Eigen();
     dh.reset(nullptr);
 
-    
-    
-
-    libdl::model::Model model(5, 1e-5 , 1, 16, 5, "", "cross_entropy", 10);
+    libdl::model::Model model(5, 4e-5, 1, 16, 5, "", "cross_entropy", 10);
 
     model.add(new libdl::layers::Convolution2D("conv1", 5, 16, 0, 1, 1, 16));
-    model.add(new libdl::layers::MaxPool(2, 2));
     model.add(new libdl::layers::ReLU());
     model.add(new libdl::layers::Convolution2D("conv2", 5, 32, 0, 1, 16, 16));
+    model.add(new libdl::layers::ReLU());
     model.add(new libdl::layers::MaxPool(2, 2));
+    model.add(new libdl::layers::DenseLayer2D(3200, 1000, "dense3", 10));
     model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::DenseLayer2D(512, 200, "dense3", 10));
-    model.add(new libdl::layers::ReLU());
-    model.add(new libdl::layers::DenseLayer2D(200, 10, "dense4", 10));
+    model.add(new libdl::layers::DenseLayer2D(1000, 10, "dense4", 10));
+    //model.add(new libdl::layers::TanH());
 
     
 
@@ -83,7 +80,7 @@ int main(int argc, char* argv[]){
 
     TensorWrapper out(1, 1, 1, 1), grads(1, 1, 1, 1);
     
-    int epochs = 5;
+    int epochs = 4;
     int batch_size = 16;
 
     TensorWrapper batch(batch_size, 28, 28, 1);
@@ -106,6 +103,31 @@ int main(int argc, char* argv[]){
         model.set_lr(1 / (1+ 1 * epoch) );
     }
 
+
+    out = model.forward(batch);
+
+
+
+    out.get_tensor().colwise() -= out.get_tensor().rowwise().maxCoeff();
+
+    out.get_tensor() = out.get_tensor().unaryExpr([](double e){return std::exp(e);});
+
+    Vectord sums = out.get_tensor().rowwise().sum();
+
+    for(int i = 0; i < out.get_tensor().rows(); i++){
+        out.get_tensor().row(i) /= sums(i);
+    }
+
+
+    int cl;
+    double acc = 0;
+    for(int o = 0; o < out.get_tensor().rows(); o++){
+        std::cout << "Logit: " << out.get_tensor().row(o).maxCoeff(&cl) << " Class: " << cl << " Label: " << labels.get_tensor()(o) << std::endl;
+        if(cl == labels.get_tensor()(o))
+            acc += 1;
+    }
+
+    std::cout << "Test accuracy: " << acc/out.get_tensor().rows() << std::endl;
 
     
     return 0;

@@ -20,6 +20,7 @@ namespace libdl::model{
     class History;
     struct Milestone;
     class Optimizer; //TODO: Implement this in a seperate class
+    class Adam;
 }
 
 typedef libdl::model::Milestone     milestone;
@@ -54,15 +55,6 @@ protected:
 private:
     std::string msg;
     std::list<milestone> history;
-};
-
-class libdl::model::Optimizer{
-public:
-
-protected:
-
-private:
-
 };
 
 
@@ -106,6 +98,44 @@ private:
 };
 
 
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            <Optimizer>                               /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+class libdl::model::Optimizer {
+    public:
+        TensorWrapper calculate(TensorWrapper& gradient);
+    protected:
+
+    private:
+
+};
+
+class libdl::model::Adam : public libdl::model::Optimizer{
+    public:
+
+        TensorWrapper calculate(TensorWrapper& gradient){
+            return gradient;
+        }
+
+    private:
+        const double alpha = 0.01;
+        const double beta_1 = 0.9;
+        const double beta_2 = 0.999;
+        const double epsilon = 1e-8;
+
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/////                                                                      /////
+/////                            </Optimizer>                              /////
+/////                                                                      /////
+////////////////////////////////////////////////////////////////////////////////
 
 
 #endif //LIBDL_MODEL_H

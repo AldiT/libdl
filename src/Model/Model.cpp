@@ -18,6 +18,8 @@
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
+//No time to implement it, as presented in the final session
+
 libdl::model::History::History() {
     this->history = std::list<milestone>();
 
@@ -132,7 +134,7 @@ TensorWrapper libdl::model::Model::backward(TensorWrapper& logits, TensorWrapper
         grads.get_tensor() = this->error->get_gradient(logits.get_tensor(), targets.get_tensor(), 20);
 
         TensorWrapper out(1, 1, 1, 1);
-
+        
         for(std::list<Layer*>::reverse_iterator it = this->layers.rbegin();
             it != this->layers.rend(); ++it){
             
@@ -140,6 +142,7 @@ TensorWrapper libdl::model::Model::backward(TensorWrapper& logits, TensorWrapper
                 out = (*it)->backward(grads, this->learning_rate);
             else
                 out = (*it)->backward(out, this->learning_rate);
+
         }
         
         return out;
@@ -149,6 +152,8 @@ TensorWrapper libdl::model::Model::backward(TensorWrapper& logits, TensorWrapper
     }
 }
 
+// I use this function to set a manual regime on the lr, because I didn't have time to complete Adam or smth ele
+// that would replace the need to compute a step.
 void libdl::model::Model::set_lr(scalar factor){
     this->learning_rate *= factor;
 }
