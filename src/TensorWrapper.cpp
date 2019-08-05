@@ -18,6 +18,15 @@ typedef Eigen::MatrixXd DynMatrix;
 
 using namespace libdl;
 
+
+////
+/////
+//////TensorWrapper 3D was the origingal design, which I don't use anymore, it is as legacy code here
+//////The one that I use is TensorWrapper_Exp (scroll down)
+/////
+////
+
+
 TensorWrapper3D::TensorWrapper3D(int first_dim_, int second_dim_, int third_dim_):
                         first_dim(first_dim_), second_dim(second_dim_), third_dim(third_dim_)
 {
@@ -252,7 +261,6 @@ libdl::TensorWrapper_Exp::TensorWrapper_Exp(int batch_size_, int tensor_height_,
 }
 
 //copy constructor
-
 libdl::TensorWrapper_Exp::TensorWrapper_Exp(const libdl::TensorWrapper_Exp &copy_cnstr) {
     this->batch_size    = copy_cnstr.get_batch_size();
     this->tensor_height = copy_cnstr.get_tensor_height();
@@ -404,6 +412,7 @@ Eigen::MatrixXd libdl::TensorWrapper_Exp::correlation2D(Eigen::MatrixXd m1, Eige
     return output;
 }
 
+//Now it is implemented in the Convolution layer, as a built-in functionality
 [[deprecated]]
 Eigen::MatrixXd& libdl::TensorWrapper_Exp::pad(Eigen::MatrixXd& to_pad_, int padding) {
     if(padding == 0){
@@ -424,6 +433,8 @@ Eigen::MatrixXd& libdl::TensorWrapper_Exp::pad(Eigen::MatrixXd& to_pad_, int pad
     }
 }
 
+//Also deprecated, also in the convolution (reverse_tensor)
+[[deprecated]]
 Eigen::MatrixXd libdl::TensorWrapper_Exp::rotate180(Eigen::MatrixXd filter) {
 
     Eigen::MatrixXd res(filter.rows(), filter.cols());
@@ -495,11 +506,12 @@ void libdl::TensorWrapper_Exp::update_slice(int instance_, int depth_, Eigen::Ma
     }
 }
 
-
+//Returns the underlying tensor, as a matrix
 Eigen::MatrixXd& libdl::TensorWrapper_Exp::get_tensor() const{
     return *(this->tensor);
 }
 
+//Changes the underlying tensor directly
 void libdl::TensorWrapper_Exp::set_tensor(Eigen::MatrixXd new_tensor, int height, int width, int depth) {
     this->batch_size = new_tensor.rows();
     this->tensor_height = height;

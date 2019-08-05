@@ -6,23 +6,17 @@
 
 * Download the master branch as a zip (or whatever).
 * Unzip the folder and run the following commands
+* ```git clone https://github.com/pybind/pybind11.git extern/pybind11 --recursive```
 * ```mkdir build```
 * ```cd build```
-* ```cmake ..```
+* ```cmake -DCMAKE_BUILD_TYPE=Release ..```
 * ```make```
-* And execute ```./libdl```
+* A dynamic library .so in my Unix system should be created , copy it to the root directory of the project (/libdl)
 
 
 
-### The whole program is set up on the Layer_tests.cpp file under tests folder (this is where **main** function is)
- In **line 79** are specified some of the hyperparameters(batch_size, batch_limit, lr).
- I train only on a small batch, this due to the fact that the library is painfully slow for now... so batch_limit is a provisional hyperparameter due to above mentioned circumctances.
-
- On my computer I reach up to 0.9 accuracy on the batch after ~10 minutes.
- There should be three phases of output:
-    1. Before training
-    2. Training
-    3. Test
+### The tests are runed on the Layer_tests.cpp file under tests folder (this is where **main** function is)
+On folder python_scripts there is a jupyter notebook , open it with jupyter and see the small demo I have set up there.
 
 I will be reachable by email all day if you have any further questions.
 

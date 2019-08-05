@@ -62,10 +62,12 @@ private:
 };
 
 
+
+
 class libdl::error::BinaryCrossEntropy{
 public:
     BinaryCrossEntropy(){
-        
+
     }
 
     Vectord get_gradient(Vectord logits, Vectord targets , int);

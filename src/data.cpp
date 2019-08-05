@@ -2,6 +2,9 @@
 // Created by Aldi Topalli on 2019-06-18.
 //
 
+
+//Object to store the data, used for MNIST
+
 #include "data.h"
 
 data::data()

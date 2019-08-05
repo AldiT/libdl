@@ -15,6 +15,8 @@ using namespace libdl::error;
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
+//MSE Error used for XOR problem
+
 libdl::error::ErrorFunctions::ErrorFunctions(int num_classes, Vectord targets): num_classes(num_classes){
     this->targets = std::make_unique<Vectord>(targets);
 }
@@ -51,6 +53,7 @@ Vectord libdl::error::ErrorFunctions::get_gradient() {
 /////                                                                      /////
 ////////////////////////////////////////////////////////////////////////////////
 
+//CrossEntropy
 
 libdl::error::CrossEntropy::CrossEntropy(int num_classes) {
     this->num_classes = num_classes;
@@ -329,7 +332,7 @@ Matrixd libdl::error::CrossEntropy::gradient(Matrixd logits, Vectord targets, in
 }
 
 //Basically I use this to apply softmax to the logits.
-//And it returns the max coefficients from each row (predictions).
+//And it returns the logits after softmax, without modifying the original ones.
 Matrixd CrossEntropy::softmax() {
 
     Matrixd copy_logits = *(this->logits);

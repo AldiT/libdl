@@ -9,7 +9,7 @@
 
 #include "Eigen/Dense"
 
-
+//Some general tests
 SCENARIO("Aldis tests", "[Aldi]"){
     GIVEN("Some layer"){
         libdl::layers::Convolution2D conv1("conv1", 3, 3, 0, 1, 2);

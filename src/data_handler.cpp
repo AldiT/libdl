@@ -7,6 +7,8 @@
 #include <cstring>
 #include <iostream>
 
+//This is legacy code, data loader written by me to read MNIST dataset.
+
 
 data_handler::data_handler()
 {

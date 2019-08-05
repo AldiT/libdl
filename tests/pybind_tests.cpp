@@ -15,41 +15,7 @@ using namespace Eigen;
 
 namespace py = pybind11;
 
-Eigen::MatrixXd print(Eigen::MatrixXd &m){
-
-    std::cout << "Printintg matrix: \n\n" << m << std::endl;
-
-    return m;
-}
-
-int test_conv(Eigen::MatrixXd input_gradients, Eigen::MatrixXd filter_gradients, Eigen::MatrixXd input){
-    TensorWrapper input_grads(input_gradients.rows(), 28, 28, 1);
-    TensorWrapper filter_grads(filter_gradients.rows(), 3, 3, 1);
-
-    TensorWrapper my_input_gradient(input_gradients.rows(), 28, 28, 1);
-    TensorWrapper my_filter_gradient(filter_gradients.rows(), 3, 3, 1);
-    TensorWrapper input_tensor(input.rows(), 28, 28, 1);
-    input_tensor.get_tensor() = input;
-
-    TensorWrapper output(input_gradients.rows(), 26, 26, filter_gradients.rows());
-
-    input_grads.get_tensor() = input_gradients;
-    filter_grads.get_tensor() = filter_gradients;
-    
-    libdl::layers::Convolution2D conv("Test conv", 3, 16, 0, 1, 1, 10);
-
-    //Testing starts here
-    /* 
-    output = conv.forward(input_tensor);
-    
-    input_grads = conv.backward(Matrixd::Constant(input.rows(), output.get_tensor().cols()), 0.01);
-    filter_grads = conc.get_filter_gradients();
-    */
-
-   return 0;
-}
-
-
+//This is where all the bindings are declared
 
 PYBIND11_MODULE(libdl, m){
     //TensorWrapper binding
