@@ -18,9 +18,4 @@
 ### The tests are runed on the Layer_tests.cpp file under tests folder (this is where **main** function is)
 On folder python_scripts there is a jupyter notebook , open it with jupyter and see the small demo I have set up there.
 
-###The bug that happens with clang build on the CI is not my fault. It is I think the same error we have discussed in the forum at the beginning of the semester. I added the instruction on the CMakeLists.txt but it still happens.
-
-I will be reachable by email all day if you have any further questions.
-
-
  ## Find main function on: tests/Layer_tests.cpp
